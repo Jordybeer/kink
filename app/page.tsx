@@ -70,6 +70,7 @@ function HomeContent() {
 
   useEffect(() => () => importOperation.current?.abort(), []);
 
+  const scanTriggerRef = useRef<HTMLButtonElement | null>(null);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [importTransfer, setImportTransfer] = useState<Profile[] | null>(null);
@@ -441,6 +442,7 @@ function HomeContent() {
 
             {!importPreview && (
               <button
+                ref={scanTriggerRef}
                 type="button"
                 onClick={() => {
                   setScanError(null);
@@ -515,6 +517,7 @@ function HomeContent() {
 
               {!importPreview && (
                 <button
+                  ref={scanTriggerRef}
                   type="button"
                   onClick={() => {
                     setScanError(null);
@@ -692,7 +695,11 @@ function HomeContent() {
             <p className="mt-1" style={{ color: "var(--text2)" }}>Vraag een nieuwe code aan de persoon die het profiel deelt.</p>
             <button
               type="button"
-              onClick={() => { setScanError(null); setScanOpen(true); }}
+              onClick={() => {
+                scanTriggerRef.current?.focus();
+                setScanError(null);
+                setScanOpen(true);
+              }}
               className="ks-motion-choice focus-ring mt-1 min-h-[44px] py-2 font-semibold underline underline-offset-4"
             >
               Opnieuw scannen

@@ -258,19 +258,32 @@ test("invalid scan retains its diagnosis, offers a fresh-code retry and remains 
     Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => Promise.reject(new Error("camera unavailable")) } });
   });
   await seedAndGo(page, "/", [], { onboardingComplete: true });
-  await page.getByRole("button", { name: /^Scan gedeeld profiel\b/ }).click();
+  const scanTrigger = page.getByRole("button", { name: /^Scan gedeeld profiel\b/ });
+  await scanTrigger.click();
   const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
   const alert = page.getByRole("alert");
-  for (let attempt = 0; attempt < 2; attempt += 1) {
+  for (let attempt = 0; attempt < 3; attempt += 1) {
     await expect(scanner).toBeVisible();
     await scanner.getByLabel("Profiel-link of code").fill("3r.beschadigd");
     await scanner.getByRole("button", { name: "Importeer", exact: true }).click();
     await expect(scanner).toBeHidden();
     await expect(alert).toContainText("Profielcode is ongeldig of beschadigd.");
     await expect(alert).toContainText("Vraag een nieuwe code aan de persoon die het profiel deelt.");
-    if (attempt === 0) {
-      await alert.getByRole("button", { name: "Opnieuw scannen" }).click();
+    await expect(scanTrigger).toBeFocused();
+    if (attempt < 2) {
+      const retry = alert.getByRole("button", { name: "Opnieuw scannen" });
+      await retry.focus();
+      await page.keyboard.press("Enter");
       await expect(alert).toHaveCount(0);
+      await expect(scanner).toBeVisible();
+      if (attempt === 0) {
+        // Retry then cancel must return to the persistent Home control.
+        await page.keyboard.press("Escape");
+        await expect(scanner).toBeHidden();
+        await expect(scanTrigger).toBeFocused();
+        await page.keyboard.press("Enter");
+      }
+      // The final attempt follows keyboard retry with another invalid result.
     }
   }
   await alert.getByRole("button", { name: "Sluit foutmelding" }).click();
@@ -300,6 +313,41 @@ for (const theme of ["light", "dark"] as const) {
         await expect(scan).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
         await expect(page.getByText("Heb je al een back-up?", { exact: true })).toBeVisible();
         await expect(page.getByRole("button", { name: "Importeer back-up", exact: true })).toBeVisible();
+        const contrast = await page.locator("[data-home-empty-card]").evaluate((card) => {
+          // Read the browser's resolved opaque gradient stops, including its
+          // color-mix composition, rather than comparing raw palette tokens.
+          const background = getComputedStyle(card).backgroundImage;
+          const stops = background.match(/(?:rgba?|color|oklab|oklch|lab|lch)\([^()]*\)/g);
+          if (stops?.length !== 2) throw new Error(`Expected two resolved Home gradient stops: ${background}`);
+          const context = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
+          const rgb = (color: string) => {
+            context.clearRect(0, 0, 1, 1);
+            context.fillStyle = color;
+            context.fillRect(0, 0, 1, 1);
+            const pixel = Array.from(context.getImageData(0, 0, 1, 1).data);
+            if (pixel[3] !== 255) throw new Error(`Home contrast requires an opaque resolved color: ${color}`);
+            return pixel.slice(0, 3);
+          };
+          const luminance = (channels: number[]) => channels.map((channel) => {
+            const value = channel / 255;
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+          const backgrounds = stops.map((stop) => luminance(rgb(stop)));
+          const targets = Array.from(card.querySelectorAll('[data-home-backup] p, [data-home-backup] button, nav a, :scope > div:first-child > p'));
+          const scanHelper = Array.from(card.querySelectorAll("span")).find((element) => element.textContent === "Bekijk wat iemand met je heeft gedeeld");
+          if (!scanHelper) throw new Error("Missing Home scan supporting text");
+          targets.push(scanHelper);
+          return targets.filter((element) => element.textContent?.trim()).map((element) => {
+            const foreground = getComputedStyle(element).color;
+            const light = luminance(rgb(foreground));
+            return {
+              text: element.textContent!.trim(), foreground, background,
+              minimum: Math.min(...backgrounds.map((surface) => (Math.max(light, surface) + 0.05) / (Math.min(light, surface) + 0.05))),
+            };
+          });
+        });
+        for (const metric of contrast) expect(metric.minimum, `${theme} composed Home: ${metric.text}`).toBeGreaterThanOrEqual(4.5);
+        await testInfo.attach(`home-empty-${theme}-composed-contrast`, { body: JSON.stringify(contrast, null, 2), contentType: "application/json" });
       }
       expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
       await page.evaluate(async () => { await document.fonts.ready; });
