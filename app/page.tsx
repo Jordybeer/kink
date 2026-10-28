@@ -71,6 +71,7 @@ function HomeContent() {
   useEffect(() => () => importOperation.current?.abort(), []);
 
   const scanTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreScanFocusRef = useRef(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [importTransfer, setImportTransfer] = useState<Profile[] | null>(null);
@@ -85,6 +86,13 @@ function HomeContent() {
   const importOperationGuard = importOperationGuardRef.current;
   useEffect(() => () => importOperationGuard.invalidate(), [importOperationGuard]);
   const importPreview = importTransfer?.[0] ?? null;
+  useEffect(() => {
+    if (scanOpen || !restoreScanFocusRef.current) return;
+    restoreScanFocusRef.current = false;
+    // Restore after the scanner's portal and focus-trap cleanup, even when
+    // paste autofocus or touch activation obscured its original trigger.
+    if (!importPreview) scanTriggerRef.current?.focus({ preventScroll: true });
+  }, [scanOpen, importPreview]);
   const persistedAnchors = importTransfer ? readProfileIdentityAnchorRegistry().anchors : [];
   const importIdentities = importTransfer?.map((candidate) =>
     classifyProfileImportWithIdentityAnchor(profiles, candidate, persistedAnchors)) ?? [];
@@ -673,12 +681,14 @@ function HomeContent() {
             } catch {
               importOperationGuard.applyIfCurrent(decodeToken, () => {
                 setScanError("Profielcode is ongeldig of beschadigd.");
+                restoreScanFocusRef.current = true;
                 setScanOpen(false);
               });
             }
           }}
           onClose={() => {
             importOperationGuard.invalidate();
+            restoreScanFocusRef.current = true;
             setScanOpen(false);
           }}
         />

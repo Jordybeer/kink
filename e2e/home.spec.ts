@@ -253,14 +253,18 @@ test("Home backup reading is visible, prevents duplicate activation and recovers
   expect(await page.evaluate(() => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles.map((profile: { id: string }) => profile.id))).toEqual([PROFILE_ALEX.id]);
 });
 
-test("invalid scan retains its diagnosis, offers a fresh-code retry and remains dismissible", async ({ page }) => {
+test("invalid scan retains its diagnosis, offers a fresh-code retry and remains dismissible", async ({ page }, testInfo) => {
   await page.addInitScript(() => {
     Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => Promise.reject(new Error("camera unavailable")) } });
   });
   await seedAndGo(page, "/", [], { onboardingComplete: true });
   const scanTrigger = page.getByRole("button", { name: /^Scan gedeeld profiel\b/ });
-  await scanTrigger.click();
+  await (testInfo.project.use.hasTouch ? scanTrigger.tap() : scanTrigger.click());
   const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
+  await scanner.getByRole("button", { name: "Annuleer", exact: true }).click();
+  await expect(scanner).toBeHidden();
+  await expect(scanTrigger).toBeFocused();
+  await (testInfo.project.use.hasTouch ? scanTrigger.tap() : scanTrigger.click());
   const alert = page.getByRole("alert").filter({ hasText: "Profielcode is ongeldig of beschadigd." });
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await expect(scanner).toBeVisible();
