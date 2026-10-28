@@ -53,7 +53,7 @@ test("questionnaire progress and answer selection share the scene motion contrac
 
 test("settings choices and switches respond immediately without moving under reduced motion", async ({ page }) => {
   await seedAndGo(page, "/", [PROFILE_ALEX]);
-  await page.getByRole("button", { name: "Instellingen" }).click();
+  await page.getByRole("button", { name: "Instellingen", exact: true }).click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   const backup = settings.getByRole("button", { name: /Back-up maken/ });
   expect((await transition(backup)).duration).toContain(0.14);
@@ -67,7 +67,7 @@ test("settings choices and switches respond immediately without moving under red
   expect((await transition(lightSurface)).duration.every((d) => d === 0)).toBe(true);
   await page.keyboard.press("Escape");
   await expect(settings).not.toBeVisible();
-  await expect(page.getByRole("button", { name: "Instellingen" })).toBeFocused();
+  await expect(page.getByRole("button", { name: "Instellingen", exact: true })).toBeFocused();
 });
 
 test("ambient motion pauses while the document is hidden and resumes without remounting", async ({ page }) => {

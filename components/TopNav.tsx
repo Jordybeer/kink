@@ -87,7 +87,7 @@ export default function TopNav() {
       >
         {/* Keep utility slots fixed while enlarged identity text wraps and grows the masthead. */}
         <nav
-          className="mx-auto grid min-h-[104px] max-w-2xl grid-cols-[44px_minmax(0,1fr)_44px] items-start px-[min(var(--page-gutter),20px)] pb-[5px] pt-[32px] lg:max-w-4xl"
+          className="mx-auto grid min-h-[104px] max-w-2xl grid-cols-[44px_minmax(0,1fr)_44px] items-start px-[var(--page-gutter)] pb-[5px] pt-[32px] lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >

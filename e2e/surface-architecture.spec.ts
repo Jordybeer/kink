@@ -18,7 +18,7 @@ async function expectCenteredWithin(
 }
 
 async function openSettings(page: Page) {
-  const trigger = page.getByRole("button", { name: "Instellingen" });
+  const trigger = page.getByRole("button", { name: "Instellingen", exact: true });
   await trigger.click();
   return trigger;
 }

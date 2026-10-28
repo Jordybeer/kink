@@ -82,7 +82,7 @@ test.describe("Alle lokale data verwijderen", () => {
       await page.getByRole("button", { name: digit, exact: true }).click();
     }
     await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toHaveCount(0);
-    const more = page.getByRole("button", { name: "Instellingen" });
+    const more = page.getByRole("button", { name: "Instellingen", exact: true });
     await expect(more).toBeVisible();
     expect(await page.evaluate(() => sessionStorage.getItem("app_unlocked"))).toBe("1");
 

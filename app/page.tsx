@@ -460,14 +460,14 @@ function HomeContent() {
         ) : (
           <section
             data-home-empty-card
-            className="mx-auto w-full max-w-xl [overflow-wrap:anywhere] rounded-[28px] px-[16px] pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-[20px] sm:pb-7 sm:pt-5"
+            className="@container/home-empty mx-auto w-full max-w-xl [overflow-wrap:anywhere] rounded-[28px] px-[16px] pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-[20px] sm:pb-7 sm:pt-5"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface2)), color-mix(in srgb, var(--identity-b) 6%, var(--surface)))",
               border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--identity-border))",
               boxShadow: "0 18px 44px color-mix(in srgb, var(--identity-a) 7%, transparent)",
             }}
           >
-            <div className="px-2 pb-6 pt-1 max-[321px]:pb-5 text-center">
+            <div className="px-2 pb-6 pt-1 max-[321px]:pb-5 text-center @max-[12rem]/home-empty:px-0">
               <span
                 className="mx-auto flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
@@ -490,11 +490,11 @@ function HomeContent() {
               </p>
             </div>
 
-            <div className="grid gap-3">
+            <div className="grid gap-3 max-[321px]:gap-1.5">
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-[12px] rounded-2xl px-[14px] py-3 text-left hover:opacity-95"
+                className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-[12px] rounded-2xl px-[14px] py-3 text-left hover:opacity-95 @max-[12rem]/home-empty:flex-wrap"
                 style={{
                   background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))",
                   border: "1px solid color-mix(in srgb, var(--accent) 34%, var(--border))",
@@ -506,13 +506,13 @@ function HomeContent() {
                 >
                   <UserPlus size={20} weight="duotone" aria-hidden="true" />
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 @max-[12rem]/home-empty:order-last @max-[12rem]/home-empty:basis-full">
                   <span className="block text-sm font-semibold">Maak mijn profiel</span>
                   <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
                     Kies wat bij jou past
                   </span>
                 </span>
-                <ArrowRight size={17} weight="bold" aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
+                <ArrowRight size={17} weight="bold" aria-hidden="true" className="flex-none @max-[12rem]/home-empty:ml-auto" style={{ color: "var(--accent)" }} />
               </button>
 
               {!importPreview && (
@@ -523,7 +523,7 @@ function HomeContent() {
                     setScanError(null);
                     setScanOpen(true);
                   }}
-                  className="ks-motion-choice focus-ring flex min-h-[68px] w-full items-center gap-[12px] px-[14px] py-3 text-left hover:opacity-90 active:opacity-75"
+                  className="ks-motion-choice focus-ring flex min-h-[68px] w-full items-center gap-[12px] px-[14px] py-3 text-left hover:opacity-90 active:opacity-75 @max-[12rem]/home-empty:flex-wrap"
                 >
                   <span
                     className="flex h-[40px] w-[40px] flex-none items-center justify-center rounded-full"
@@ -531,13 +531,13 @@ function HomeContent() {
                   >
                     <Camera size={18} aria-hidden="true" />
                   </span>
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0 flex-1 @max-[12rem]/home-empty:order-last @max-[12rem]/home-empty:basis-full">
                     <span className="block text-sm font-semibold">Scan gedeeld profiel</span>
                     <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
                       Bekijk wat iemand met je heeft gedeeld
                     </span>
                   </span>
-                  <ArrowRight size={16} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                  <ArrowRight size={16} aria-hidden="true" className="flex-none @max-[12rem]/home-empty:ml-auto" style={{ color: "var(--text2)" }} />
                 </button>
               )}
 

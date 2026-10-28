@@ -134,7 +134,7 @@ test.describe("Home page — profielen aanwezig", () => {
 
   test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 480 });
-    const more = page.getByRole("button", { name: "Instellingen" });
+    const more = page.getByRole("button", { name: "Instellingen", exact: true });
     await more.click();
 
     const dialog = page.getByRole("dialog", { name: "Instellingen" });
@@ -244,7 +244,7 @@ test("Home backup reading is visible, prevents duplicate activation and recovers
     readWindow.restoreHomeBackupRead();
     readWindow.finishHomeBackupRead("{}");
   });
-  await expect(page.getByRole("alert")).toContainText("Ongeldig bestand");
+  await expect(page.locator("[data-home-empty-card]").getByRole("alert")).toContainText("Ongeldig bestand");
   await expect(backup).toBeEnabled();
   await expect(input).toBeEnabled();
   await expect(reading).toHaveCount(0);
@@ -261,7 +261,7 @@ test("invalid scan retains its diagnosis, offers a fresh-code retry and remains 
   const scanTrigger = page.getByRole("button", { name: /^Scan gedeeld profiel\b/ });
   await scanTrigger.click();
   const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
-  const alert = page.getByRole("alert");
+  const alert = page.getByRole("alert").filter({ hasText: "Profielcode is ongeldig of beschadigd." });
   for (let attempt = 0; attempt < 3; attempt += 1) {
     await expect(scanner).toBeVisible();
     await scanner.getByLabel("Profiel-link of code").fill("3r.beschadigd");
@@ -363,6 +363,26 @@ for (const theme of ["light", "dark"] as const) {
     await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
     await page.evaluate(async () => { await document.fonts.ready; });
     expect(await page.locator("html").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBe(32);
+    const fragmentedWords = await page.locator("[data-home-empty-card]").evaluate((element) => {
+      const fragmented: string[] = [];
+      const words = new Intl.Segmenter("nl", { granularity: "word" });
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        for (const word of words.segment(node.textContent ?? "")) {
+          if (!word.isWordLike) continue;
+          const range = document.createRange();
+          range.setStart(node, word.index);
+          range.setEnd(node, word.index + word.segment.length);
+          const lines = new Set(Array.from(range.getClientRects())
+            .filter((rect) => rect.width > 0 && rect.height > 0)
+            .map((rect) => Math.round(rect.top)));
+          if (lines.size > 1) fragmented.push(word.segment);
+        }
+      }
+      return fragmented;
+    });
+    expect(fragmentedWords).toEqual([]);
     const masthead = page.locator("[data-home-masthead]");
     const wordmark = masthead.locator("[data-home-nav-wordmark]");
     expect(await wordmark.evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(72);

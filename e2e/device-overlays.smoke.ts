@@ -80,7 +80,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await sharedHeading.scrollIntoViewIfNeeded();
   await saveScreenshot(page, testInfo, "home-profile-groups");
 
-  const settingsTrigger = page.getByRole("button", { name: "Instellingen" });
+  const settingsTrigger = page.getByRole("button", { name: "Instellingen", exact: true });
   await settingsTrigger.click();
   const settings = page.getByRole("dialog", { name: "Instellingen" });
   const settingsTitle = settings.getByRole("heading", { name: "Instellingen" });
