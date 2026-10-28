@@ -58,6 +58,8 @@ export default function EditorialHeading({
           style={{
             fontFamily: "var(--font-display, Georgia, serif)",
             fontWeight: 500,
+            // Compact list headings reserve the serif guard inside their width.
+            marginInline: size === "compact" ? 0 : undefined,
           }}
         >
           {title}
