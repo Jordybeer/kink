@@ -21,6 +21,12 @@ interface Props {
   align?: "left" | "right";
 }
 
+function focusMenuControl(element: HTMLElement | null | undefined) {
+  // Floating navigation already occupies the viewport; focus there must not
+  // scroll the underlying document into the header's reserved content area.
+  element?.focus({ preventScroll: Boolean(element.closest("[data-top-nav-variant]")) });
+}
+
 export default function ContextMenu({ open, onClose, items, children, align = "right" }: Props) {
   const t = useMotionSafe();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -50,7 +56,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
       ? active
       : menuRef.current?.querySelector<HTMLElement>('button[aria-expanded="true"]') ?? null;
 
-    const frame = window.requestAnimationFrame(() => itemRefs.current[0]?.focus());
+    const frame = window.requestAnimationFrame(() => focusMenuControl(itemRefs.current[0]));
     return () => window.cancelAnimationFrame(frame);
   }, [open]);
 
@@ -58,13 +64,13 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
     const available = itemRefs.current.filter((item): item is HTMLButtonElement => Boolean(item));
     if (available.length === 0) return;
     const nextIndex = (index + available.length) % available.length;
-    available[nextIndex]?.focus();
+    focusMenuControl(available[nextIndex]);
   }
 
   function restoreTriggerFocus() {
     const trigger = returnFocusRef.current;
     onClose();
-    window.requestAnimationFrame(() => trigger?.focus());
+    window.requestAnimationFrame(() => focusMenuControl(trigger));
   }
 
   function activateItem(item: ContextMenuItem) {
@@ -75,7 +81,7 @@ export default function ContextMenu({ open, onClose, items, children, align = "r
       const active = document.activeElement;
       if (!trigger || !document.contains(trigger)) return;
       if (!active || active === document.body || active === document.documentElement) {
-        trigger.focus();
+        focusMenuControl(trigger);
       }
     });
   }
