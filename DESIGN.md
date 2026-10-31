@@ -97,6 +97,15 @@ Empty and populated Home use the same brand masthead and the same post-masthead 
 
 Do not independently nudge empty and populated Home unless there is a real behavioural reason. A spacing fix that makes one state pretty while breaking the other is a regression.
 
+Home's 44px GearSix utility opens `Instellingen` directly and receives focus back
+when the sheet closes. Content routes retain their overflow actions. Keep the
+centered wordmark and subtitle; enlarged text may wrap the name at Kink/Sync and
+grow the masthead without shrinking or clipping text. Fixed utility slots retain
+their touch budget, including the offline state.
+
+Both Home states expose quiet 44px `Over KinkSync` and `Privacy & veiligheid`
+links. They belong to the existing composition, without another surface.
+
 ### Empty Home
 
 The first-profile state may use one deliberate feature surface because it is the entire activation task.
@@ -107,12 +116,16 @@ Hierarchy:
 2. scan/import a partner profile;
 3. restore an existing backup as tertiary utility.
 
-Locked backup-import treatment, not necessarily implemented yet:
+The feature surface retains its primary profile action. `Scan gedeeld profiel`
+uses a generous borderless secondary row, without a tinted icon container.
+Backup sits below it as tertiary utility with exactly `Heb je al een back-up?`
+and `Importeer back-up`; no secondary tinted or bordered boxes belong here.
 
-- place it below `Scan partnerprofiel` within the empty-state area;
-- do **not** make it a third equal large card;
-- use quiet utility treatment, for example `Heb je al een back-up?` followed by `Importeer back-up`;
-- invoking it should reuse the established backup import/restore path rather than inventing a parallel restore system.
+Restore reuses the established import path. Its existing reading state shows
+polite `Back-up lezen…` feedback and disables duplicate activation and file
+inputs, including the same operation's Settings entry. Invalid scans retain
+the diagnosis and dismissal, ask for a new code and offer `Opnieuw scannen`
+through the existing scanner.
 
 ### Populated Home
 
@@ -128,6 +141,9 @@ Locked direction:
 - `Nieuw profiel` and `Scan profiel` remain clear actions but must not make the lower half of Home another equal-weight card grid.
 
 The goal is fewer simultaneous rectangles and a clearer visual sentence.
+Utilities and profile actions share one separator at their boundary. The
+Compare feature keeps the people as its heading and names the visible action
+in its supporting sentence: `Vergelijk overeenkomsten, bespreekpunten en grenzen.`
 
 ## Profile surfaces
 

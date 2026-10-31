@@ -134,9 +134,8 @@ test.describe("Home page — profielen aanwezig", () => {
 
   test("instellingen houden hun titel vast terwijl de laatste actie bereikbaar blijft", async ({ page }) => {
     await page.setViewportSize({ width: 375, height: 480 });
-    const more = page.getByRole("button", { name: "Meer opties" });
+    const more = page.getByRole("button", { name: "Instellingen", exact: true });
     await more.click();
-    await page.getByRole("menuitem", { name: "Instellingen" }).click();
 
     const dialog = page.getByRole("dialog", { name: "Instellingen" });
     const title = dialog.getByRole("heading", { name: "Instellingen" });
@@ -208,3 +207,227 @@ test.describe("Profiel aanmaken via UI", () => {
     expect(savedProfile?.experienceLevel).toBe("ervaren");
   });
 });
+
+test("Home backup reading is visible, prevents duplicate activation and recovers after an invalid file", async ({ page }) => {
+  await seedAndGo(page, "/", [], { onboardingComplete: true });
+  await page.evaluate(() => {
+    const original = File.prototype.text;
+    let reads = 0;
+    File.prototype.text = () => {
+      document.documentElement.dataset.homeBackupReads = String(++reads);
+      return new Promise<string>((resolve) => {
+        Object.assign(window, { finishHomeBackupRead: resolve });
+      });
+    };
+    Object.assign(window, { restoreHomeBackupRead: () => { File.prototype.text = original; } });
+  });
+  const backup = page.getByRole("button", { name: "Importeer back-up", exact: true });
+  const input = page.getByLabel("Kies een backupbestand");
+  await input.setInputFiles({ name: "backup.json", mimeType: "application/json", buffer: Buffer.from("{}") });
+  await expect(backup).toBeDisabled();
+  await expect(input).toBeDisabled();
+  const reading = page.locator("[data-home-backup]").getByRole("status");
+  await expect(reading).toHaveText("Back-up lezen…");
+  await expect(reading).toHaveAttribute("aria-live", "polite");
+  // Native disabled activation cannot open another chooser or replace this read.
+  await backup.evaluate((element: HTMLButtonElement) => element.click());
+  await expect(page.locator("html")).toHaveAttribute("data-home-backup-reads", "1");
+
+  await page.getByRole("button", { name: "Instellingen", exact: true }).click();
+  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  await expect(settings.locator('input[type="file"]')).toBeDisabled();
+  await expect(settings.getByRole("status")).toHaveText("Back-up lezen…");
+  await page.keyboard.press("Escape");
+  await expect(settings).toBeHidden();
+  await page.evaluate(() => {
+    const readWindow = window as unknown as { finishHomeBackupRead: (text: string) => void; restoreHomeBackupRead: () => void };
+    readWindow.restoreHomeBackupRead();
+    readWindow.finishHomeBackupRead("{}");
+  });
+  await expect(page.locator("[data-home-empty-card]").getByRole("alert")).toContainText("Ongeldig bestand");
+  await expect(backup).toBeEnabled();
+  await expect(input).toBeEnabled();
+  await expect(reading).toHaveCount(0);
+  await input.setInputFiles({ name: "backup.json", mimeType: "application/json", buffer: Buffer.from(JSON.stringify({ source: "backup", profiles: [PROFILE_ALEX] })) });
+  await expect(page.getByRole("link", { name: "Alex Dominant openen" })).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles.map((profile: { id: string }) => profile.id))).toEqual([PROFILE_ALEX.id]);
+});
+
+test("invalid scan retains its diagnosis, offers a fresh-code retry and remains dismissible", async ({ page }, testInfo) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "mediaDevices", { configurable: true, value: { getUserMedia: () => Promise.reject(new Error("camera unavailable")) } });
+  });
+  await seedAndGo(page, "/", [], { onboardingComplete: true });
+  const scanTrigger = page.getByRole("button", { name: /^Scan gedeeld profiel\b/ });
+  await (testInfo.project.use.hasTouch ? scanTrigger.tap() : scanTrigger.click());
+  const scanner = page.getByRole("dialog", { name: "QR-code scannen" });
+  await scanner.getByRole("button", { name: "Annuleer", exact: true }).click();
+  await expect(scanner).toBeHidden();
+  await expect(scanTrigger).toBeFocused();
+  await (testInfo.project.use.hasTouch ? scanTrigger.tap() : scanTrigger.click());
+  const alert = page.getByRole("alert").filter({ hasText: "Profielcode is ongeldig of beschadigd." });
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await expect(scanner).toBeVisible();
+    await scanner.getByLabel("Profiel-link of code").fill("3r.beschadigd");
+    await scanner.getByRole("button", { name: "Importeer", exact: true }).click();
+    await expect(scanner).toBeHidden();
+    await expect(alert).toContainText("Profielcode is ongeldig of beschadigd.");
+    await expect(alert).toContainText("Vraag een nieuwe code aan de persoon die het profiel deelt.");
+    await expect(scanTrigger).toBeFocused();
+    if (attempt < 2) {
+      const retry = alert.getByRole("button", { name: "Opnieuw scannen" });
+      await retry.focus();
+      await page.keyboard.press("Enter");
+      await expect(alert).toHaveCount(0);
+      await expect(scanner).toBeVisible();
+      if (attempt === 0) {
+        // Retry then cancel must return to the persistent Home control.
+        await page.keyboard.press("Escape");
+        await expect(scanner).toBeHidden();
+        await expect(scanTrigger).toBeFocused();
+        await page.keyboard.press("Enter");
+      }
+      // The final attempt follows keyboard retry with another invalid result.
+    }
+  }
+  await alert.getByRole("button", { name: "Sluit foutmelding" }).click();
+  await expect(alert).toHaveCount(0);
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles)).toEqual([]);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Home clarity ${theme} empty and populated captures keep help and action hierarchy`, async ({ page }, testInfo) => {
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
+    for (const populated of [false, true]) {
+      await seedAndGo(page, "/", populated ? [PROFILE_ALEX, SHARED_SAM] : [], { onboardingComplete: true });
+      await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
+      const help = page.getByRole("navigation", { name: "Hulp bij KinkSync" });
+      await expect(help.getByRole("link", { name: "Over KinkSync" })).toHaveAttribute("href", "/about");
+      await expect(help.getByRole("link", { name: "Privacy & veiligheid" })).toHaveAttribute("href", "/security");
+      for (const link of await help.getByRole("link").all()) {
+        expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+      }
+      if (populated) {
+        const compare = page.locator("[data-home-compare-feature]");
+        await expect(compare).toContainText("Vergelijk overeenkomsten, bespreekpunten en grenzen.");
+        await expect(page.locator("[data-home-profile-actions]")).toHaveCSS("border-top-width", "0px");
+      } else {
+        const scan = page.getByRole("button", { name: /^Scan gedeeld profiel\b/ });
+        await expect(scan).toHaveCSS("border-top-width", "0px");
+        await expect(scan).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
+        await expect(page.getByText("Heb je al een back-up?", { exact: true })).toBeVisible();
+        await expect(page.getByRole("button", { name: "Importeer back-up", exact: true })).toBeVisible();
+        const contrast = await page.locator("[data-home-empty-card]").evaluate((card) => {
+          // Read the browser's resolved opaque gradient stops, including its
+          // color-mix composition, rather than comparing raw palette tokens.
+          const background = getComputedStyle(card).backgroundImage;
+          const stops = background.match(/(?:rgba?|color|oklab|oklch|lab|lch)\([^()]*\)/g);
+          if (stops?.length !== 2) throw new Error(`Expected two resolved Home gradient stops: ${background}`);
+          const context = document.createElement("canvas").getContext("2d", { willReadFrequently: true })!;
+          const rgb = (color: string) => {
+            context.clearRect(0, 0, 1, 1);
+            context.fillStyle = color;
+            context.fillRect(0, 0, 1, 1);
+            const pixel = Array.from(context.getImageData(0, 0, 1, 1).data);
+            if (pixel[3] !== 255) throw new Error(`Home contrast requires an opaque resolved color: ${color}`);
+            return pixel.slice(0, 3);
+          };
+          const luminance = (channels: number[]) => channels.map((channel) => {
+            const value = channel / 255;
+            return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+          }).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+          const backgrounds = stops.map((stop) => luminance(rgb(stop)));
+          const targets = Array.from(card.querySelectorAll('[data-home-backup] p, [data-home-backup] button, nav a, :scope > div:first-child > p'));
+          const scanHelper = Array.from(card.querySelectorAll("span")).find((element) => element.textContent === "Bekijk wat iemand met je heeft gedeeld");
+          if (!scanHelper) throw new Error("Missing Home scan supporting text");
+          targets.push(scanHelper);
+          return targets.filter((element) => element.textContent?.trim()).map((element) => {
+            const foreground = getComputedStyle(element).color;
+            const light = luminance(rgb(foreground));
+            return {
+              text: element.textContent!.trim(), foreground, background,
+              minimum: Math.min(...backgrounds.map((surface) => (Math.max(light, surface) + 0.05) / (Math.min(light, surface) + 0.05))),
+            };
+          });
+        });
+        for (const metric of contrast) expect(metric.minimum, `${theme} composed Home: ${metric.text}`).toBeGreaterThanOrEqual(4.5);
+        await testInfo.attach(`home-empty-${theme}-composed-contrast`, { body: JSON.stringify(contrast, null, 2), contentType: "application/json" });
+      }
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)).toBe(false);
+      await page.evaluate(async () => { await document.fonts.ready; });
+      await page.mouse.move(0, 0);
+      await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-clarity-${theme}-${populated ? "populated" : "empty"}.png`, fullPage: true });
+    }
+  });
+
+  test(`Home masthead fits 320px with 200% actual text in ${theme} online and offline`, async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 320, height: 667 });
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
+    await seedAndGo(page, "/", [], { onboardingComplete: true });
+    await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+    await page.evaluate(async () => { await document.fonts.ready; });
+    expect(await page.locator("html").evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBe(32);
+    const fragmentedWords = await page.locator("[data-home-empty-card]").evaluate((element) => {
+      const fragmented: string[] = [];
+      const words = new Intl.Segmenter("nl", { granularity: "word" });
+      const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        for (const word of words.segment(node.textContent ?? "")) {
+          if (!word.isWordLike) continue;
+          const range = document.createRange();
+          range.setStart(node, word.index);
+          range.setEnd(node, word.index + word.segment.length);
+          const lines = new Set(Array.from(range.getClientRects())
+            .filter((rect) => rect.width > 0 && rect.height > 0)
+            .map((rect) => Math.round(rect.top)));
+          if (lines.size > 1) fragmented.push(word.segment);
+        }
+      }
+      return fragmented;
+    });
+    expect(fragmentedWords).toEqual([]);
+    const masthead = page.locator("[data-home-masthead]");
+    const wordmark = masthead.locator("[data-home-nav-wordmark]");
+    expect(await wordmark.evaluate((element) => Number.parseFloat(getComputedStyle(element).fontSize))).toBeGreaterThanOrEqual(72);
+    await expect(wordmark).toHaveText("KinkSync");
+    await expect(masthead.locator("[data-home-subtitle]")).toHaveText("Verken grenzen. Samen.");
+    for (const offline of [false, true]) {
+      if (offline) {
+        await page.context().setOffline(true);
+        await page.evaluate(() => window.dispatchEvent(new Event("offline")));
+        await expect(masthead.getByRole("status", { name: "Offline" })).toBeVisible();
+      }
+      const geometry = await masthead.evaluate((element) => {
+        const trigger = element.querySelector('[data-testid="home-topnav-settings"]')!.getBoundingClientRect();
+        const bounds = element.getBoundingClientRect();
+        const identity = element.querySelector("[data-home-identity]")!;
+        const text: Array<{ left: number; right: number; top: number; bottom: number }> = [];
+        const walker = document.createTreeWalker(identity, NodeFilter.SHOW_TEXT);
+        while (walker.nextNode()) {
+          if (!walker.currentNode.textContent?.trim()) continue;
+          const range = document.createRange();
+          range.selectNodeContents(walker.currentNode);
+          for (const rect of Array.from(range.getClientRects())) text.push({ left: rect.left, right: rect.right, top: rect.top, bottom: rect.bottom });
+        }
+        return {
+          trigger: { width: trigger.width, height: trigger.height, left: trigger.left },
+          bounds: { top: bounds.top, bottom: bounds.bottom },
+          text,
+          overflow: Math.max(document.documentElement.scrollWidth, document.body.scrollWidth) - window.innerWidth,
+        };
+      });
+      expect(geometry.trigger.width).toBeGreaterThanOrEqual(44);
+      expect(geometry.trigger.height).toBeGreaterThanOrEqual(44);
+      expect(geometry.overflow).toBeLessThanOrEqual(1);
+      for (const rect of geometry.text) {
+        expect(rect.left).toBeGreaterThanOrEqual(0);
+        expect(rect.right).toBeLessThanOrEqual(geometry.trigger.left + 1);
+        expect(rect.top).toBeGreaterThanOrEqual(geometry.bounds.top - 1);
+        expect(rect.bottom).toBeLessThanOrEqual(geometry.bounds.bottom + 1);
+      }
+    }
+    await page.context().setOffline(false);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-clarity-${theme}-320-text-200.png`, fullPage: true });
+  });
+}

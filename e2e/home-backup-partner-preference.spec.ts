@@ -14,7 +14,7 @@ test.describe("Home herstel en partner-voorkeur", () => {
     await expect(page.getByRole("heading", { name: "Maak je eerste profiel" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Maak mijn profiel Kies wat bij jou past" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Scan gedeeld profiel Bekijk wat iemand met je heeft gedeeld" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Backup herstellen Ga verder met een bestaande KinkSync-backup" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Importeer back-up", exact: true })).toBeVisible();
     await expect(page.getByLabel("Kies een backupbestand")).toHaveAttribute("accept", ".json,application/json");
 
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);

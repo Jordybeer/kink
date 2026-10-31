@@ -10,8 +10,7 @@ test("routewissels landen bovenaan ondanks de sticky navigatie", async ({ page }
   await seedAndGo(page, "/", [PROFILE_ALEX], { onboardingComplete: true });
   await expectRouteAtTop(page);
 
-  await page.getByRole("button", { name: "Meer opties" }).click();
-  await page.getByRole("menuitem", { name: "Over KinkSync" }).click();
+  await page.getByRole("link", { name: "Over KinkSync", exact: true }).click();
   await expect(page).toHaveURL(/\/about$/);
   await expectRouteAtTop(page);
 

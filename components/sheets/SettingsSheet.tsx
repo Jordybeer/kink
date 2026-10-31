@@ -32,6 +32,7 @@ interface SettingsSheetProps {
   onImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
   importError: string | null;
   importSuccess: string | null;
+  importReading?: boolean;
 }
 
 const SETTINGS_ICON_TONE = "color-mix(in srgb, var(--accent) 64%, var(--text2))";
@@ -198,6 +199,7 @@ export default function SettingsSheet({
   onImportFile,
   importError,
   importSuccess,
+  importReading = false,
 }: SettingsSheetProps) {
   const appLockEnabled = useStore((state) => state.appLockEnabled);
   const biometricEnabled = useStore((state) => state.biometricEnabled);
@@ -262,11 +264,13 @@ export default function SettingsSheet({
             <label
               className="focus-within:outline focus-within:outline-2 focus-within:outline-[var(--accent)] flex min-h-[52px] w-full cursor-pointer items-center gap-[12px] px-[6px] py-2 text-left sm:px-[8px]"
               style={DIVIDER_STYLE}
+              aria-disabled={importReading}
             >
               <input
                 type="file"
                 accept=".json"
                 onChange={onImportFile}
+                disabled={importReading}
                 className="sr-only"
               />
               <RowContent
@@ -277,6 +281,9 @@ export default function SettingsSheet({
               />
             </label>
           </div>
+          <p role={importReading ? "status" : undefined} aria-live="polite" className={importReading ? "mt-2 px-1 text-xs" : "sr-only"}>
+            {importReading ? "Back-up lezen…" : ""}
+          </p>
           {importError && (
             <p className="mt-2 px-1 text-xs" role="alert" style={{ color: "var(--hard-no)" }}>
               {importError}

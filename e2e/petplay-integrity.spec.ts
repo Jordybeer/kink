@@ -82,7 +82,7 @@ test.describe("Alle lokale data verwijderen", () => {
       await page.getByRole("button", { name: digit, exact: true }).click();
     }
     await expect(page.getByRole("heading", { name: "KinkSync ontgrendelen" })).toHaveCount(0);
-    const more = page.getByRole("button", { name: "Meer opties" });
+    const more = page.getByRole("button", { name: "Instellingen", exact: true });
     await expect(more).toBeVisible();
     expect(await page.evaluate(() => sessionStorage.getItem("app_unlocked"))).toBe("1");
 
@@ -119,7 +119,6 @@ test.describe("Alle lokale data verwijderen", () => {
     await page.evaluate(() => history.replaceState(null, "", "/"));
 
     await more.click();
-    await page.getByRole("menuitem", { name: "Instellingen" }).click();
     await page.getByRole("button", { name: /Alle data verwijderen/ }).click();
     await page.getByLabel("Typ wis alles om te bevestigen").fill("wis alles");
     await page.getByRole("button", { name: "Vernietig voor altijd" }).click();

@@ -10,9 +10,8 @@ async function overflowsHorizontally(locator: import("@playwright/test").Locator
 }
 
 async function openSettings(page: Page) {
-  const more = page.getByRole("button", { name: "Meer opties" });
+  const more = page.getByRole("button", { name: "Instellingen", exact: true });
   await more.click();
-  await page.getByRole("menuitem", { name: "Instellingen" }).click();
   return more;
 }
 
@@ -21,7 +20,7 @@ test("settings blijft compact met optionele installatie in de instellingen", asy
   await seedProfiles(page, [PROFILE_ALEX], { pinnedProfileId: PROFILE_ALEX.id });
 
   const homeNav = page.getByRole("navigation", { name: "Hoofdnavigatie" });
-  const contextAction = page.getByRole("button", { name: "Meer opties" });
+  const contextAction = page.getByRole("button", { name: "Instellingen", exact: true });
   const installAction = page.getByRole("button", { name: "KinkSync installeren" });
   await expect(contextAction).toBeVisible();
   await expect(page.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);

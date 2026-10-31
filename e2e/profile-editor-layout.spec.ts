@@ -44,7 +44,7 @@ test("inline answer keeps its position, saves partial fields and survives clear 
   await expect(page.getByTestId("profile-read-status-yes")).toBeFocused();
   await page.getByTestId("profile-read-status-willing").click();
   const updatedRow = page.locator(`[data-kink-id="${topic.id}"]`);
-  await expect(updatedRow.getByText("Updated context", { exact: true })).toBeVisible();
+  await expect(updatedRow.locator('button[aria-label$=", bewerken"]').getByText("Updated context", { exact: true })).toBeVisible();
   await page.reload();
   await expect(updatedRow).toContainText("Updated context");
   const persisted = await page.evaluate((id) => JSON.parse(localStorage.getItem("kink-profiles")!).state.profiles[0].entries[id], topic.id);
