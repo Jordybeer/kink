@@ -798,8 +798,8 @@ function ScenePage() {
             <section className="mb-5" aria-label="Meest gebruikt">
               <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</h3>
               <div className="grid gap-1">
-                {topKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
-                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" featured onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
+                {topKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k, index) => (
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" featured={index === 0} onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </section>

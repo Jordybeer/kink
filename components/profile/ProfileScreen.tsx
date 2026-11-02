@@ -557,7 +557,7 @@ export default function ProfilePage({ params }: Props) {
                   <button
                     type="button"
                     data-testid="profile-read-private"
-                    onClick={() => { closeEditor(); setPrivateReadOpen((open) => !open); }}
+                    onClick={() => { closeEditor(); if (privateReadOpen) setRevealedPrivateResponses(new Set()); setPrivateReadOpen((open) => !open); }}
                     aria-expanded={privateReadOpen}
                     aria-controls="profile-read-private-content"
                     className="ks-motion-choice focus-ring flex min-h-14 w-full min-w-0 items-center gap-3 rounded-xl py-2 text-left"

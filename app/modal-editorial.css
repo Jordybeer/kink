@@ -5,7 +5,7 @@
 .ks-modal-atmosphere::after {
   content:""; pointer-events:none; position:absolute; border-radius:50%;
   z-index:0; opacity:var(--ambient-layer-opacity,1);
-  filter:blur(38px); will-change:transform;
+  filter:blur(38px);
 }
 .ks-modal-atmosphere::before {
   width:22rem; height:17rem; top:-9rem; right:-8rem;
@@ -56,6 +56,6 @@
 .ks-modal-role[data-selected="true"]::before { content:"";position:absolute;top:12px;bottom:12px;left:0;width:3px;border-radius:4px;background:var(--accent); }
 @keyframes ks-modal-drift {to { transform:translate(15px,-12px) scale(1.035);opacity:.68; }}
 @media (prefers-reduced-motion:reduce) {
-  .ks-modal-atmosphere::before,.ks-modal-atmosphere::after { animation:none;will-change:auto; }
+  .ks-modal-atmosphere::before,.ks-modal-atmosphere::after { animation:none; }
   .ks-modal-choice,.ks-modal-role { transition:none; }
 }

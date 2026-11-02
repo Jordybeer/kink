@@ -100,4 +100,8 @@ test("privéantwoorden behouden het compacte overzicht en veilig inline bewerken
   await expect(privateContent.getByTestId("profile-inline-editor")).toBeVisible();
   await privateToggle.click();
   await expect(page.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  // Collapsing private answers also clears the explicit reveal; reopening must re-mask them.
+  await privateToggle.click();
+  await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  await expect(privateContent.getByRole("button", { name: /Privéantwoord voor .* tonen/ }).first()).toBeVisible();
 });

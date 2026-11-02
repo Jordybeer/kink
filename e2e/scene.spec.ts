@@ -44,6 +44,7 @@ test.describe("Scene planner", () => {
     await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
     await expect(dialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
     await expect(dialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
+    await expect(dialog.locator(".ks-modal-choice-featured")).toHaveCount(1);
     const search = dialog.getByRole("searchbox", { name: "Zoek een interesse" });
     await search.fill("onvindbare-selectie-123");
     await expect(dialog.getByText(/Geen suggesties gevonden/)).toBeVisible();

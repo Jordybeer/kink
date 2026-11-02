@@ -151,7 +151,7 @@ function TitledSheetFrame({
       {scrollable ? (
         <>
           <div
-            className={`min-h-0 min-w-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid="sheet-scroll-body"
           >
             {children}
