@@ -37,6 +37,26 @@ test.describe("Scene planner", () => {
     await expect(page.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })).toBeVisible();
   });
 
+  test("setlist-suggesties gebruiken één scrollvlak met zoeken en een vaste actie", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    const dialog = page.getByRole("dialog", { name: "Kinks toevoegen" });
+    await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(dialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
+    await expect(dialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
+    const search = dialog.getByRole("searchbox", { name: "Zoek een interesse" });
+    await search.fill("onvindbare-selectie-123");
+    await expect(dialog.getByText(/Geen suggesties gevonden/)).toBeVisible();
+    await search.fill("Spanking");
+    await expect(dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true })).toBeVisible();
+    await search.fill("");
+    await dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true }).first().click();
+    await expect(dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true }).first()).toBeDisabled();
+    await expect(dialog.locator('[data-testid="sheet-footer"]')).toContainText("1 item");
+    await dialog.getByRole("button", { name: "Klaar" }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+
   test("geen overflow op mobiel (390px)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/scene?a=pw-alex-001&b=pw-sam-002");
