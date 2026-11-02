@@ -94,6 +94,8 @@ function TitledSheetFrame({
   const quickSheet = variant === "sheet";
   const surface = variant === "surface";
 
+  const sheetAmbient = "linear-gradient(156deg, color-mix(in srgb, var(--accent2) 5%, var(--surface)) 0%, var(--surface) 46%, color-mix(in srgb, var(--accent) 3%, var(--surface)) 100%)";
+
   const frameClassName = quickSheet
     ? scrollable
       ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
@@ -106,8 +108,8 @@ function TitledSheetFrame({
     <div
       className={`min-w-0 w-full max-w-full ${frameClassName}`}
       style={quickSheet
-        ? { background: "var(--surface)", borderTop: "1px solid var(--border)" }
-        : { background: "var(--surface)", borderColor: "var(--border)" }}
+        ? { background: sheetAmbient, borderTop: "1px solid var(--border)" }
+        : { background: sheetAmbient, borderColor: "var(--border)" }}
     >
       {quickSheet && (
         <div className="mb-1 h-7" aria-hidden="true" data-sheet-handle>
@@ -118,8 +120,8 @@ function TitledSheetFrame({
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
         <h2
-          className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
-          style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+          className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : quickSheet ? "text-[23px] font-medium leading-tight" : "text-lg font-bold"}`}
+          style={surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
         >{title}</h2>
         <button
           type="button"
