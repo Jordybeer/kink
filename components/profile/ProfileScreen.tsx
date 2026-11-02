@@ -591,7 +591,7 @@ export default function ProfilePage({ params }: Props) {
                 <DisclosureBody open={privateReadOpen} id="profile-read-private-content"
                   contentClassName="pt-2">
                   <div className="divide-y" style={{ borderColor: "var(--border)" }}>
-                    {privateKinks.map((kink) => (
+                    {privateReadOpen && privateKinks.map((kink) => (
                       <div key={kink.id} style={{ borderColor: "color-mix(in srgb, var(--border) 65%, transparent)" }}>
                         {renderTopic(kink, true, true)}
                       </div>
