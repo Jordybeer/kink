@@ -520,7 +520,7 @@ export default function IntimacyPlanner() {
           Privé en alleen lokaal opgeslagen
         </p>
           <div className="min-w-0 space-y-5">
-            <div className="ks-modal-planner-date grid min-w-0 grid-cols-1 min-[375px]:grid-cols-2 gap-3">
+            <div data-testid="planner-date-time" className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input

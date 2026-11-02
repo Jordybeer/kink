@@ -8,6 +8,7 @@ import {
   useState,
   type CSSProperties,
   type ReactNode,
+  type Ref,
 } from "react";
 import { createPortal } from "react-dom";
 import SheetBackdrop from "@/components/SheetBackdrop";
@@ -17,6 +18,8 @@ import { useFocusTrap } from "@/lib/useFocusTrap";
 const SheetCloseContext = createContext<(() => void) | null>(null);
 
 export type SheetVariant = "sheet" | "task" | "surface";
+
+type SheetTestIds = { header?: string; body?: string; footer?: string };
 
 interface SheetContentProps {
   children: ReactNode;
@@ -74,6 +77,9 @@ interface Props {
   eyebrow?: string;
   subtitle?: string;
   contentSized?: boolean;
+  headerAfter?: ReactNode;
+  scrollBodyRef?: Ref<HTMLDivElement>;
+  testIds?: SheetTestIds;
   "aria-label"?: string;
 }
 
@@ -87,6 +93,9 @@ function TitledSheetFrame({
   eyebrow,
   subtitle,
   contentSized = false,
+  headerAfter,
+  scrollBodyRef,
+  testIds,
   children,
 }: {
   title: string;
@@ -98,6 +107,9 @@ function TitledSheetFrame({
   eyebrow?: string;
   subtitle?: string;
   contentSized?: boolean;
+  headerAfter?: ReactNode;
+  scrollBodyRef?: Ref<HTMLDivElement>;
+  testIds?: SheetTestIds;
   children: ReactNode;
 }) {
   const quickSheet = variant === "sheet";
@@ -128,7 +140,7 @@ function TitledSheetFrame({
         </div>
       )}
       {/* Bound structural spacing so enlarged text retains the reading width. */}
-      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
+      <div data-testid={testIds?.header} className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
@@ -148,11 +160,13 @@ function TitledSheetFrame({
           <X size={20} aria-hidden="true" />
         </button>
       </div>
+      {headerAfter && <div className="mb-3 flex-none">{headerAfter}</div>}
       {scrollable ? (
         <>
           <div
+            ref={scrollBodyRef}
             className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
-            data-testid="sheet-scroll-body"
+            data-testid={testIds?.body ?? "sheet-scroll-body"}
           >
             {children}
           </div>
@@ -160,7 +174,7 @@ function TitledSheetFrame({
             <div
               className="flex-none border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
               style={{ borderColor: "var(--border)" }}
-              data-testid="sheet-footer"
+              data-testid={testIds?.footer ?? "sheet-footer"}
             >
               {footer}
             </div>
@@ -195,6 +209,9 @@ export default function Sheet({
   eyebrow,
   subtitle,
   contentSized = false,
+  headerAfter,
+  scrollBodyRef,
+  testIds,
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
@@ -283,6 +300,9 @@ export default function Sheet({
                       eyebrow={eyebrow}
                       subtitle={subtitle}
                       contentSized={contentSized}
+                      headerAfter={headerAfter}
+                      scrollBodyRef={scrollBodyRef}
+                      testIds={testIds}
                     >
                       {children}
                     </TitledSheetFrame>

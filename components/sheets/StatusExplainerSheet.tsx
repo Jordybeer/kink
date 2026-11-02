@@ -25,6 +25,7 @@ export default function StatusExplainerSheet({ open, onClose }: StatusExplainerS
       onClose={onClose}
       scrollable
       variant="surface"
+      contentSized
       title="Wat betekenen deze keuzes?"
       headerIcon={<Info size={20} weight="duotone" />}
       aria-label="Uitleg keuzes"

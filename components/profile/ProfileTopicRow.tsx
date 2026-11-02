@@ -42,7 +42,7 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
             ref={trigger}
             disabled={!editable || !visible}
             onClick={onToggle}
-            aria-label={`${kink.name} bewerken`}
+            aria-label={`${kink.name}, bewerken`}
             aria-expanded={selected && open}
             aria-controls={id}
             className="ks-motion-choice focus-ring min-w-0 flex-1 rounded-lg text-left disabled:cursor-default"
