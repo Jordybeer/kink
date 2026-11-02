@@ -1,6 +1,8 @@
 import { test, expect } from "@playwright/test";
 import { seedProfiles, seedAndGo, PROFILE_ALEX, PROFILE_SAM } from "./fixtures";
 
+import { expectContentHeightBudget, expectHomeHeightBudget } from "./home-navigation";
+
 const SHARED_SAM = { ...PROFILE_SAM, isImported: true, origin: "shared" as const };
 const EMPTY_HOME_VIEWPORTS = [
   { width: 320, height: 667 },
@@ -24,6 +26,7 @@ test.describe("Home page — leeg", () => {
       const stage = emptyCard.locator("xpath=ancestor::main");
 
       await expect(masthead).toBeVisible();
+      await expectHomeHeightBudget(page);
       await expect(wordmark).toBeVisible();
       await expect(subtitle).toHaveCount(1);
       await expect(emptyCard).toBeVisible();
@@ -428,6 +431,22 @@ for (const theme of ["light", "dark"] as const) {
       }
     }
     await page.context().setOffline(false);
-    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-clarity-${theme}-320-text-200.png`, fullPage: true });
+    await expectHomeHeightBudget(page);
+    const stage = page.locator("main");
+    const expectedMinimum = await masthead.evaluate((element) => window.innerHeight - element.getBoundingClientRect().height);
+    expect(await stage.evaluate((element) => Number.parseFloat(getComputedStyle(element).minHeight))).toBeCloseTo(expectedMinimum, 0);
+    await page.evaluate(() => window.scrollTo(0, 80));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
+    await expect.poll(async () => (await masthead.boundingBox())?.y).toBe(0);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-reload-${theme}-320-text-200.png`, fullPage: false });
+    await page.getByRole("link", { name: "Over KinkSync", exact: true }).click();
+    await expect(page).toHaveURL(/\/about$/);
+    await expectContentHeightBudget(page);
+    await page.getByRole("link", { name: "Terug", exact: true }).click();
+    await expect(page).toHaveURL(/\/$/);
+    await expectHomeHeightBudget(page);
+    await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
+    await page.setViewportSize({ width: 390, height: 667 });
+    await expectHomeHeightBudget(page);
   });
 }

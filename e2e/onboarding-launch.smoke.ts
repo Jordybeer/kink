@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { expectHomeHeightBudget } from "./home-navigation";
 
 async function freshStart(page: Page) {
   await page.goto("/");
@@ -32,6 +33,10 @@ test("onboarding blijft bruikbaar van telefoon tot desktop", async ({ page }, te
 
   const dialog = page.getByRole("dialog", { name: "Welkom bij KinkSync" });
   await expect(dialog).toBeVisible();
+  await expect(page.locator("[data-home-masthead]")).toHaveCount(0);
+  expect(await page.locator("html").evaluate((element) =>
+    element.style.getPropertyValue("--home-masthead-h"),
+  )).toBe("");
   await expectWithinVisualViewport(dialog);
   await expectNoHorizontalOverflow(page);
   await expect(page.getByRole("button", { name: "Begin", exact: true })).toBeVisible();
@@ -71,4 +76,5 @@ test("onboarding blijft bruikbaar van telefoon tot desktop", async ({ page }, te
   await expect(page.getByRole("button", { name: /^Scan gedeeld profiel\b/ })).toBeVisible();
   await expect(page.getByRole("button", { name: "Importeer back-up", exact: true })).toBeVisible();
   await expectNoHorizontalOverflow(page);
+  await expectHomeHeightBudget(page);
 });
