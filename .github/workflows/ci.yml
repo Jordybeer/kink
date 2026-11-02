@@ -39,7 +39,7 @@ jobs:
   # a slow GitHub runner into a false product failure.
   scene-rehearsal:
     name: Browser and device rehearsal
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 45
     # Do not make the regular and production-browser rehearsals for one PR fight
     # for downloads/build resources at the same time. Other PRs remain independent.
@@ -108,7 +108,7 @@ jobs:
   # gate, but serialize it with the regular browser rehearsal for this candidate.
   pwa-rehearsal:
     name: Production offline web rehearsal
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 40
     concurrency:
       group: browser-${{ github.repository }}-${{ github.event.pull_request.number || github.ref_name }}
