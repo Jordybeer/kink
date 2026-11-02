@@ -48,7 +48,7 @@ test.describe("Scene planner", () => {
     await search.fill("onvindbare-selectie-123");
     await expect(dialog.getByText(/Geen suggesties gevonden/)).toBeVisible();
     await search.fill("Spanking");
-    await expect(dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true }).first()).toBeVisible();
     await search.fill("");
     await dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true }).first().click();
     await expect(dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen", exact: true }).first()).toBeDisabled();
