@@ -12,7 +12,7 @@ import {
   Sparkle,
   UserCirclePlus,
 } from "@phosphor-icons/react";
-import Sheet, { SheetContent } from "@/components/Sheet";
+import Sheet from "@/components/Sheet";
 import { QUESTIONNAIRE_INTERESTS } from "@/lib/questionnaire";
 import {
   createPerspectiveProfiles,
@@ -60,7 +60,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   const nameId = useId();
   const experienceId = useId();
   const experienceHintId = useId();
-  const scrollRef = useRef<HTMLDivElement | null>(null);
   const createInFlightRef = useRef(false);
   const [step, setStep] = useState<Step>(0);
   const [name, setName] = useState("");
@@ -85,8 +84,9 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   }, [open]);
 
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: 0 });
-  }, [step]);
+    if (!open) return;
+    document.querySelector<HTMLElement>('[role="dialog"][aria-label="Nieuw profiel maken"] [data-testid="sheet-scroll-body"]')?.scrollTo({ top: 0 });
+  }, [step, open]);
 
   function toggleInterest(interest: QuestionnaireInterest) {
     setInterests((current) =>
@@ -163,55 +163,58 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
   const title = step === 0 ? "Wie ben je hier?" : "Wat wil je verkennen?";
 
   return (
-    <Sheet open={open} onClose={onClose} scrollable aria-label="Nieuw profiel maken">
-      <SheetContent
-        showClose={false}
-        className="max-h-[calc(100dvh-env(safe-area-inset-top))] overflow-hidden px-0 pb-0 pt-3"
-        style={{ background: "var(--profile-form-surface)" }}
-      >
-        <div className="px-5">
-          <div className="flex items-center gap-3 mb-4">
-            <div
-              className="w-11 h-11 rounded-2xl flex items-center justify-center flex-none"
-              style={{
-                background: "color-mix(in srgb, var(--accent) 14%, var(--profile-form-control-surface))",
-                color: "var(--accent)",
-                border: "1px solid var(--border-accent)",
-              }}
-            >
-              {step === 0
-                ? <UserCirclePlus aria-hidden="true" size={22} weight="duotone" />
-                : <Sparkle aria-hidden="true" size={22} weight="duotone" />}
-            </div>
-            <div className="min-w-0">
-              <p className="text-xs uppercase tracking-[0.18em]" style={{ color: "var(--text2)" }}>
-                Stap {step + 1} van 2
-              </p>
-              <h2
-                className="text-2xl leading-tight"
-                style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}
-              >
-                {title}
-              </h2>
-            </div>
-          </div>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title={title}
+      headerIcon={step === 0 ? <UserCirclePlus size={20} weight="duotone" /> : <Sparkle size={20} weight="duotone" />}
+      variant="surface"
+      scrollable
+      aria-label="Nieuw profiel maken"
+      footer={
+        <div
+          className="grid grid-cols-[auto_minmax(0,1fr)] gap-2"
+          
+        >
+          <button
+            type="button"
+            onClick={step === 0 ? onClose : () => setStep(0)}
+            disabled={isCreating}
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+            style={{ background: "var(--profile-form-control-surface)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
+          >
+            {step === 0 ? "Annuleer" : <><ArrowLeft size={16} aria-hidden="true" /> Terug</>}
+          </button>
+          <button
+            type="button"
+            onClick={step === 0 ? continueFromIdentity : create}
+            disabled={isCreating}
+            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+          >
+            {step === 1
+              ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Start vragen")
+              : "Verder"}
+            {step === 0 && <ArrowRight size={16} weight="bold" aria-hidden="true" />}
+          </button>
+        </div>
+      }
+    >
 
-          <div className="grid grid-cols-2 gap-2 mb-5" aria-hidden="true">
+        <div className="mb-5">
+          <p className="mb-3 text-xs font-semibold" style={{ color: "var(--text2)" }}>Stap {step + 1} van 2</p>
+          <div className="grid grid-cols-2 gap-2" role="progressbar" aria-label="Voortgang profielaanmaak"
+            aria-valuemin={0} aria-valuemax={2} aria-valuenow={step + 1}>
             {[0, 1].map((index) => (
-              <div
-                key={index}
-                className="h-1 rounded-full transition-colors"
-                style={{ background: index <= step ? "var(--accent)" : "var(--profile-form-muted-surface)" }}
+              <span key={index} aria-hidden="true"
+                className="ks-motion-state h-1 rounded-full"
+                style={{ background: index <= step ? "var(--accent)" : "var(--surface3)" }}
               />
             ))}
           </div>
         </div>
 
-        <div
-          ref={scrollRef}
-          className="overflow-y-auto overscroll-contain px-5 pb-5"
-          style={{ maxHeight: "calc(100dvh - 210px)" }}
-        >
+        <div className="pb-3">
           {step === 0 && (
             <div className="ks-fade-in">
               <label htmlFor={nameId} className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
@@ -239,7 +242,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 <legend className="text-sm font-semibold mb-2" style={{ color: "var(--text2)" }}>
                   Kant van de dynamiek
                 </legend>
-                <div className="grid gap-2">
+                <div className="overflow-hidden divide-y rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
                   {DIRECTIONS.map(({ value, label, description, icon: Icon }) => {
                     const active = direction === value;
                     return (
@@ -251,16 +254,15 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                           setNameError(null);
                         }}
                         aria-pressed={active}
-                        className="ks-motion-choice focus-ring w-full min-h-[78px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
+                        className="ks-motion-choice ks-motion-state focus-ring w-full min-h-[68px] px-3 py-2.5 flex items-center gap-3 text-left"
                         style={active
                           ? {
                               background: "color-mix(in srgb, var(--accent) 11%, var(--profile-form-control-surface))",
-                              border: "1px solid var(--accent)",
-                            }
-                          : { background: "var(--profile-form-control-surface)", border: "1px solid var(--control-border)" }}
+                              }
+                          : { background: "var(--profile-form-control-surface)" }}
                       >
                         <span
-                          className="w-11 h-11 rounded-full flex items-center justify-center flex-none"
+                          className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
                           style={{
                             background: active ? "var(--accent)" : "var(--profile-form-muted-surface)",
                             color: active ? "var(--on-accent)" : "var(--text2)",
@@ -330,7 +332,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
                 Kies wat nu relevant voelt. Die onderwerpen verschijnen eerder. Je antwoorden worden nooit voorspeld of ingevuld.
               </p>
-              <div className="grid gap-2">
+              <div className="overflow-hidden divide-y rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
                 {QUESTIONNAIRE_INTERESTS.map((interest) => {
                   const active = interests.includes(interest.value);
                   return (
@@ -339,17 +341,16 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       type="button"
                       onClick={() => toggleInterest(interest.value)}
                       aria-pressed={active}
-                      className="ks-motion-choice focus-ring min-h-[66px] rounded-2xl px-3.5 py-3 flex items-center gap-3 text-left"
+                      className="ks-motion-choice ks-motion-state focus-ring min-h-[62px] px-3 py-2.5 flex items-center gap-3 text-left"
                       style={active
                         ? {
                             background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",
-                            border: "1px solid var(--accent)",
-                          }
-                        : { background: "var(--profile-form-control-surface)", border: "1px solid var(--control-border)" }}
+                            }
+                        : { background: "var(--profile-form-control-surface)" }}
                     >
                       <span
                         aria-hidden="true"
-                        className="w-6 h-6 rounded-full flex items-center justify-center flex-none"
+                        className="w-7 h-7 rounded-full flex items-center justify-center flex-none"
                         style={{
                           background: active ? "var(--accent)" : "var(--profile-form-muted-surface)",
                           color: active ? "var(--on-accent)" : "transparent",
@@ -375,33 +376,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           )}
         </div>
 
-        <div
-          className="grid grid-cols-[auto_1fr] gap-2 px-5 pt-3 pb-[calc(1rem+env(safe-area-inset-bottom))]"
-          style={{ background: "var(--profile-form-surface)", borderTop: "1px solid var(--border)" }}
-        >
-          <button
-            type="button"
-            onClick={step === 0 ? onClose : () => setStep(0)}
-            disabled={isCreating}
-            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--profile-form-control-surface)", color: "var(--text2)", border: "1px solid var(--control-border)" }}
-          >
-            {step === 0 ? "Annuleer" : <><ArrowLeft size={16} aria-hidden="true" /> Terug</>}
-          </button>
-          <button
-            type="button"
-            onClick={step === 0 ? continueFromIdentity : create}
-            disabled={isCreating}
-            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-          >
-            {step === 1
-              ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Start vragen")
-              : "Verder"}
-            {step === 0 && <ArrowRight size={16} weight="bold" aria-hidden="true" />}
-          </button>
-        </div>
-      </SheetContent>
     </Sheet>
   );
 }
