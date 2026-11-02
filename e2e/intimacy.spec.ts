@@ -48,6 +48,9 @@ test.describe("Intimiteitsagenda", () => {
 
     const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
     await expect(planDialog).toBeVisible();
+    await expect(planDialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(planDialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
+    await expect(planDialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
     const viewportWidth = page.viewportSize()!.width;
     const planDialogBox = await planDialog.boundingBox();
     expect(planDialogBox?.x).toBeGreaterThanOrEqual(0);
