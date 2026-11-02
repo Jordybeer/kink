@@ -46,7 +46,9 @@ for (const encrypted of [false, true]) {
 test("invalid backup and back navigation never finish onboarding", async ({ page }) => {
   await openRestore(page);
   await page.getByLabel("Kies een backupbestand").setInputFiles({ name: "backup.json", mimeType: "application/json", buffer: Buffer.from("{}") });
-  await expect(page.getByRole("alert")).toBeVisible();
+  const importError = page.getByRole("main").getByRole("alert");
+  await expect(importError).toBeVisible();
+  await expect(importError).toHaveText("Ongeldig bestand: geen geldige KinkSync-backup gevonden.");
   await expect(page.getByRole("button", { name: "Verder met mijn gegevens" })).toHaveCount(0);
   await page.getByRole("button", { name: "Terug naar de introductie" }).click();
   await expect(page.getByRole("button", { name: "Begin", exact: true })).toBeVisible();

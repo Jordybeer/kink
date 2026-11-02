@@ -3,12 +3,13 @@ import { useState, useEffect, useRef } from "react";
 import { formatTime, parseTime } from "@/lib/timeUtils";
 
 interface TimePickerProps {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   disabled?: boolean;
 }
 
-export default function TimePicker({ value, onChange, disabled = false }: TimePickerProps) {
+export default function TimePicker({ id, value, onChange, disabled = false }: TimePickerProps) {
   const parsed = parseTime(value);
   const [open, setOpen] = useState(false);
   const [hour, setHour] = useState(parsed?.hour ?? 20);
@@ -41,11 +42,12 @@ export default function TimePicker({ value, onChange, disabled = false }: TimePi
   return (
     <div className="relative flex-none">
       <button
+        id={id}
         ref={buttonRef}
         type="button"
         disabled={disabled}
         onClick={() => setOpen((o) => !o)}
-        aria-label="Tijd kiezen"
+        aria-label={id ? undefined : "Tijd kiezen"}
         className="ks-motion-choice focus-ring rounded-lg px-2 text-sm tabular-nums disabled:opacity-50"
         style={{
           background: "var(--surface2)",

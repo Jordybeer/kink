@@ -3,120 +3,106 @@ import { KINKS } from "../lib/kinks";
 import type { Profile } from "../types";
 import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 
-test("mature profile read view is status-first, private-safe and readable in both themes", async ({ page }, testInfo) => {
-  const impact = KINKS.filter((kink) => kink.category === "impact");
-  const bondage = KINKS.filter((kink) => kink.category === "bondage");
+const topic = KINKS.find((kink) => kink.description && kink.safetyNote)!;
+const yesContent = "#profile-read-status-yes-content";
+
+test("status filters preserve the hero, boundaries, empty selections, deep links and browser history", async ({ page }) => {
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}?interests=willing`, [PROFILE_ALEX]);
+  const hero = page.getByTestId("profile-summary");
+  await expect(hero).toBeVisible();
+  await expect(page.locator("#profile-read-status-willing-content")).toContainText("Lichte sessies");
+  await expect(page.getByTestId("profile-read-hard-limits")).toContainText("Breath restriction / neck pressure");
+  const filters = page.getByRole("group", { name: "Antwoordstatus" });
+  await expect(filters.getByRole("button")).toHaveCount(5);
+  await page.getByTestId("profile-read-status-yes").click();
+  await expect(page).toHaveURL(/interests=yes/);
+  await expect(hero).toBeVisible();
+  await expect(page.locator(yesContent)).toContainText("Klassiek en heerlijk");
+  await page.getByTestId("profile-read-status-maybe").click();
+  await expect(page.locator("#profile-read-status-maybe-content")).toContainText("Nog geen openbare antwoorden met deze status.");
+  await expect(page.getByTestId("profile-read-status-maybe")).toHaveAttribute("aria-pressed", "true");
+  await page.reload();
+  await expect(page.locator("#profile-read-status-maybe-content")).toBeVisible();
+  await expect(hero).toBeVisible();
+  await page.goBack();
+  await expect(page.locator(yesContent)).toBeVisible();
+  await expect(hero).toBeVisible();
+  await page.goForward();
+  await expect(page.locator("#profile-read-status-maybe-content")).toBeVisible();
+  await page.getByTestId("profile-read-status-hard_no").click();
+  await expect(page.getByTestId("profile-read-hard-limits")).toBeVisible();
+  await expect(page.getByTestId("profile-read-hard-limits").getByText("Breath restriction / neck pressure", { exact: true })).toHaveCount(1);
+  await expect(page.locator(yesContent)).toHaveCount(0);
+});
+
+test("Profile overview and inline editor wrap at mobile, desktop and 320px with enlarged text in both themes", async ({ page }, testInfo) => {
+  const longName = `Eigen onderwerp ${"langenaam".repeat(12)}`;
   const profile: Profile = {
     ...PROFILE_ALEX,
-    name: "Alexandra" + "langealias".repeat(18),
-    entries: Object.fromEntries(KINKS.map((kink) => [kink.id, { status: "willing", comment: "" }])),
+    name: "Alexandra" + "langealias".repeat(12),
+    customKinks: [{ id: "custom_long", name: longName }],
+    entries: {
+      [topic.id]: { status: "yes", comment: "Context met afspraken." },
+      choking: { status: "hard_no", comment: `Geenuitzonderingen${"x".repeat(120)}` },
+      custom_long: { status: "yes", comment: "Zelf gekozen context." },
+    },
   };
-
-  impact.slice(0, 4).forEach((kink) => {
-    profile.entries[kink.id] = { status: "yes", comment: "" };
-  });
-  const longBoundaryNote = `Geenuitzonderingen${"x".repeat(180)}🙂`;
-  impact.slice(4, 7).forEach((kink, index) => {
-    profile.entries[kink.id] = { status: "hard_no", comment: index === 0 ? longBoundaryNote : "" };
-  });
-  profile.entries[bondage[0].id] = {
-    status: "yes",
-    comment: "Privé context",
-    tags: ["privégeheim"],
-    curious: true,
-    privateResponse: true,
-  };
-
-  profile.entries[KINKS[KINKS.length - 1].id] = { status: "maybe", comment: "" };
-  profile.entries[KINKS[KINKS.length - 2].id] = { status: "no", comment: "" };
-
-  await page.setViewportSize({ width: 390, height: 844 });
+  await page.setViewportSize({ width: testInfo.project.name === "mobile" ? 390 : 1280, height: testInfo.project.name === "mobile" ? 844 : 900 });
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await seedAndGo(page, `/profile/${profile.id}`, [profile]);
-
+  await seedAndGo(page, `/profile?id=${profile.id}`, [profile]);
+  const overview = page.getByRole("region", { name: "Profieloverzicht" });
+  const assertFit = async () => {
+    await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
+    await expect.poll(() => overview.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+    for (const control of await overview.locator('button:visible').all()) {
+      const box = (await control.boundingBox())!;
+      expect(box.height).toBeGreaterThanOrEqual(44);
+      expect(box.x).toBeGreaterThanOrEqual(0);
+      expect(box.x + box.width).toBeLessThanOrEqual((await page.viewportSize())!.width + 1);
+    }
+  };
   for (const theme of ["light", "dark"] as const) {
     await page.emulateMedia({ colorScheme: theme, reducedMotion: "reduce" });
     await expect(page.locator("html")).toHaveAttribute("data-theme", theme);
-
-    const hardLimits = page.getByTestId("profile-read-hard-limits");
-    await expect(hardLimits).toBeVisible();
-    for (const kink of impact.slice(4, 7)) {
-      await expect(hardLimits.getByText(kink.name, { exact: true })).toBeVisible();
-    }
-    await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
-
-    const yes = page.getByTestId("profile-read-status-yes");
-    const yesSummary = page.getByTestId("profile-read-status-yes-summary");
-    await expect(yes).toHaveAccessibleName(/Heel graag, .* antwoorden/);
-    await expect(yesSummary.getByText(impact[0].name, { exact: true })).toBeVisible();
-    await expect(yesSummary).not.toContainText(bondage[0].name);
-    await expect(yesSummary).not.toContainText("Privé context");
-    await expect(yesSummary).not.toContainText("privégeheim");
-
-    const privateSection = page.getByTestId("profile-read-private");
-    await expect(privateSection).toContainText("1");
-    await expect(page.locator("#profile-read-private-content")).toBeHidden();
-
-    await yes.focus();
-    await page.keyboard.press("Enter");
-    await expect(page).toHaveURL(/interests=yes/);
-    await expect(page.getByTestId("profile-summary")).toHaveCount(0);
-    const browser = page.getByRole("region", { name: "Interesses & grenzen" });
-    const yesContent = page.locator("#profile-read-status-yes-content");
-    await expect(page.getByLabel("Hoofdnavigatie").getByRole("link", { name: "Terug", exact: true })).toHaveAttribute("href", `/profile?id=${profile.id}#profile-interests-title`);
-    await expect(yesContent).toBeVisible();
-    await expect(yesContent.getByText("Impact Play", { exact: true })).toBeVisible();
-    await expect(browser).not.toContainText("Privé context");
-    await expect(browser).not.toContainText("privégeheim");
-    await expect.poll(() => yesContent.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-
-    await browser.getByRole("link", { name: /^Ja,/ }).click();
-    await expect(page).toHaveURL(/interests=willing/);
-    await expect(yesContent).toHaveCount(0);
-    const willingContent = page.locator("#profile-read-status-willing-content");
-    await expect(willingContent).toBeVisible();
-    await expect(willingContent).not.toContainText(bondage[0].name);
-    await page.reload();
-    await expect(willingContent).toBeVisible();
-    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-interest-browser-${theme}.png`, fullPage: false });
-
-    await page.goBack();
-    await expect(page.getByTestId("profile-summary")).toBeVisible();
-    await page.goForward();
-    await expect(willingContent).toBeVisible();
-    await browser.getByRole("link", { name: "Terug naar profiel" }).click();
-    await expect(page.getByTestId("profile-summary")).toBeVisible();
-    await expect(yesSummary).toBeVisible();
-    await expect(page.getByTestId("profile-read-hard-limits")).toBeVisible();
-
-    if (testInfo.project.name === "mobile" && theme === "dark") {
-      await page.setViewportSize({ width: 320, height: 844 });
-      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-
-      await page.locator("html").evaluate((element) => {
-        element.style.fontSize = "200%";
-      });
-      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-      await expect(hardLimits.getByText(longBoundaryNote, { exact: true })).toBeVisible();
-      await page.getByTestId("profile-read-status-yes").click();
-      await expect(page.getByRole("region", { name: "Interesses & grenzen" })).toBeVisible();
-      await expect.poll(() => page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)).toBe(true);
-      await expect.poll(() => page.locator("#profile-read-status-yes-content").evaluate((node) => {
-        const header = node.parentElement!.previousElementSibling!.getBoundingClientRect();
-        const navHeight = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--nav-h")) || 112;
-        return header.height + navHeight < window.innerHeight - 160;
-      })).toBe(true);
-      await page.getByRole("link", { name: "Terug naar profiel" }).click();
-      await page.locator("html").evaluate((element) => {
-        element.style.fontSize = "";
-      });
-      await page.setViewportSize({ width: 390, height: 844 });
-    }
-
     await page.evaluate(async () => { await document.fonts.ready; });
-    await page.screenshot({
-      path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-status-first-${theme}.png`,
-      fullPage: true,
-    });
+    await assertFit();
+    await page.getByTestId("profile-read-status-yes").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-inline-overview-${theme}.png`, fullPage: false });
+    const row = page.locator(`[data-kink-id="${topic.id}"]`);
+    await row.locator('button[aria-label$=", bewerken"]').click();
+    await row.getByTestId("profile-inline-editor").scrollIntoViewIfNeeded();
+    await assertFit();
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-inline-editor-${theme}.png`, fullPage: false });
+    await row.getByRole("button", { name: "Klaar", exact: true }).click();
+  }
+  await page.setViewportSize({ width: 320, height: 844 });
+  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+  const custom = page.locator('[data-kink-id="custom_long"]');
+  await custom.locator('button[aria-label$=", bewerken"]').click();
+  await custom.getByRole("button", { name: "Details", exact: true }).click();
+  await custom.getByLabel("Persoonlijke context").fill("Context" + "x".repeat(150));
+  await assertFit();
+  await expect(custom.getByText(longName, { exact: true })).toBeVisible();
+  await expect.poll(() => custom.evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
+  await custom.getByRole("button", { name: "Details", exact: true }).scrollIntoViewIfNeeded();
+  await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/profile-inline-320-text-200.png`, fullPage: false });
+});
+
+test("shared and imported profiles disclose no private data and cannot edit answers", async ({ page }) => {
+  for (const ownership of [{ origin: "shared" as const }, { origin: "own" as const, isImported: true }]) {
+    const profile: Profile = { ...PROFILE_ALEX, ...ownership, entries: {
+      [topic.id]: { status: "yes", comment: "Public context" },
+      custom_pw001: { status: "hard_no", comment: "Secret comment", tags: ["secret tag"], privateResponse: true },
+    } };
+    await seedAndGo(page, `/profile?id=${profile.id}&interests=yes`, [profile]);
+    await expect(page.getByTestId("profile-summary")).toBeVisible();
+    await expect(page.locator(yesContent)).toContainText("Public context");
+    await expect(page.getByTestId("profile-read-status-hard_no")).toHaveAccessibleName("Harde grens, 0 antwoorden");
+    await expect(page.getByTestId("profile-read-private")).toHaveCount(0);
+    await expect(page.getByText("Secret comment", { exact: true })).toHaveCount(0);
+    await expect(page.getByText("secret tag", { exact: true })).toHaveCount(0);
+    await expect(page.locator('button[aria-label$=", bewerken"]')).toHaveCount(0);
+    await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toHaveCount(0);
   }
 });

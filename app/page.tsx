@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight, Camera, Sparkle, UploadSimple, UserPlus, X } from "@phosphor-icons/react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import type { Profile, ProfileIdentityAnchorMethod } from "@/types";
 import type { EncryptedBackup } from "@/lib/crypto";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -69,6 +70,8 @@ function HomeContent() {
 
   useEffect(() => () => importOperation.current?.abort(), []);
 
+  const scanTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const restoreScanFocusRef = useRef(false);
   const [scanOpen, setScanOpen] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
   const [importTransfer, setImportTransfer] = useState<Profile[] | null>(null);
@@ -83,6 +86,13 @@ function HomeContent() {
   const importOperationGuard = importOperationGuardRef.current;
   useEffect(() => () => importOperationGuard.invalidate(), [importOperationGuard]);
   const importPreview = importTransfer?.[0] ?? null;
+  useEffect(() => {
+    if (scanOpen || !restoreScanFocusRef.current) return;
+    restoreScanFocusRef.current = false;
+    // Restore after the scanner's portal and focus-trap cleanup, even when
+    // paste autofocus or touch activation obscured its original trigger.
+    if (!importPreview) scanTriggerRef.current?.focus({ preventScroll: true });
+  }, [scanOpen, importPreview]);
   const persistedAnchors = importTransfer ? readProfileIdentityAnchorRegistry().anchors : [];
   const importIdentities = importTransfer?.map((candidate) =>
     classifyProfileImportWithIdentityAnchor(profiles, candidate, persistedAnchors)) ?? [];
@@ -177,8 +187,7 @@ function HomeContent() {
   async function handleImportFile(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
-    if (!file) return;
-    importOperation.current?.abort();
+    if (!file || importOperation.current) return;
     const controller = new AbortController();
     importOperation.current = controller;
     setImportError(null);
@@ -424,9 +433,8 @@ function HomeContent() {
         {profiles.length > 0 ? (
           <div
             data-home-profile-actions
-            className="mt-4 mb-5 flex flex-col"
+            className="mb-5 flex flex-col"
             style={{
-              borderTop: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
               borderBottom: "1px solid color-mix(in srgb, var(--border) 72%, transparent)",
             }}
           >
@@ -442,6 +450,7 @@ function HomeContent() {
 
             {!importPreview && (
               <button
+                ref={scanTriggerRef}
                 type="button"
                 onClick={() => {
                   setScanError(null);
@@ -459,14 +468,14 @@ function HomeContent() {
         ) : (
           <section
             data-home-empty-card
-            className="mx-auto w-full max-w-xl overflow-hidden rounded-[28px] px-4 pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-5 sm:pb-7 sm:pt-5"
+            className="@container/home-empty mx-auto w-full max-w-xl [overflow-wrap:anywhere] rounded-[28px] px-[16px] pb-6 pt-4 max-[321px]:pb-4 max-[321px]:pt-3 sm:px-[20px] sm:pb-7 sm:pt-5"
             style={{
               background: "linear-gradient(145deg, color-mix(in srgb, var(--identity-a) 8%, var(--surface2)), color-mix(in srgb, var(--identity-b) 6%, var(--surface)))",
               border: "1px solid color-mix(in srgb, var(--border-accent) 62%, var(--identity-border))",
               boxShadow: "0 18px 44px color-mix(in srgb, var(--identity-a) 7%, transparent)",
             }}
           >
-            <div className="px-2 pb-8 pt-1 max-[321px]:pb-7 text-center">
+            <div className="px-2 pb-6 pt-1 max-[321px]:pb-5 text-center @max-[12rem]/home-empty:px-0">
               <span
                 className="mx-auto flex h-9 w-9 items-center justify-center rounded-full"
                 style={{
@@ -489,81 +498,78 @@ function HomeContent() {
               </p>
             </div>
 
-            <div className="grid gap-3.5">
+            <div className="grid gap-3 max-[321px]:gap-1.5">
               <button
                 type="button"
                 onClick={() => setFormOpen(true)}
-                className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left hover:opacity-95"
+                className="ks-motion-choice focus-ring flex min-h-[72px] w-full items-center gap-[12px] rounded-2xl px-[14px] py-3 text-left hover:opacity-95 @max-[12rem]/home-empty:flex-wrap"
                 style={{
                   background: "color-mix(in srgb, var(--accent) 13%, var(--surface2))",
                   border: "1px solid color-mix(in srgb, var(--accent) 34%, var(--border))",
                 }}
               >
                 <span
-                  className="flex h-11 w-11 flex-none items-center justify-center rounded-full"
+                  className="flex h-[44px] w-[44px] flex-none items-center justify-center rounded-full"
                   style={{ background: "var(--accent)", color: "var(--on-accent)" }}
                 >
                   <UserPlus size={20} weight="duotone" aria-hidden="true" />
                 </span>
-                <span className="min-w-0 flex-1">
+                <span className="min-w-0 flex-1 @max-[12rem]/home-empty:order-last @max-[12rem]/home-empty:basis-full">
                   <span className="block text-sm font-semibold">Maak mijn profiel</span>
                   <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
                     Kies wat bij jou past
                   </span>
                 </span>
-                <ArrowRight size={17} weight="bold" aria-hidden="true" className="flex-none" style={{ color: "var(--accent)" }} />
+                <ArrowRight size={17} weight="bold" aria-hidden="true" className="flex-none @max-[12rem]/home-empty:ml-auto" style={{ color: "var(--accent)" }} />
               </button>
 
               {!importPreview && (
                 <button
+                  ref={scanTriggerRef}
                   type="button"
                   onClick={() => {
                     setScanError(null);
                     setScanOpen(true);
                   }}
-                  className="ks-motion-choice focus-ring flex min-h-[68px] w-full items-center gap-3 rounded-2xl px-3.5 py-3 text-left"
-                  style={{
-                    background: "color-mix(in srgb, var(--surface2) 82%, transparent)",
-                    border: "1px solid var(--border)",
-                  }}
+                  className="ks-motion-choice focus-ring flex min-h-[68px] w-full items-center gap-[12px] px-[14px] py-3 text-left hover:opacity-90 active:opacity-75 @max-[12rem]/home-empty:flex-wrap"
                 >
                   <span
-                    className="flex h-10 w-10 flex-none items-center justify-center rounded-full"
-                    style={{ background: "var(--surface3)", color: "var(--text2)" }}
+                    className="flex h-[40px] w-[40px] flex-none items-center justify-center rounded-full"
+                    style={{ color: "var(--text2)" }}
                   >
                     <Camera size={18} aria-hidden="true" />
                   </span>
-                  <span className="min-w-0 flex-1">
+                  <span className="min-w-0 flex-1 @max-[12rem]/home-empty:order-last @max-[12rem]/home-empty:basis-full">
                     <span className="block text-sm font-semibold">Scan gedeeld profiel</span>
                     <span className="mt-0.5 block text-xs leading-5" style={{ color: "var(--text2)" }}>
                       Bekijk wat iemand met je heeft gedeeld
                     </span>
                   </span>
-                  <ArrowRight size={16} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
+                  <ArrowRight size={16} aria-hidden="true" className="flex-none @max-[12rem]/home-empty:ml-auto" style={{ color: "var(--text2)" }} />
                 </button>
               )}
 
-              <button
-                type="button"
-                onClick={() => backupInputRef.current?.click()}
-                className="ks-motion-choice focus-ring flex min-h-12 w-full items-center gap-3 rounded-xl px-3.5 text-left hover:opacity-90 active:opacity-75"
-                style={{
-                  borderTop: "1px solid color-mix(in srgb, var(--border) 62%, transparent)",
-                  color: "var(--text2)",
-                }}
-              >
-                <UploadSimple size={18} aria-hidden="true" className="flex-none" style={{ color: "var(--identity-a)" }} />
-                <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-semibold" style={{ color: "var(--text)" }}>Backup herstellen</span>
-                  <span className="mt-0.5 block text-xs leading-5">Ga verder met een bestaande KinkSync-backup</span>
-                </span>
-                <ArrowRight size={15} aria-hidden="true" className="flex-none" />
-              </button>
+              <div data-home-backup className="text-center" style={{ color: "var(--text2)" }}>
+                <p className="text-xs leading-4">Heb je al een back-up?</p>
+                <button
+                  type="button"
+                  onClick={() => backupInputRef.current?.click()}
+                  disabled={importReading}
+                  className="ks-motion-choice focus-ring inline-flex min-h-[44px] items-center justify-center gap-2 px-2 text-sm font-medium underline underline-offset-4 hover:opacity-90 disabled:opacity-60"
+                >
+                  <UploadSimple size={17} aria-hidden="true" className="flex-none" />
+                  Importeer back-up
+                </button>
+                <p role={importReading ? "status" : undefined} aria-live="polite" className={importReading ? "text-xs leading-5" : "sr-only"}>
+                  {importReading ? "Back-up lezen…" : ""}
+                </p>
+              </div>
               <input
                 ref={backupInputRef}
                 type="file"
                 accept=".json,application/json"
                 onChange={handleImportFile}
+                disabled={importReading}
                 aria-label="Kies een backupbestand"
                 tabIndex={-1}
                 className="sr-only"
@@ -579,8 +585,10 @@ function HomeContent() {
                 </p>
               )}
             </div>
+            <HomeHelpLinks />
           </section>
         )}
+        {!emptyHome && <HomeHelpLinks />}
       </PageShell>
 
       <ProfileCreateSheet
@@ -603,6 +611,7 @@ function HomeContent() {
         onImportFile={handleImportFile}
         importError={importError}
         importSuccess={importSuccess}
+        importReading={importReading}
       />
 
       <PinFlowSheet
@@ -672,12 +681,14 @@ function HomeContent() {
             } catch {
               importOperationGuard.applyIfCurrent(decodeToken, () => {
                 setScanError("Profielcode is ongeldig of beschadigd.");
+                restoreScanFocusRef.current = true;
                 setScanOpen(false);
               });
             }
           }}
           onClose={() => {
             importOperationGuard.invalidate();
+            restoreScanFocusRef.current = true;
             setScanOpen(false);
           }}
         />
@@ -689,7 +700,21 @@ function HomeContent() {
           className="fixed top-[calc(var(--nav-h)+12px)] left-4 right-4 z-[300] mx-auto max-w-md rounded-xl px-4 py-3 flex items-center gap-3 shadow-lg ks-fade-in"
           style={{ background: "var(--surface)", border: "1px solid var(--hard-no)", color: "var(--hard-no)" }}
         >
-          <span className="text-sm flex-1">{scanError}</span>
+          <div className="min-w-0 flex-1 text-sm">
+            <p>{scanError}</p>
+            <p className="mt-1" style={{ color: "var(--text2)" }}>Vraag een nieuwe code aan de persoon die het profiel deelt.</p>
+            <button
+              type="button"
+              onClick={() => {
+                scanTriggerRef.current?.focus();
+                setScanError(null);
+                setScanOpen(true);
+              }}
+              className="ks-motion-choice focus-ring mt-1 min-h-[44px] py-2 font-semibold underline underline-offset-4"
+            >
+              Opnieuw scannen
+            </button>
+          </div>
           <button
             type="button"
             onClick={() => setScanError(null)}
@@ -883,6 +908,15 @@ function HomeContent() {
         </div>
       </Sheet>
     </>
+  );
+}
+
+function HomeHelpLinks() {
+  return (
+    <nav aria-label="Hulp bij KinkSync" className="mt-2 flex flex-wrap justify-center gap-x-[16px]" style={{ color: "var(--text2)" }}>
+      <Link href="/about" className="ks-motion-choice focus-ring inline-flex min-h-[44px] items-center text-xs underline underline-offset-4 hover:opacity-90">Over KinkSync</Link>
+      <Link href="/security" className="ks-motion-choice focus-ring inline-flex min-h-[44px] items-center text-xs underline underline-offset-4 hover:opacity-90">Privacy &amp; veiligheid</Link>
+    </nav>
   );
 }
 

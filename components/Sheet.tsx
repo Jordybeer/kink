@@ -67,6 +67,7 @@ interface Props {
   onClose: () => void;
   children: ReactNode;
   title?: string;
+  headerIcon?: ReactNode;
   scrollable?: boolean;
   variant?: SheetVariant;
   footer?: ReactNode;
@@ -75,6 +76,7 @@ interface Props {
 
 function TitledSheetFrame({
   title,
+  headerIcon,
   onClose,
   scrollable,
   variant,
@@ -82,6 +84,7 @@ function TitledSheetFrame({
   children,
 }: {
   title: string;
+  headerIcon?: ReactNode;
   onClose: () => void;
   scrollable: boolean;
   variant: SheetVariant;
@@ -96,12 +99,12 @@ function TitledSheetFrame({
       ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
       : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
     : surface
-      ? "flex h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[var(--sheet-gutter)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:pt-3"
+      ? "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
       : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
 
   return (
     <div
-      className={frameClassName}
+      className={`min-w-0 w-full max-w-full ${frameClassName}`}
       style={quickSheet
         ? { background: "var(--surface)", borderTop: "1px solid var(--border)" }
         : { background: "var(--surface)", borderColor: "var(--border)" }}
@@ -111,13 +114,18 @@ function TitledSheetFrame({
           <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
         </div>
       )}
-      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 items-center gap-2 px-1`}>
-        <h2 className="min-w-0 flex-1 text-balance text-lg font-bold">{title}</h2>
+      {/* Bound structural spacing so enlarged text retains the reading width. */}
+      <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
+        {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
+        <h2
+          className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : "text-lg font-bold"}`}
+          style={surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+        >{title}</h2>
         <button
           type="button"
           onClick={onClose}
           aria-label={`${title} sluiten`}
-          className="ks-motion-choice focus-ring flex h-11 w-11 flex-none items-center justify-center rounded-full"
+          className={`ks-motion-choice focus-ring flex ${surface ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
           style={{ color: "var(--text2)" }}
         >
           <X size={20} aria-hidden="true" />
@@ -126,7 +134,7 @@ function TitledSheetFrame({
       {scrollable ? (
         <>
           <div
-            className={`min-h-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 min-w-0 flex-1 scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid="sheet-scroll-body"
           >
             {children}
@@ -163,14 +171,20 @@ export default function Sheet({
   onClose,
   children,
   title,
+  headerIcon,
   scrollable = false,
   variant = "sheet",
   footer,
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
-  const y = useMotionValue(0);
-  const backdropOpacity = useTransform(y, [0, 300], [1, 0]);
+  const y = useMotionValue<number | string>(0);
+  // Entrance/exit uses percentages; only pixel-valued dragging owns dimming.
+  const backdropOpacity = useTransform(y, (value) =>
+    typeof value === "number" && Number.isFinite(value)
+      ? Math.max(0, Math.min(1, 1 - value / 300))
+      : 1,
+  );
   const sheetRef = useRef<HTMLDivElement | null>(null);
   const [mounted, setMounted] = useState(false);
   const quickSheet = variant === "sheet";
@@ -201,11 +215,16 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed left-0 right-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
             data-testid="sheet-visual-viewport"
             style={{
               top: "var(--visual-viewport-offset-top, 0px)",
-              height: "var(--visual-viewport-height, 100dvh)",
+              width: "100vw",
+              // A stale or overflow-inflated JS height cannot exceed the CSS
+              // viewport. A smaller visual viewport still accommodates keyboards.
+              height: variant === "surface"
+                ? "min(var(--visual-viewport-height, 100dvh), 100dvh)"
+                : "var(--visual-viewport-height, 100dvh)",
             }}
           >
             <motion.div
@@ -236,6 +255,7 @@ export default function Sheet({
                   ? (
                     <TitledSheetFrame
                       title={title}
+                      headerIcon={headerIcon}
                       onClose={onClose}
                       scrollable={scrollable}
                       variant={variant}

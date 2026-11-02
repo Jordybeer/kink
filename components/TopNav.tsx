@@ -1,9 +1,9 @@
 "use client";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, Info, ShieldCheck, WifiSlash } from "@phosphor-icons/react";
+import { CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -26,7 +26,6 @@ const contentNavRow: React.CSSProperties = {
 
 export default function TopNav() {
   const path = usePathname();
-  const router = useRouter();
   const hydrated = useHasHydrated();
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
@@ -35,6 +34,8 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const homeMastheadRef = useRef<HTMLElement>(null);
+  const homeMastheadVisible = path === "/" && (!hydrated || onboardingComplete);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -71,6 +72,25 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
+  useLayoutEffect(() => {
+    const masthead = homeMastheadRef.current;
+    if (!homeMastheadVisible || !masthead) return;
+
+    const root = document.documentElement;
+    const updateHeight = () => {
+      // Measure only the intrinsic masthead, never its downstream page budget.
+      // ResizeObserver catches wrapping, font loading, text and viewport changes.
+      root.style.setProperty("--home-masthead-h", `${masthead.getBoundingClientRect().height}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(masthead, { box: "border-box" });
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--home-masthead-h");
+    };
+  }, [homeMastheadVisible]);
+
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
@@ -80,37 +100,16 @@ export default function TopNav() {
   } as const;
 
   if (path === "/") {
-    const homeMenuItems = [
-      {
-        label: "Instellingen",
-        icon: <GearSix size={17} aria-hidden="true" />,
-        onClick: () => {
-          window.requestAnimationFrame(() => {
-            document.querySelector<HTMLButtonElement>('[data-testid="home-topnav-more"]')?.focus();
-            window.dispatchEvent(new CustomEvent("ks:open-settings"));
-          });
-        },
-      },
-      {
-        label: "Over KinkSync",
-        icon: <Info size={17} aria-hidden="true" />,
-        onClick: () => router.push("/about"),
-      },
-      {
-        label: "Security & privacy",
-        icon: <ShieldCheck size={17} aria-hidden="true" />,
-        onClick: () => router.push("/security"),
-      },
-    ];
-
     return (
       <header
         className="sticky top-0 z-40"
-        style={{ ...safeAreaShell, background: "var(--bg)" }}
+        style={{ ...safeAreaShell, pointerEvents: "auto", background: "var(--bg)" }}
+        ref={homeMastheadRef}
         data-home-masthead
       >
+        {/* Keep utility slots fixed while enlarged identity text wraps and grows the masthead. */}
         <nav
-          className="mx-auto grid h-28 max-w-2xl grid-cols-[2.75rem_minmax(0,1fr)_2.75rem] items-start px-[var(--page-gutter)] pt-10 lg:max-w-4xl"
+          className="mx-auto grid min-h-[104px] max-w-2xl grid-cols-[44px_minmax(0,1fr)_44px] items-start px-[var(--page-gutter)] pb-[5px] pt-[32px] lg:max-w-4xl"
           aria-label="Hoofdnavigatie"
           data-top-nav-variant="home"
         >
@@ -120,7 +119,7 @@ export default function TopNav() {
           <div data-home-identity className="min-w-0 text-center">
             <h1
               data-home-nav-wordmark
-              className="serif-safe whitespace-nowrap"
+              className="serif-safe [overflow-wrap:anywhere]"
               style={{
                 fontFamily: "var(--font-display, Georgia, serif)",
                 fontSize: "clamp(2.25rem, 10vw, 2.5rem)",
@@ -128,7 +127,7 @@ export default function TopNav() {
                 lineHeight: 1,
               }}
             >
-              <Wordmark />
+              <Wordmark breakAt={4} />
             </h1>
             <p
               data-home-subtitle
@@ -144,23 +143,20 @@ export default function TopNav() {
             className="justify-self-end"
             style={{ pointerEvents: "auto" }}
           >
-            <ContextMenu
-              open={overflowOpen}
-              onClose={() => setOverflowOpen(false)}
-              items={homeMenuItems}
+            <button
+              type="button"
+              data-testid="home-topnav-settings"
+              onClick={(event) => {
+                event.currentTarget.focus({ preventScroll: true });
+                window.dispatchEvent(new CustomEvent("ks:open-settings"));
+              }}
+              aria-label="Instellingen"
+              aria-haspopup="dialog"
+              className="ks-motion-choice focus-ring flex h-[44px] w-[44px] items-center justify-center rounded-full"
+              style={{ color: "var(--text2)" }}
             >
-              <button
-                type="button"
-                data-testid="home-topnav-more"
-                onClick={() => setOverflowOpen((open) => !open)}
-                aria-label="Meer opties"
-                aria-expanded={overflowOpen}
-                className="focus-ring flex h-11 w-11 items-center justify-center rounded-full"
-                style={{ color: "var(--text2)" }}
-              >
-                <DotsThree size={22} weight="bold" aria-hidden="true" />
-              </button>
-            </ContextMenu>
+              <GearSix size={22} aria-hidden="true" />
+            </button>
           </div>
         </nav>
       </header>
@@ -336,7 +332,7 @@ function OfflineStatus({ compact = false }: { compact?: boolean }) {
       aria-live="polite"
       aria-label="Offline"
       className={compact
-        ? "inline-flex h-9 w-9 items-center justify-center rounded-full text-xs font-medium"
+        ? "inline-flex h-[36px] w-[36px] items-center justify-center rounded-full text-xs font-medium"
         : "inline-flex h-9 flex-none items-center gap-1.5 rounded-full px-2 text-xs font-medium"}
       style={{ color: "var(--hard-no)", background: "color-mix(in srgb, var(--hard-no) 8%, transparent)" }}
     >

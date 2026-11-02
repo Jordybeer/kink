@@ -55,6 +55,11 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
+      - name: Use Ubuntu archive mirrors for browser dependencies
+        run: |
+          # Azure's mirror can trickle package payloads for most of the job budget.
+          # Keep the runner's HTTPS Ubuntu archive/security fallbacks and apt verification.
+          sudo sed -i '\|^http://azure\.archive\.ubuntu\.com/ubuntu/|d' /etc/apt/apt-mirrors.txt
       - run: npx playwright install --with-deps chromium webkit
       - name: Run browser E2E with compact diagnostics
         shell: bash
@@ -117,6 +122,11 @@ jobs:
           node-version: 26
           cache: npm
       - run: npm ci
+      - name: Use Ubuntu archive mirrors for browser dependencies
+        run: |
+          # Azure's mirror can trickle package payloads for most of the job budget.
+          # Keep the runner's HTTPS Ubuntu archive/security fallbacks and apt verification.
+          sudo sed -i '\|^http://azure\.archive\.ubuntu\.com/ubuntu/|d' /etc/apt/apt-mirrors.txt
       - run: npx playwright install --with-deps chromium
       - run: npm run test:e2e:offline
         env:

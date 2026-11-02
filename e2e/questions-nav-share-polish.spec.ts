@@ -3,7 +3,7 @@ import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
 
 const PROFILES = [PROFILE_ALEX, PROFILE_SAM];
 
-test("Home keeps one brand statement and moves product explanation into the shared context menu", async ({ page }) => {
+test("Home keeps one brand statement and keeps product explanation quietly reachable", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
 
   await expect(page.getByText("Verken grenzen. Samen.", { exact: true })).toBeVisible();
@@ -11,23 +11,22 @@ test("Home keeps one brand statement and moves product explanation into the shar
   await expect(page.getByText("Alle stemmen aan tafel. Eén gesprek.", { exact: true })).toHaveCount(0);
   await expect(page.getByRole("link", { name: "Ontdek hoe KinkSync werkt" })).toHaveCount(0);
 
-  await page.getByRole("button", { name: "Meer opties" }).click();
-  await expect(page.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Over KinkSync", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Privacy & veiligheid" })).toBeVisible();
 });
 
-test("profile keeps notes attached to their subject and reveals them only in deliberate status detail", async ({ page }) => {
+test("profile keeps notes attached to their subject under local status filters", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, PROFILES);
 
-  await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeHidden();
-  await expect(page.getByText("Shibari ook", { exact: true })).toBeHidden();
+  await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
+  await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeHidden();
 
   await page.getByTestId("profile-read-status-yes").click();
   await expect(page.getByText("Klassiek en heerlijk", { exact: true })).toBeVisible();
   await expect(page.getByText("Shibari ook", { exact: true })).toBeVisible();
 
-  await page.getByRole("region", { name: "Interesses & grenzen" }).getByRole("link", { name: /^Ja,/ }).click();
+  await page.getByTestId("profile-read-status-willing").click();
   await expect(page.getByText("Lichte sessies", { exact: true })).toBeVisible();
 
   await expect(page.getByRole("button", { name: "Verberg notities" })).toHaveCount(0);

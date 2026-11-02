@@ -27,7 +27,7 @@ export default function ProfileRoute({ id }: ProfileRouteProps) {
   const profileTourComplete = useStore((state) => state.profileTourComplete);
   const completeProfileTour = useStore((state) => state.completeProfileTour);
   const profile = profiles.find((candidate) => candidate.id === id);
-  const shared = profile?.origin === "shared" || (!profile?.origin && profile?.isImported === true);
+  const shared = profile?.origin === "shared" || profile?.isImported === true;
   const focusQuestions = searchParams.get("focus") === "questionnaire";
   const [tourVisible, setTourVisible] = useState(false);
   const params = useMemo(() => Promise.resolve({ id }), [id]);
@@ -59,7 +59,7 @@ export default function ProfileRoute({ id }: ProfileRouteProps) {
 
   return (
     <>
-      <ProfileScreen params={params} />
+      <ProfileScreen key={id} params={params} />
       {tourVisible && <ProfileIntroTour onComplete={finishProfileTour} />}
     </>
   );

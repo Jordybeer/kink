@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import {
   Bell,
   CalendarPlus,
@@ -37,6 +37,11 @@ import {
 } from "@/lib/intimacyReminder";
 
 type ComposerMode = IntimacyStatus;
+
+const AGENDA_TABS = [
+  ["planned", "Gepland"],
+  ["completed", "Logboek"],
+] as const;
 
 function localDateInputValue(date = new Date()): string {
   const year = date.getFullYear();
@@ -211,6 +216,7 @@ export default function IntimacyPlanner() {
   const intimacyHydrated = useIntimacyHasHydrated();
 
   const [tab, setTab] = useState<"planned" | "completed">("planned");
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [composerMode, setComposerMode] = useState<ComposerMode | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [calendarTarget, setCalendarTarget] = useState<IntimacyRecord | null>(null);
@@ -345,6 +351,29 @@ export default function IntimacyPlanner() {
 
   const visible = tab === "planned" ? planned : completed;
 
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let nextIndex: number;
+    switch (event.key) {
+      case "ArrowLeft":
+        nextIndex = (index - 1 + AGENDA_TABS.length) % AGENDA_TABS.length;
+        break;
+      case "ArrowRight":
+        nextIndex = (index + 1) % AGENDA_TABS.length;
+        break;
+      case "Home":
+        nextIndex = 0;
+        break;
+      case "End":
+        nextIndex = AGENDA_TABS.length - 1;
+        break;
+      default:
+        return;
+    }
+    event.preventDefault();
+    setTab(AGENDA_TABS[nextIndex][0]);
+    tabRefs.current[nextIndex]?.focus();
+  }
+
   return (
     <PageShell width="2xl">
       <h1 className="sr-only">Intimiteit</h1>
@@ -378,19 +407,20 @@ export default function IntimacyPlanner() {
         className="mb-4 grid grid-cols-2 rounded-xl p-1"
         style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}
       >
-        {([
-          ["planned", "Gepland"],
-          ["completed", "Logboek"],
-        ] as const).map(([value, label]) => {
+        {AGENDA_TABS.map(([value, label], index) => {
           const active = tab === value;
           return (
             <button
               key={value}
+              ref={(node) => { tabRefs.current[index] = node; }}
+              id={`intimacy-tab-${value}`}
               type="button"
               role="tab"
               aria-selected={active}
-              aria-controls="intimacy-tab-panel"
+              aria-controls={`intimacy-panel-${value}`}
+              tabIndex={active ? 0 : -1}
               onClick={() => setTab(value)}
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
               className="ks-motion-choice focus-ring min-h-11 rounded-lg px-3 text-sm font-semibold"
               style={{
                 background: active ? "var(--surface)" : "transparent",
@@ -404,8 +434,17 @@ export default function IntimacyPlanner() {
         })}
       </div>
 
-      <div id="intimacy-tab-panel" role="tabpanel" aria-label={tab === "planned" ? "Geplande momenten" : "Logboek"}>
-        {visible.length === 0 ? (
+      {AGENDA_TABS.map(([value]) => (
+      <div
+        key={value}
+        id={`intimacy-panel-${value}`}
+        role="tabpanel"
+        aria-labelledby={`intimacy-tab-${value}`}
+        hidden={tab !== value}
+        tabIndex={0}
+        className="focus-ring"
+      >
+        {tab === value && (visible.length === 0 ? (
           <div className="py-12 text-center">
             <Heart size={38} weight="duotone" aria-hidden="true" className="mx-auto mb-3" style={{ color: "var(--accent)", opacity: 0.7 }} />
             <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
@@ -442,8 +481,9 @@ export default function IntimacyPlanner() {
               />
             ))}
           </div>
-        )}
+        ))}
       </div>
+      ))}
 
       <Sheet
         open={composerMode !== null}

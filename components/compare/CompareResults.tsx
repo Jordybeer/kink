@@ -77,13 +77,6 @@ export default function CompareResults({
 
   return (
     <>
-      {model.summary.jointlyAssessed === 0 && (
-        <div className="mb-4 rounded-xl border px-4 py-5 text-center" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-          <p className="text-base font-medium" style={{ color: "var(--text)" }}>Nog geen voorkeuren aan beide kanten ingevuld.</p>
-          <p className="mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>Een antwoord van één profiel alleen wordt niet als vergelijking geïnterpreteerd.</p>
-        </div>
-      )}
-
       {CATEGORIES.map((category) => {
         const categoryFacts = facts.filter((fact) => fact.category === category);
         if (!categoryFacts.length) return null;

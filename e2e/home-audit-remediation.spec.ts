@@ -11,7 +11,7 @@ test("lege Home houdt de onzichtbare backup-file-input uit de Tab-volgorde", asy
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/", [], { onboardingComplete: true, profileTourComplete: true });
 
-  const restore = page.getByRole("button", { name: /Backup herstellen/ });
+  const restore = page.getByRole("button", { name: "Importeer back-up", exact: true });
   const fileInput = page.getByLabel("Kies een backupbestand");
   await restore.focus();
   await page.keyboard.press("Tab");

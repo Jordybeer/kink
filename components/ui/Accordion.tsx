@@ -1,77 +1,65 @@
 "use client";
-import { useState, useId, type ReactNode } from "react";
+
+import { useState, useId, type CSSProperties, type ReactNode } from "react";
 import { CaretDown } from "@phosphor-icons/react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
+import DisclosureBody from "@/components/ui/DisclosureBody";
 import { useMotionSafe } from "@/lib/motion";
 
 interface Props {
-  trigger: ReactNode;
-  /** Optional icon shown in a tinted pill left of the trigger label */
+  trigger: ReactNode | ((open: boolean) => ReactNode);
   icon?: ReactNode;
   children: ReactNode;
   defaultOpen?: boolean;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
+  className?: string;
+  triggerClassName?: string;
+  triggerStyle?: CSSProperties;
+  contentClassName?: string;
 }
 
-export default function Accordion({ trigger, icon, children, defaultOpen = false }: Props) {
-  const [open, setOpen] = useState(defaultOpen);
+/** Flat disclosure: its caller owns the surface and content spacing. */
+export default function Accordion({
+  trigger, icon, children, defaultOpen = false, open: controlledOpen, onOpenChange,
+  className = "", triggerClassName = "", triggerStyle, contentClassName,
+}: Props) {
+  const [uncontrolledOpen, setUncontrolledOpen] = useState(defaultOpen);
+  const open = controlledOpen ?? uncontrolledOpen;
   const id = useId();
   const bodyId = `acc-body-${id}`;
   const t = useMotionSafe();
 
   return (
-    <div
-      className="overflow-hidden rounded-[20px]"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
+    <div className={className}>
       <button
         type="button"
         aria-expanded={open}
         aria-controls={bodyId}
-        onClick={() => setOpen((v) => !v)}
-        className="focus-ring ks-motion-choice flex w-full items-center justify-between px-5 py-4"
-        style={{ background: "transparent", border: "none", color: "var(--text)" }}
+        onClick={() => {
+          const next = !open;
+          if (controlledOpen === undefined) setUncontrolledOpen(next);
+          onOpenChange?.(next);
+        }}
+        className={`focus-ring ks-motion-choice flex min-h-11 w-full items-center gap-3 text-left text-sm ${triggerClassName}`}
+        style={triggerStyle}
       >
-        <span className="flex items-center gap-3">
-          {icon && (
-            <span
-              className="flex items-center justify-center rounded-[12px] p-2"
-              style={{ background: "color-mix(in srgb, var(--accent) 15%, transparent)", color: "var(--accent)" }}
-            >
-              {icon}
-            </span>
-          )}
-          <span className="text-sm font-medium">{trigger}</span>
-        </span>
-
+        {icon && <span className="flex flex-none items-center" aria-hidden="true">{icon}</span>}
+        <span className="min-w-0 flex-1">{typeof trigger === "function" ? trigger(open) : trigger}</span>
         <motion.span
+          initial={false}
           animate={{ rotate: open ? 180 : 0 }}
           transition={t.fast}
-          className="flex items-center justify-center"
+          className="flex flex-none items-center justify-center"
           style={{ color: "var(--text2)" }}
           aria-hidden="true"
         >
           <CaretDown size={16} weight="bold" aria-hidden="true" />
         </motion.span>
       </button>
-
-      <AnimatePresence initial={false}>
-        {open && (
-          <motion.div
-            id={bodyId}
-            role="region"
-            key="body"
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: "auto", opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={t.sheet}
-            style={{ overflow: "hidden" }}
-          >
-            <div className="flex flex-col gap-2 px-4 pb-4 pt-1">
-              {children}
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      <DisclosureBody open={open} id={bodyId} contentClassName={contentClassName}>
+        {children}
+      </DisclosureBody>
     </div>
   );
 }

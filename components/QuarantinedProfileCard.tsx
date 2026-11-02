@@ -8,6 +8,7 @@ import { decodeSharedProfile } from "@/lib/profileShareV3";
 import { getProfileVerificationCode } from "@/lib/profileVerification";
 import { profileConsentAlias } from "@/lib/consentProof";
 import { useStore } from "@/lib/store";
+import Accordion from "@/components/ui/Accordion";
 
 const QRScanner = dynamic(() => import("@/components/QRScanner"), { ssr: false });
 
@@ -141,10 +142,9 @@ export default function QuarantinedProfileCard({ record }: { record: Quarantined
         )}
       </div>
 
-      <details className="mt-4 text-sm" style={{ color: "var(--text2)" }}>
-        <summary className="cursor-pointer focus-ring rounded-md">Technische details</summary>
+      <Accordion trigger="Technische details" className="mt-4 text-sm" triggerClassName="rounded-md" triggerStyle={{ color: "var(--text2)" }}>
         <p className="mt-2 break-words" style={{ lineHeight: 1.55 }}>{record.reason}</p>
-      </details>
+      </Accordion>
 
       {scannerOpen && (
         <QRScanner

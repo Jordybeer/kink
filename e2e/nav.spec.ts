@@ -13,7 +13,7 @@ test("hub keeps a calm utility nav while brand and settings sit in their proper 
   await expect(nav.getByRole("button", { name: "Instellingen openen" })).toHaveCount(0);
   await expect(nav.getByRole("link", { name: "Terug" })).toHaveCount(0);
 
-  const more = nav.getByRole("button", { name: "Meer opties" });
+  const more = nav.getByRole("button", { name: "Instellingen" });
   const brand = nav.getByRole("heading", { name: "KinkSync", exact: true });
   const motto = page.getByText("Verken grenzen. Samen.", { exact: true });
   await expect(more).toBeVisible();
@@ -37,44 +37,28 @@ test("hub keeps a calm utility nav while brand and settings sit in their proper 
   expect(mottoBox!.y).toBeGreaterThanOrEqual(brandBox!.y + brandBox!.height);
 
   await more.click();
-  const menu = page.getByRole("menu");
-  await expect(menu).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Instellingen" })).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Agenda" })).toHaveCount(0);
-  await expect(menu.getByRole("menuitem", { name: "Over KinkSync" })).toBeVisible();
-  await expect(menu.getByRole("menuitem", { name: "Security & privacy" })).toBeVisible();
-
+  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  await expect(settings).toBeVisible();
   await page.keyboard.press("Escape");
+  await expect(settings).toBeHidden();
   await expect(more).toBeFocused();
+  await expect(page.getByRole("link", { name: "Over KinkSync", exact: true })).toHaveAttribute("href", "/about");
+  await expect(page.getByRole("link", { name: "Privacy & veiligheid" })).toHaveAttribute("href", "/security");
   await page.getByRole("link", { name: "Agenda" }).click();
   await expect(page).toHaveURL(/\/intimacy$/);
 });
 
-test("Home overflow follows the ARIA menu keyboard contract", async ({ page }) => {
+test("Home Settings is directly keyboard accessible and restores focus", async ({ page }) => {
   await seedAndGo(page, "/", PROFILES);
-  const more = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Meer opties" });
-  await more.focus();
+  const settingsTrigger = page.getByLabel("Hoofdnavigatie").getByRole("button", { name: "Instellingen", exact: true });
+  await settingsTrigger.focus();
   await page.keyboard.press("Enter");
-
-  const menu = page.getByRole("menu");
-  const settings = menu.getByRole("menuitem", { name: "Instellingen" });
-  const about = menu.getByRole("menuitem", { name: "Over KinkSync" });
-  const security = menu.getByRole("menuitem", { name: "Security & privacy" });
-
-  await expect(settings).toBeFocused();
-  await page.keyboard.press("ArrowDown");
-  await expect(about).toBeFocused();
-  await page.keyboard.press("ArrowDown");
-  await expect(security).toBeFocused();
-  await page.keyboard.press("End");
-  await expect(security).toBeFocused();
-  await page.keyboard.press("Home");
-  await expect(settings).toBeFocused();
-  await page.keyboard.press("ArrowUp");
-  await expect(security).toBeFocused();
+  const settings = page.getByRole("dialog", { name: "Instellingen" });
+  await expect(settings).toBeVisible();
+  await expect(page.getByRole("menu")).toHaveCount(0);
   await page.keyboard.press("Escape");
-  await expect(menu).toBeHidden();
-  await expect(more).toBeFocused();
+  await expect(settings).toBeHidden();
+  await expect(settingsTrigger).toBeFocused();
 });
 
 test("subpages show back chevron pointing at the right parent", async ({ page }) => {

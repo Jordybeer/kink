@@ -6,6 +6,8 @@ import {
   seedProfiles,
 } from "./fixtures";
 
+import { checkScrolledContentMenu, checkScrolledHomeReload } from "./home-navigation";
+
 const ROUTES = [
   { slug: "home", url: "/" },
   { slug: "about", url: "/about" },
@@ -72,7 +74,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
       await expect(page.getByRole("heading", { name: "Profielen vergelijken" })).toBeVisible();
       await expect(page.getByTestId("compare-results-filter")).toBeVisible();
       await expect(page.getByTestId("compare-categories-filter")).toBeVisible();
-      await expect(page.getByRole("heading", { name: "Wat valt op tussen jullie" })).toBeVisible();
+      await expect(page.getByRole("heading", { name: "Jullie antwoorden" })).toBeVisible();
       await expect.poll(() => page.locator('section[id^="cat-"]').count()).toBeGreaterThan(0);
       break;
     case "contract":
@@ -122,8 +124,7 @@ async function expectStatusExplainerStartsAtTop(page: Page) {
   expect(scrollTop).toBeLessThanOrEqual(1);
 
   await dialog
-    .getByTestId("sheet-scroll-body")
-    .getByRole("button", { name: "Sluit", exact: true })
+    .getByRole("button", { name: "Wat betekenen deze keuzes? sluiten", exact: true })
     .click();
   await expect(dialog).toBeHidden();
 }
@@ -229,4 +230,31 @@ test("iPhone tactile motion remains present normally and collapses with reduced 
     path: `test-results/device-screenshots/${testInfo.project.name}/motion-reduced-pressed.png`,
   });
   await page.mouse.up();
+});
+
+// Keep the original reload restoration regression in the existing WebKit lane.
+test("native Home reload and scrolled content navigation preserve reading position", async ({ page, browserName, isMobile }, testInfo) => {
+  test.skip(browserName !== "webkit" && testInfo.project.name !== "desktop-chrome", "WebKit restoration and one desktop capture");
+  // Reproduce the reported 390x667 scroll restoration case in real WebKit.
+  // Tall tablet previews otherwise have too little collapsed Home content to scroll.
+  await page.setViewportSize({ width: testInfo.project.name === "desktop-chrome" ? 1280 : 390, height: 667 });
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  const shared = { ...PROFILE_SAM, origin: "shared" as const, isImported: true };
+  const profiles = [PROFILE_ALEX, shared, ...Array.from({ length: 6 }, (_, index) => ({
+    ...PROFILE_ALEX, id: `reload-owned-${index}`, name: `Eigen ${index}`,
+  })), ...Array.from({ length: 6 }, (_, index) => ({
+    ...shared, id: `reload-shared-${index}`, name: `Gedeeld ${index}`,
+  }))];
+  await seedProfiles(page, profiles);
+  await checkScrolledHomeReload(page, isMobile, browserName);
+  if (testInfo.project.name === "desktop-chrome") {
+    // Prepare the visual only after the native restoration checks have passed.
+    await page.evaluate(() => window.scrollTo(0, 80));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
+    await expect.poll(async () => (await page.locator("[data-home-masthead]").boundingBox())?.y).toBe(0);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-reload-desktop.png`, fullPage: false });
+  }
+  await page.getByRole("link", { name: "Alex Dominant openen", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/profile/${PROFILE_ALEX.id}$`));
+  await checkScrolledContentMenu(page, isMobile);
 });

@@ -440,7 +440,7 @@ function ContractPage() {
 
         <div className="mb-6 rounded-2xl p-4 sm:p-6 print:hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
           <h2 className="mb-1 text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>
-            Echte namen <span className="not-italic opacity-60">(optioneel)</span>
+            Echte namen <span className="not-italic">(optioneel)</span>
           </h2>
           <p className="mb-4 text-sm" style={{ color: "var(--text2)" }}>
             Beide velden samen invullen of beide leeg laten. Bij invullen verschijnen de echte namen naast de nicknames onder de handtekening.

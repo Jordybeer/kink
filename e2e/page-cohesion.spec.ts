@@ -126,8 +126,7 @@ test.describe("Page cohesion scenes", () => {
 
     await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
     await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
-    await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
-    await expect(page.getByText(/kink-matches en afspraken als extra startpunt/i)).toBeVisible();
+    await expect(page.getByText("Een contract is optioneel.", { exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Contract opstellen" })).toBeVisible();
     expect(await page.evaluate(() => document.body.scrollWidth > document.body.clientWidth)).toBe(false);
   });

@@ -66,8 +66,7 @@ test("scene planner maakt een contract optioneel voor een geselecteerd paar", as
 
   await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
   await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
-  await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
-  await expect(page.getByText(/kink-matches en afspraken als extra startpunt/i)).toBeVisible();
+  await expect(page.getByText("Een contract is optioneel.", { exact: true })).toBeVisible();
   await expect(page.getByRole("link", { name: "Contract opstellen" })).toHaveAttribute(
     "href",
     "/contract?a=pw-alex-001&b=pw-sam-002",
@@ -80,7 +79,7 @@ test("een legacy contractsnapshot blokkeert de scène niet en telt niet als acti
   });
 
   await expect(page.getByRole("heading", { name: "Verbond vereist" })).toHaveCount(0);
-  await expect(page.getByText("Contract · optioneel", { exact: true })).toBeVisible();
+  await expect(page.getByText("Een contract is optioneel.", { exact: true })).toBeVisible();
   await expect(page.getByText("Lege setlist", { exact: true })).toBeVisible();
 });
 

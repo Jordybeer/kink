@@ -19,10 +19,6 @@ export interface CompareStory {
   coverage: string;
 }
 
-function preferenceCount(count: number): string {
-  return `${count} ${count === 1 ? "voorkeur" : "voorkeuren"}`;
-}
-
 function categoryInsight(categoryScores: CompareCategoryScore[]): CompareInsight | null {
   const scored = categoryScores
     .map((category) => ({
@@ -80,21 +76,11 @@ function storyKind(summary: CompareSummary, overlapPercent: number | null): Comp
   return "mixed";
 }
 
-function leadFor(kind: CompareStoryKind): string {
-  switch (kind) {
-    case "very-overlapping":
-      return "Jullie zitten wel héél vaak op dezelfde golflengte 😏 Misschien zijn de paar verschillen juist het leukst om samen verder te ontdekken.";
-    case "overlapping":
-      return "Jullie zitten verrassend vaak op dezelfde golflengte 👀 Waar jullie antwoorden verschillen, valt misschien nog iets nieuws te ontdekken.";
-    case "discuss-heavy":
-      return "Niet alles is meteen duidelijk tussen jullie. Sommige antwoorden liggen dicht bij elkaar, andere vragen misschien om een goed gesprek.";
-    case "different":
-      return "Jullie denken er best vaak anders over. Dat is niet per se een probleem. Misschien valt er juist daardoor nog veel over elkaar te ontdekken.";
-    case "mixed":
-      return "Jullie zitten best vaak op één lijn, maar verschillen ook regelmatig van mening. Genoeg om nog over te praten en samen te ontdekken.";
-    case "low-coverage":
-      return "Het beeld is nog niet helemaal compleet. Vul allebei wat meer in en vergelijk daarna opnieuw.";
+function leadFor(jointlyAssessed: number): string {
+  if (jointlyAssessed === 0) {
+    return "Er zijn nog geen onderwerpen met een zichtbaar antwoord van jullie allebei.";
   }
+  return `Jullie hebben allebei een zichtbaar antwoord bij ${jointlyAssessed} ${jointlyAssessed === 1 ? "onderwerp" : "onderwerpen"}.`;
 }
 
 function additionalLimitCopy(limit: number): string {
@@ -174,14 +160,14 @@ export function planCompareStory(
   }
 
   const coverage = summary.unpairedVisible > 0
-    ? `${preferenceCount(summary.jointlyAssessed)} zijn aan beide kanten ingevuld. Voor ${summary.unpairedVisible} andere ontbreekt nog één zichtbaar antwoord.`
-    : `${preferenceCount(summary.jointlyAssessed)} zijn aan beide kanten ingevuld.`;
+    ? `Bij ${summary.unpairedVisible} ${summary.unpairedVisible === 1 ? "ander onderwerp" : "andere onderwerpen"} ontbreekt nog één zichtbaar antwoord.`
+    : "";
 
   return {
     kind,
     overlapPercent,
     overlapCount,
-    lead: leadFor(kind),
+    lead: leadFor(summary.jointlyAssessed),
     insights: insights.slice(0, 2),
     coverage,
   };

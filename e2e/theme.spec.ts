@@ -10,8 +10,7 @@ async function expectTheme(page: Page, theme: "light" | "dark") {
 }
 
 async function openSettings(page: Page) {
-  await page.getByRole("button", { name: "Meer opties" }).click();
-  await page.getByRole("menuitem", { name: "Instellingen" }).click();
+  await page.getByRole("button", { name: "Instellingen", exact: true }).click();
   return page.getByRole("dialog", { name: "Instellingen" });
 }
 
