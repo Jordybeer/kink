@@ -53,7 +53,7 @@ test.describe("Intimiteitsagenda", () => {
     await expect(planDialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
     // A smaller iPhone cannot reliably display two native date/time inputs side by side.
     await page.setViewportSize({ width: 320, height: 667 });
-    await expect.poll(() => planDialog.locator(".ks-modal-planner-date").evaluate(
+    await expect.poll(() => planDialog.getByTestId("planner-date-time").evaluate(
       (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
     )).toBe(1);
     await expect(planDialog.getByLabel("Datum")).toBeVisible();

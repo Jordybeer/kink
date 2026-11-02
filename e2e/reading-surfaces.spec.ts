@@ -48,8 +48,10 @@ async function expectReadingGeometry(dialog: Locator, close: Locator, page: Page
   expect(box.y).toBeGreaterThanOrEqual(-1);
   expect(box.y + box.height).toBeLessThanOrEqual(viewport.height + 1);
   if (viewport.width < 640) {
-    expect(box.y).toBeLessThanOrEqual(25);
-    expect(box.height).toBeGreaterThan(viewport.height * 0.9);
+    // Content-sized reading sheets should stay in the viewport, not fill it.
+    expect(box.y).toBeLessThanOrEqual(48);
+    expect(box.height).toBeGreaterThan(180);
+    expect(box.height).toBeLessThanOrEqual(viewport.height - box.y + 1);
   } else {
     expect(box.width).toBeLessThanOrEqual(576);
     expect(Math.abs(box.x + box.width / 2 - viewport.width / 2)).toBeLessThanOrEqual(1);

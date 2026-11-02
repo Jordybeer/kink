@@ -35,11 +35,7 @@
 .ks-modal-choice-featured .ks-modal-choice-rail { height:34px; width:4px; }
 .ks-modal-section-title { color:var(--accent2-text); font-size:11px; letter-spacing:.13em; font-weight:750; text-transform:uppercase; }
 .ks-modal-primary { background:linear-gradient(108deg,var(--accent-fill),color-mix(in srgb,var(--accent-fill) 86%,var(--accent2))); box-shadow:0 5px 20px var(--accent-glow); }
-.ks-modal-planner-date {
-  padding:14px 12px; border-radius:19px; border:1px solid color-mix(in srgb,var(--accent) 25%,var(--border));
-  background:radial-gradient(ellipse at 80% 0%, color-mix(in srgb,var(--accent) 15%,transparent),transparent 72%),
-             linear-gradient(115deg,color-mix(in srgb,var(--accent2) 8%,var(--surface2)),var(--surface2));
-}
+
 .ks-modal-planner-date input { font-weight:650; font-size:16px; }
 .ks-modal-role-group { overflow:hidden; border-top:1px solid color-mix(in srgb,var(--border) 80%,transparent); }
 .ks-modal-role { position:relative; border-bottom:1px solid color-mix(in srgb,var(--border) 80%,transparent); transition:background var(--motion-state) var(--motion-ease); }

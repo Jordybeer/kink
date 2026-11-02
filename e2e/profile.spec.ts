@@ -104,6 +104,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
     const header = dialog.getByTestId("profile-edit-header");
     const scrollBody = dialog.getByTestId("profile-edit-scroll-body");
+    await expect(dialog.getByTestId("sheet-scroll-body")).toHaveCount(0);
     const footer = dialog.getByTestId("profile-edit-footer");
     const nameInput = dialog.getByLabel("Naam of alias");
 
