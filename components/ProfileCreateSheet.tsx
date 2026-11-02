@@ -167,14 +167,13 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
       open={open}
       onClose={onClose}
       title={title}
-      headerIcon={step === 0 ? <UserCirclePlus size={20} weight="duotone" /> : <Sparkle size={20} weight="duotone" />}
+      headerIcon={step === 0 ? <UserCirclePlus size={20} weight="duotone" aria-hidden="true" /> : <Sparkle size={20} weight="duotone" aria-hidden="true" />}
       variant="surface"
       scrollable
       aria-label="Nieuw profiel maken"
       footer={
         <div
           className="grid grid-cols-[auto_minmax(0,1fr)] gap-2"
-          
         >
           <button
             type="button"
@@ -200,7 +199,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
         </div>
       }
     >
-
         <div className="mb-5">
           <p className="mb-3 text-xs font-semibold" style={{ color: "var(--text2)" }}>Stap {step + 1} van 2</p>
           <div className="grid grid-cols-2 gap-2" role="progressbar" aria-label="Voortgang profielaanmaak"
@@ -242,7 +240,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 <legend className="text-sm font-semibold mb-2" style={{ color: "var(--text2)" }}>
                   Kant van de dynamiek
                 </legend>
-                <div className="overflow-hidden divide-y rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
+                <div className="overflow-hidden divide-y divide-[var(--border)] rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
                   {DIRECTIONS.map(({ value, label, description, icon: Icon }) => {
                     const active = direction === value;
                     return (
@@ -341,7 +339,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       type="button"
                       onClick={() => toggleInterest(interest.value)}
                       aria-pressed={active}
-                      className="ks-motion-choice ks-motion-state focus-ring min-h-[62px] px-3 py-2.5 flex items-center gap-3 text-left"
+                      className="ks-motion-choice ks-motion-state focus-ring min-h-[62px] w-full px-3 py-2.5 flex items-center gap-3 text-left"
                       style={active
                         ? {
                             background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",
@@ -375,7 +373,6 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             </div>
           )}
         </div>
-
     </Sheet>
   );
 }
