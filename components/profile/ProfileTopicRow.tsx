@@ -3,6 +3,8 @@
 import { useId, useRef } from "react";
 import type { Kink, KinkEntry } from "@/types";
 import KinkListRow from "@/components/KinkListRow";
+import PrivateResponseStatus from "@/components/PrivateResponseStatus";
+import { kinkCategoryLabel } from "@/lib/kinks";
 import StatusOptionRows from "@/components/StatusOptionRows";
 import Accordion from "@/components/ui/Accordion";
 import DisclosureBody from "@/components/ui/DisclosureBody";
@@ -16,13 +18,14 @@ interface Props {
   selected: boolean;
   open: boolean;
   concealed: boolean;
+  compactPrivate?: boolean;
   onToggle: () => void;
   onReveal: () => void;
   onConceal: () => void;
   onChange: (partial: Partial<KinkEntry>) => void;
 }
 
-export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, onToggle, onReveal, onConceal, onChange }: Props) {
+export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, onToggle, onReveal, onConceal, onChange }: Props) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const visible = !entry.privateResponse || !concealed;
@@ -32,14 +35,46 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
   }
   return (
     <div data-testid="profile-topic-row" data-kink-id={kink.id} className="min-w-0">
-      <KinkListRow kink={kink} entry={entry} editable={editable && visible} concealed={!visible}
-        onOpen={() => { trigger.current?.focus({ preventScroll: true }); onToggle(); }} triggerRef={trigger} expanded={open} controls={id} />
-      {editable && entry.privateResponse && (
-        <button type="button" onClick={visible ? onConceal : onReveal}
-          aria-label={`Privéantwoord voor ${kink.name} ${visible ? "opnieuw verbergen" : "tonen"}`}
-          className="focus-ring ks-motion-choice min-h-11 text-sm font-medium" style={{ color: "var(--text2)" }}>
-          {visible ? "Opnieuw verbergen" : "Privéantwoord tonen"}
-        </button>
+      {compactPrivate ? (
+        <div className="flex min-h-14 min-w-0 items-start gap-3 py-3">
+          <button
+            type="button"
+            ref={trigger}
+            disabled={!editable || !visible}
+            onClick={onToggle}
+            aria-label={`${kink.name} bewerken`}
+            aria-expanded={selected && open}
+            aria-controls={id}
+            className="ks-motion-choice focus-ring min-w-0 flex-1 rounded-lg text-left disabled:cursor-default"
+          >
+            <span className="block break-words text-sm font-semibold" style={{ color: "var(--text)" }}>{kink.name}</span>
+            <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(kink.category)}</span>
+            {visible && entry.comment && (
+              <span className="mt-1 block break-words text-xs leading-5" style={{ color: "var(--text2)" }}>{entry.comment}</span>
+            )}
+          </button>
+          <PrivateResponseStatus
+            status={entry.status}
+            privateResponse
+            concealed={!visible}
+            subject={kink.name}
+            onReveal={onReveal}
+            onConceal={onConceal}
+            plain
+          />
+        </div>
+      ) : (
+        <>
+          <KinkListRow kink={kink} entry={entry} editable={editable && visible} concealed={!visible}
+            onOpen={() => { trigger.current?.focus({ preventScroll: true }); onToggle(); }} triggerRef={trigger} expanded={open} controls={id} />
+          {editable && entry.privateResponse && (
+            <button type="button" onClick={visible ? onConceal : onReveal}
+              aria-label={`Privéantwoord voor ${kink.name} ${visible ? "opnieuw verbergen" : "tonen"}`}
+              className="focus-ring ks-motion-choice min-h-11 text-sm font-medium" style={{ color: "var(--text2)" }}>
+              {visible ? "Opnieuw verbergen" : "Privéantwoord tonen"}
+            </button>
+          )}
+        </>
       )}
       {visible && editable && (
         <DisclosureBody open={selected && open} id={id} data-testid="profile-inline-editor" contentClassName="pb-5 pt-3 [overflow-wrap:anywhere]">
