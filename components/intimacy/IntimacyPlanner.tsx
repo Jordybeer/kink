@@ -509,7 +509,7 @@ export default function IntimacyPlanner() {
               type="button"
               onClick={saveEntry}
               className="ks-modal-primary ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
-              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+              style={{ color: "var(--on-accent-fill)" }}
             >
               {saveLabel}
             </button>

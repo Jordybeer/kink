@@ -191,7 +191,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             onClick={step === 0 ? continueFromIdentity : create}
             disabled={isCreating}
             className="ks-modal-primary ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
-            style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+            style={{ color: "var(--on-accent-fill)" }}
           >
             {step === 1
               ? (isCreating ? "Profiel opslaan…" : pendingProfileId ? "Opslaan opnieuw" : "Start vragen")
@@ -256,11 +256,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                         aria-pressed={active}
                         data-selected={active}
                         className="ks-modal-role ks-motion-choice ks-motion-state focus-ring w-full min-h-[68px] px-3 py-2.5 flex items-center gap-3 text-left"
-                        style={active
-                          ? {
-                              background: "color-mix(in srgb, var(--accent) 11%, var(--profile-form-control-surface))",
-                              }
-                          : { background: "var(--profile-form-control-surface)" }}
+                        
                       >
                         <span
                           className="w-9 h-9 rounded-xl flex items-center justify-center flex-none"
@@ -344,11 +340,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       aria-pressed={active}
                       data-selected={active}
                       className="ks-modal-role ks-motion-choice ks-motion-state focus-ring min-h-[62px] w-full px-3 py-2.5 flex items-center gap-3 text-left"
-                      style={active
-                        ? {
-                            background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",
-                            }
-                        : { background: "var(--profile-form-control-surface)" }}
+                      
                     >
                       <span
                         aria-hidden="true"

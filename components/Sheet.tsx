@@ -133,7 +133,7 @@ function TitledSheetFrame({
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
           <h2
-            className={`break-words text-balance ${surface ? "text-[32px] font-medium leading-[1.06] tracking-[-0.025em]" : quickSheet ? "text-[25px] font-medium leading-tight" : "text-lg font-bold"}`}
+            className={`break-words text-balance ${surface ? "text-[clamp(1.65rem,7.5vw,2rem)] font-medium leading-[1.06] tracking-[-0.025em]" : quickSheet ? "text-[25px] font-medium leading-tight" : "text-lg font-bold"}`}
             style={surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
           >{title}</h2>
           {subtitle && <p className="mt-2 max-w-[32rem] text-sm leading-5" style={{ color: "var(--text2)" }}>{subtitle}</p>}
