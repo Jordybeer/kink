@@ -29,6 +29,7 @@ import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import CategorySection from "@/components/CategorySection";
 import ProfileTopicRow from "./ProfileTopicRow";
+import DisclosureBody from "@/components/ui/DisclosureBody";
 import EditorialHeading from "@/components/ui/EditorialHeading";
 import { pinnedPublicItems, profileInlineStatus } from "@/lib/profileInline";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
@@ -213,10 +214,10 @@ export default function ProfilePage({ params }: Props) {
     next.set("interests", status);
     router.push(`/profile?${next}`, { scroll: false });
   }
-  function renderTopic(kink: Kink, editable = !shared) {
+  function renderTopic(kink: Kink, editable = !shared, compactPrivate = false) {
     const entry = currentProfile.entries[kink.id] ?? { status: null, comment: "" };
     const selected = editor?.kink.id === kink.id;
-    return <ProfileTopicRow kink={kink} entry={entry} editable={editable}
+    return <ProfileTopicRow kink={kink} entry={entry} editable={editable} compactPrivate={compactPrivate}
       selected={selected} open={selected && !!editor?.open} concealed={!privateResponseRevealed(kink.id)}
       onToggle={() => {
         const closing = editor?.kink.id === kink.id && editor.open;
@@ -545,7 +546,13 @@ export default function ProfilePage({ params }: Props) {
             </section>}
 
             {!shared && privateKinks.length > 0 && (
-              <section className="mt-5 border-y" style={{ borderColor: "color-mix(in srgb, var(--border) 72%, transparent)" }}>
+              <section
+                className="mt-6 rounded-2xl border px-4 py-3"
+                style={{
+                  background: "linear-gradient(135deg, color-mix(in srgb, var(--accent2) 6%, var(--surface)), var(--surface) 76%)",
+                  borderColor: "color-mix(in srgb, var(--accent2) 21%, var(--border))",
+                }}
+              >
                 <h3>
                   <button
                     type="button"
@@ -553,11 +560,20 @@ export default function ProfilePage({ params }: Props) {
                     onClick={() => { closeEditor(); setPrivateReadOpen((open) => !open); }}
                     aria-expanded={privateReadOpen}
                     aria-controls="profile-read-private-content"
-                    className="ks-motion-choice focus-ring flex min-h-11 w-full items-center gap-3 py-3 text-left"
+                    className="ks-motion-choice focus-ring flex min-h-14 w-full min-w-0 items-center gap-3 rounded-xl py-2 text-left"
                   >
-                    <Lock size={14} aria-hidden="true" className="flex-none" style={{ color: "var(--text2)" }} />
-                    <span className="min-w-0 flex-1 text-sm font-semibold">Privéantwoorden</span>
-                    <span className="flex-none text-sm tabular-nums" style={{ color: "var(--text2)" }}>
+                    <span className="flex h-10 w-10 flex-none items-center justify-center rounded-xl"
+                      style={{ background: "color-mix(in srgb, var(--accent2) 14%, transparent)", color: "var(--accent2)" }}>
+                      <Lock size={18} aria-hidden="true" />
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="block text-lg font-medium leading-tight"
+                        style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>Privéantwoorden</span>
+                      <span className="mt-1 block text-xs leading-5" style={{ color: "var(--text2)" }}>
+                        Alleen zichtbaar voor jou
+                      </span>
+                    </span>
+                    <span className="flex-none text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                       {readSummary.privateItems.length}
                     </span>
                     <motion.span
@@ -567,16 +583,21 @@ export default function ProfilePage({ params }: Props) {
                       aria-hidden="true"
                       style={{ color: "var(--text2)" }}
                     >
-                      <CaretDown size={15} />
+                      <CaretDown size={16} />
                     </motion.span>
                   </button>
                 </h3>
 
-                <div id="profile-read-private-content" hidden={!privateReadOpen} className="pb-1">
-                  {privateReadOpen ? privateKinks.map((kink) => {
-                    return <div key={kink.id}>{renderTopic(kink)}</div>;
-                  }) : null}
-                </div>
+                <DisclosureBody open={privateReadOpen} id="profile-read-private-content"
+                  contentClassName="pt-2">
+                  <div className="divide-y" style={{ borderColor: "var(--border)" }}>
+                    {privateKinks.map((kink) => (
+                      <div key={kink.id} style={{ borderColor: "color-mix(in srgb, var(--border) 65%, transparent)" }}>
+                        {renderTopic(kink, true, true)}
+                      </div>
+                    ))}
+                  </div>
+                </DisclosureBody>
               </section>
             )}
           </div>
