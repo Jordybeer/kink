@@ -167,6 +167,8 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
       open={open}
       onClose={onClose}
       title={title}
+      eyebrow={`Jouw perspectief / 0${step + 1} van 02`}
+      subtitle="Jij bepaalt vanuit welke kant je vertelt."
       headerIcon={step === 0 ? <UserCirclePlus size={20} weight="duotone" aria-hidden="true" /> : <Sparkle size={20} weight="duotone" aria-hidden="true" />}
       variant="surface"
       scrollable
@@ -188,7 +190,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
             type="button"
             onClick={step === 0 ? continueFromIdentity : create}
             disabled={isCreating}
-            className="ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
+            className="ks-modal-primary ks-motion-choice focus-ring min-h-12 rounded-xl px-4 flex items-center justify-center gap-2 text-sm font-semibold"
             style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
           >
             {step === 1
@@ -240,7 +242,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                 <legend className="text-sm font-semibold mb-2" style={{ color: "var(--text2)" }}>
                   Kant van de dynamiek
                 </legend>
-                <div className="overflow-hidden divide-y divide-[var(--border)] rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
+                <div className="ks-modal-role-group">
                   {DIRECTIONS.map(({ value, label, description, icon: Icon }) => {
                     const active = direction === value;
                     return (
@@ -252,7 +254,8 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                           setNameError(null);
                         }}
                         aria-pressed={active}
-                        className="ks-motion-choice ks-motion-state focus-ring w-full min-h-[68px] px-3 py-2.5 flex items-center gap-3 text-left"
+                        data-selected={active}
+                        className="ks-modal-role ks-motion-choice ks-motion-state focus-ring w-full min-h-[68px] px-3 py-2.5 flex items-center gap-3 text-left"
                         style={active
                           ? {
                               background: "color-mix(in srgb, var(--accent) 11%, var(--profile-form-control-surface))",
@@ -330,7 +333,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
               <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
                 Kies wat nu relevant voelt. Die onderwerpen verschijnen eerder. Je antwoorden worden nooit voorspeld of ingevuld.
               </p>
-              <div className="overflow-hidden divide-y rounded-xl" style={{ background: "var(--surface2)", border: "1px solid var(--border)", borderColor: "var(--border)" }}>
+              <div className="ks-modal-role-group">
                 {QUESTIONNAIRE_INTERESTS.map((interest) => {
                   const active = interests.includes(interest.value);
                   return (
@@ -339,7 +342,8 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
                       type="button"
                       onClick={() => toggleInterest(interest.value)}
                       aria-pressed={active}
-                      className="ks-motion-choice ks-motion-state focus-ring min-h-[62px] w-full px-3 py-2.5 flex items-center gap-3 text-left"
+                      data-selected={active}
+                      className="ks-modal-role ks-motion-choice ks-motion-state focus-ring min-h-[62px] w-full px-3 py-2.5 flex items-center gap-3 text-left"
                       style={active
                         ? {
                             background: "color-mix(in srgb, var(--accent) 10%, var(--profile-form-control-surface))",

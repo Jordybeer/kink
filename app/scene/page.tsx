@@ -223,37 +223,26 @@ function SceneItemRow({
 }
 
 function KinkChip({
-  name, added, color, onAdd,
-}: { name: string; added: boolean; color: string; onAdd: () => void }) {
+  name, added, color, onAdd, featured = false,
+}: { name: string; added: boolean; color: string; onAdd: () => void; featured?: boolean }) {
   const t = useMotionSafe();
   return (
     <motion.button
       type="button"
       onClick={onAdd}
       disabled={added}
+      data-added={added}
       aria-label={name}
       whileTap={t.tap}
       transition={t.state}
-      className="ks-motion-choice focus-ring flex min-h-12 w-full min-w-0 items-center gap-3 rounded-xl px-3 py-2.5 text-left disabled:cursor-default"
-      style={{
-        background: added
-          ? "var(--surface2)"
-          : `linear-gradient(105deg, color-mix(in srgb, ${color} 10%, var(--surface2)), var(--surface2))`,
-        border: `1px solid color-mix(in srgb, ${color} ${added ? 15 : 27}%, var(--border))`,
-        color: added ? "var(--text2)" : "var(--text)",
-      }}
+      className={`ks-modal-choice ks-motion-choice focus-ring min-w-0 ${featured ? "ks-modal-choice-featured" : ""} disabled:cursor-default`}
+      style={{ "--choice-color": color } as import("react").CSSProperties}
     >
-      <motion.span
-        aria-hidden="true"
-        className="flex h-7 w-7 flex-none items-center justify-center rounded-full"
-        style={{ background: `color-mix(in srgb, ${color} 15%, transparent)`, color }}
-        animate={{ scale: added ? 0.94 : 1 }}
-        transition={t.state}
-      >
-        {added ? <Check size={15} weight="bold" /> : <Plus size={16} />}
-      </motion.span>
-      <span className="min-w-0 flex-1 break-words text-sm font-medium leading-5">{name}</span>
-      {added && <span className="flex-none text-xs" style={{ color: "var(--text2)" }}>Toegevoegd</span>}
+      <span className="ks-modal-choice-rail" aria-hidden="true" />
+      <span className="min-w-0 flex-1 break-words text-sm font-semibold leading-5">{name}</span>
+      <span aria-hidden="true" className="ks-modal-choice-action">
+        {added ? <Check size={16} weight="bold" /> : <Plus size={17} />}
+      </span>
     </motion.button>
   );
 }
@@ -768,6 +757,8 @@ function ScenePage() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title="Toevoegen aan setlist"
+        eyebrow="Scène / samenstellen"
+        subtitle="Een setlist van dingen die jullie écht willen verkennen."
         aria-label="Kinks toevoegen"
         variant="surface"
         scrollable
@@ -780,7 +771,7 @@ function ScenePage() {
             <button
               type="button"
               onClick={() => setDrawerOpen(false)}
-              className="ks-motion-choice focus-ring min-h-11 min-w-32 rounded-xl px-5 text-sm font-semibold"
+              className="ks-modal-primary ks-motion-choice focus-ring min-h-11 min-w-32 rounded-xl px-5 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               Klaar
@@ -790,7 +781,7 @@ function ScenePage() {
       >
         <div className="pb-2">
           <p className="mb-4 text-sm leading-5" style={{ color: "var(--text2)" }}>
-            Kies wat bij jullie scène past. Een suggestie is geen toestemming.
+            Suggesties helpen kiezen, maar zijn nooit automatisch toestemming.
           </p>
           <label htmlFor="scene-suggestion-search" className="sr-only">Zoek een interesse</label>
           <input
@@ -805,10 +796,10 @@ function ScenePage() {
 
           {topKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
             <section className="mb-5" aria-label="Meest gebruikt">
-              <h3 className="mb-2 text-base font-medium" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--accent2)" }}>Meest gebruikt</h3>
-              <div className="grid gap-2">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</h3>
+              <div className="grid gap-1">
                 {topKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
-                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" featured onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
             </section>
@@ -816,8 +807,8 @@ function ScenePage() {
 
           {mutualKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
             <section className="mb-5" aria-label="Wederzijds">
-              <h3 className="mb-2 text-base font-medium" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--yes)" }}>Wederzijds</h3>
-              <div className="grid gap-2">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--yes)" }}>Wederzijds</h3>
+              <div className="grid gap-1">
                 {mutualKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
                   <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
@@ -827,8 +818,8 @@ function ScenePage() {
 
           {spanningKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
             <section className="mb-5" aria-label="Spanning">
-              <h3 className="mb-2 text-base font-medium" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--no)" }}>Spanning</h3>
-              <div className="grid gap-2">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--no)" }}>Spanning</h3>
+              <div className="grid gap-1">
                 {spanningKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
                   <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}

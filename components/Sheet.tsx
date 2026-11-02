@@ -71,6 +71,9 @@ interface Props {
   scrollable?: boolean;
   variant?: SheetVariant;
   footer?: ReactNode;
+  eyebrow?: string;
+  subtitle?: string;
+  contentSized?: boolean;
   "aria-label"?: string;
 }
 
@@ -81,6 +84,9 @@ function TitledSheetFrame({
   scrollable,
   variant,
   footer,
+  eyebrow,
+  subtitle,
+  contentSized = false,
   children,
 }: {
   title: string;
@@ -89,6 +95,9 @@ function TitledSheetFrame({
   scrollable: boolean;
   variant: SheetVariant;
   footer?: ReactNode;
+  eyebrow?: string;
+  subtitle?: string;
+  contentSized?: boolean;
   children: ReactNode;
 }) {
   const quickSheet = variant === "sheet";
@@ -101,12 +110,14 @@ function TitledSheetFrame({
       ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
       : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
     : surface
-      ? "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
+      ? contentSized
+        ? "flex max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-1.5rem)] flex-col overflow-hidden rounded-2xl border px-[min(var(--sheet-gutter),20px)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:px-[min(var(--sheet-gutter),24px)]"
+        : "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
       : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
 
   return (
     <div
-      className={`min-w-0 w-full max-w-full ${frameClassName}`}
+      className={`min-w-0 w-full max-w-full ${surface ? "ks-modal-atmosphere " : ""}${frameClassName}`}
       style={quickSheet
         ? { background: sheetAmbient, borderTop: "1px solid var(--border)" }
         : { background: sheetAmbient, borderColor: "var(--border)" }}
@@ -119,10 +130,14 @@ function TitledSheetFrame({
       {/* Bound structural spacing so enlarged text retains the reading width. */}
       <div className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
-        <h2
-          className={`min-w-0 flex-1 self-center break-words text-balance ${surface ? "text-[28px] font-medium leading-tight" : quickSheet ? "text-[23px] font-medium leading-tight" : "text-lg font-bold"}`}
-          style={surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
-        >{title}</h2>
+        <div className="min-w-0 flex-1 self-center">
+          {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
+          <h2
+            className={`break-words text-balance ${surface ? "text-[32px] font-medium leading-[1.06] tracking-[-0.025em]" : quickSheet ? "text-[25px] font-medium leading-tight" : "text-lg font-bold"}`}
+            style={surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+          >{title}</h2>
+          {subtitle && <p className="mt-2 max-w-[32rem] text-sm leading-5" style={{ color: "var(--text2)" }}>{subtitle}</p>}
+        </div>
         <button
           type="button"
           onClick={onClose}
@@ -177,6 +192,9 @@ export default function Sheet({
   scrollable = false,
   variant = "sheet",
   footer,
+  eyebrow,
+  subtitle,
+  contentSized = false,
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
@@ -217,7 +235,7 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : contentSized ? "items-start pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:items-center sm:p-6" : "items-end sm:items-center sm:p-6"}`}
             data-testid="sheet-visual-viewport"
             style={{
               top: "var(--visual-viewport-offset-top, 0px)",
@@ -262,6 +280,9 @@ export default function Sheet({
                       scrollable={scrollable}
                       variant={variant}
                       footer={footer}
+                      eyebrow={eyebrow}
+                      subtitle={subtitle}
+                      contentSized={contentSized}
                     >
                       {children}
                     </TitledSheetFrame>

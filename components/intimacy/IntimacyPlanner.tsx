@@ -490,6 +490,8 @@ export default function IntimacyPlanner() {
         onClose={closeComposer}
         aria-label={composerMode === "planned" ? "Intiem moment plannen" : "Intiem moment bijhouden"}
         title={composerTitle}
+        eyebrow={composerMode === "planned" ? "Agenda / een moment voor jullie" : "Agenda / jullie herinneringen"}
+        subtitle="Een klein vooruitzicht. Helemaal van jullie."
         headerIcon={composerMode === "planned" ? <CalendarPlus size={21} /> : <Heart size={21} weight="fill" />}
         scrollable
         variant="surface"
@@ -506,7 +508,7 @@ export default function IntimacyPlanner() {
             <button
               type="button"
               onClick={saveEntry}
-              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              className="ks-modal-primary ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
               style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
             >
               {saveLabel}
@@ -518,7 +520,7 @@ export default function IntimacyPlanner() {
           Privé en alleen lokaal opgeslagen
         </p>
           <div className="min-w-0 space-y-5">
-            <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2">
+            <div className="ks-modal-planner-date grid min-w-0 grid-cols-2 gap-3">
               <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input
