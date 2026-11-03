@@ -223,23 +223,27 @@ function SceneItemRow({
 }
 
 function KinkChip({
-  name, added, color, onAdd,
-}: { name: string; added: boolean; color: string; onAdd: () => void }) {
+  name, added, color, onAdd, featured = false,
+}: { name: string; added: boolean; color: string; onAdd: () => void; featured?: boolean }) {
+  const t = useMotionSafe();
   return (
-    <button
+    <motion.button
+      type="button"
       onClick={onAdd}
       disabled={added}
-      className="ks-motion-choice text-xs px-3 py-1.5 rounded-full border focus-ring disabled:opacity-40 flex items-center gap-1"
-      style={{
-        background: added ? "transparent" : `color-mix(in srgb, ${color} 12%, transparent)`,
-        borderColor: added ? "var(--border)" : `color-mix(in srgb, ${color} 45%, transparent)`,
-        color: added ? "var(--text2)" : color,
-        minHeight: 44,
-      }}
+      data-added={added}
+      aria-label={name}
+      whileTap={t.tap}
+      transition={t.state}
+      className={`ks-modal-choice ks-motion-choice focus-ring min-w-0 ${featured ? "ks-modal-choice-featured" : ""} disabled:cursor-default`}
+      style={{ "--choice-color": color } as import("react").CSSProperties}
     >
-      {!added && <Plus size={12} aria-hidden="true" />}
-      {name}
-    </button>
+      <span className="ks-modal-choice-rail" aria-hidden="true" />
+      <span className="min-w-0 flex-1 break-words text-sm font-semibold leading-5">{name}</span>
+      <span aria-hidden="true" className="ks-modal-choice-action">
+        {added ? <Check size={16} weight="bold" /> : <Plus size={17} />}
+      </span>
+    </motion.button>
   );
 }
 
@@ -265,6 +269,7 @@ function ScenePage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [safeword, setSafeword] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [suggestionSearch, setSuggestionSearch] = useState("");
   const [showAftercare, setShowAftercare] = useState(false);
 
   const currentScene = sceneId ? scenes.find((s) => s.id === sceneId) ?? null : null;
@@ -748,53 +753,85 @@ function ScenePage() {
         />
       )}
 
-      <Sheet open={drawerOpen} onClose={() => setDrawerOpen(false)} aria-label="Kinks toevoegen">
-        <div className="rounded-t-2xl px-4 pt-5 pb-8" style={{ background: "var(--surface)", maxHeight: "70vh", overflowY: "auto" }}>
-          <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} aria-hidden="true" />
-
-          <div className="flex items-center justify-between mb-5">
-            <h2 className="text-sm font-bold" style={{ color: "var(--text)" }}>Toevoegen aan setlist</h2>
+      <Sheet
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        title="Toevoegen aan setlist"
+        eyebrow="Scène / samenstellen"
+        subtitle="Een setlist van dingen die jullie écht willen verkennen."
+        aria-label="Kinks toevoegen"
+        variant="surface"
+        scrollable
+        headerIcon={<ListPlus size={20} aria-hidden="true" />}
+        footer={
+          <div className="flex items-center gap-3">
+            <span className="min-w-0 flex-1 text-sm" style={{ color: "var(--text2)" }}>
+              {items.length} {items.length === 1 ? "item" : "items"} in de setlist
+            </span>
             <button
+              type="button"
               onClick={() => setDrawerOpen(false)}
-              className="ks-motion-choice focus-ring rounded-lg"
-              style={{ minWidth: 44, minHeight: 44, display: "flex", alignItems: "center", justifyContent: "center", color: "var(--text2)" }}
-              aria-label="Sluiten"
+              className="ks-modal-primary ks-motion-choice focus-ring min-h-11 min-w-32 rounded-xl px-5 text-sm font-semibold"
+              style={{ color: "var(--on-accent-fill)" }}
             >
-              <X size={16} aria-hidden="true" />
+              Klaar
             </button>
           </div>
+        }
+      >
+        <div className="pb-2">
+          <p className="mb-4 text-sm leading-5" style={{ color: "var(--text2)" }}>
+            Suggesties helpen kiezen, maar zijn nooit automatisch toestemming.
+          </p>
+          <label htmlFor="scene-suggestion-search" className="sr-only">Zoek een interesse</label>
+          <input
+            id="scene-suggestion-search"
+            type="search"
+            value={suggestionSearch}
+            onChange={(event) => setSuggestionSearch(event.target.value)}
+            placeholder="Zoek een interesse"
+            className="focus-ring mb-5 min-h-12 w-full min-w-0 rounded-xl px-4 text-base outline-none"
+            style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
 
-          {topKinks.length > 0 && (
-            <div className="mb-5">
-              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--accent2)" }}>Meest gebruikt</p>
-              <div className="flex flex-wrap gap-2">
-                {topKinks.map((k) => (
-                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
+          {topKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
+            <section className="mb-5" aria-label="Meest gebruikt">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--accent2)" }}>Meest gebruikt</h3>
+              <div className="grid gap-1">
+                {topKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k, index) => (
+                  <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--accent2)" featured={index === 0} onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {mutualKinks.length > 0 && (
-            <div className="mb-5">
-              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--yes)" }}>Wederzijds</p>
-              <div className="flex flex-wrap gap-2">
-                {mutualKinks.map((k) => (
+          {mutualKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
+            <section className="mb-5" aria-label="Wederzijds">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--yes)" }}>Wederzijds</h3>
+              <div className="grid gap-1">
+                {mutualKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
                   <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--yes)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
-            </div>
+            </section>
           )}
 
-          {spanningKinks.length > 0 && (
-            <div>
-              <p className="text-sm mb-3" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: "var(--no)" }}>Spanning</p>
-              <div className="flex flex-wrap gap-2">
-                {spanningKinks.map((k) => (
+          {spanningKinks.some((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())) && (
+            <section className="mb-5" aria-label="Spanning">
+              <h3 className="ks-modal-section-title mb-3" style={{ color: "var(--no)" }}>Spanning</h3>
+              <div className="grid gap-1">
+                {spanningKinks.filter((k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase())).map((k) => (
                   <KinkChip key={k.id} name={directionalCompareLabel(k.id, k.name)} added={addedKinkIds.has(k.id)} color="var(--no)" onAdd={() => addFromKink(directionalCompareLabel(k.id, k.name), k.id)} />
                 ))}
               </div>
-            </div>
+            </section>
+          )}
+          {suggestionSearch.trim() && ![...topKinks, ...mutualKinks, ...spanningKinks].some(
+            (k) => directionalCompareLabel(k.id, k.name).toLocaleLowerCase().includes(suggestionSearch.trim().toLocaleLowerCase()),
+          ) && (
+            <p className="py-5 text-center text-sm" style={{ color: "var(--text2)" }}>
+              Geen suggesties gevonden. Je kunt zelf een item toevoegen in je setlist.
+            </p>
           )}
         </div>
       </Sheet>

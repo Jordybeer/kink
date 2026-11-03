@@ -72,3 +72,36 @@ test("scene suggestions ignore concealed status and usage history", async ({ pag
   await expect(page.getByRole("heading", { name: "Toevoegen aan setlist" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Spanking (hand)" })).toHaveCount(0);
 });
+
+test("privéantwoorden behouden het compacte overzicht en veilig inline bewerken", async ({ page }) => {
+  const alex = {
+    ...PROFILE_ALEX,
+    entries: {
+      ...PROFILE_ALEX.entries,
+      spanking_hand_give: {
+        ...PROFILE_ALEX.entries.spanking_hand_give,
+        status: "yes" as const,
+        comment: "ALLEEN-VOOR-MIJ-LEZEN",
+        privateResponse: true,
+      },
+    },
+  };
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [alex]);
+  const privateToggle = page.getByTestId("profile-read-private");
+  await expect(privateToggle).toBeVisible();
+  await expect(page.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  await privateToggle.click();
+  const privateContent = page.locator("#profile-read-private-content");
+  await expect(privateContent).toBeVisible();
+  await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  await privateContent.getByRole("button", { name: /Privéantwoord voor .* tonen/ }).first().click();
+  await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toBeVisible();
+  await privateContent.getByRole("button", { name: /Spanking.* bewerken/ }).first().click();
+  await expect(privateContent.getByTestId("profile-inline-editor")).toBeVisible();
+  await privateToggle.click();
+  await expect(page.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  // Collapsing private answers also clears the explicit reveal; reopening must re-mask them.
+  await privateToggle.click();
+  await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  await expect(privateContent.getByRole("button", { name: /Privéantwoord voor .* tonen/ }).first()).toBeVisible();
+});

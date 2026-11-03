@@ -189,7 +189,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       </div>
 
       {current && presentation.hasDetails && (
-        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" headerIcon={<Info size={20} weight="duotone" />} variant="surface" scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
+        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" headerIcon={<Info size={20} weight="duotone" />} variant="surface" contentSized scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
           <ExplanationContent>
             <EditorialHeading title={presentation.title} size="compact" level={3} />
             <ExplanationSection title="In het kort" emphasis>
@@ -209,7 +209,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
         </Sheet>
       )}
       {current?.safetyNote && (
-        <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} title="Veiligheid" headerIcon={<ShieldCheck size={20} weight="duotone" />} variant="surface" scrollable aria-label={`Veiligheid bij ${presentation.title}`}>
+        <Sheet open={safetyOpen} onClose={() => setSafetyKinkId(null)} title="Veiligheid" headerIcon={<ShieldCheck size={20} weight="duotone" />} variant="surface" contentSized scrollable aria-label={`Veiligheid bij ${presentation.title}`}>
           <ExplanationContent>
             <EditorialHeading title={presentation.title} size="compact" level={3} />
             <ExplanationProse>{current.safetyNote}</ExplanationProse>
@@ -217,7 +217,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
         </Sheet>
       )}
       {categoryDetail && categoryCopy && (
-        <Sheet open onClose={() => setCategoryDetail(null)} title={kinkCategoryLabel(categoryDetail)} headerIcon={<span className="h-[8px] w-[8px] rounded-full" style={{ background: CATEGORY_ACCENT[categoryDetail] }} />} variant="surface" scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}>
+        <Sheet open onClose={() => setCategoryDetail(null)} title={kinkCategoryLabel(categoryDetail)} headerIcon={<span className="h-[8px] w-[8px] rounded-full" style={{ background: CATEGORY_ACCENT[categoryDetail] }} />} variant="surface" contentSized scrollable aria-label={`Over ${kinkCategoryLabel(categoryDetail)}`}>
           <ExplanationContent>
             <ExplanationProse>{categoryCopy}</ExplanationProse>
             <ExplanationProse secondary>Deze uitleg helpt termen herkennen. Ze vult niets voor je in en verandert geen antwoorden.</ExplanationProse>

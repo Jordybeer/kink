@@ -489,32 +489,38 @@ export default function IntimacyPlanner() {
         open={composerMode !== null}
         onClose={closeComposer}
         aria-label={composerMode === "planned" ? "Intiem moment plannen" : "Intiem moment bijhouden"}
+        title={composerTitle}
+        eyebrow={composerMode === "planned" ? "Agenda / een moment voor jullie" : "Agenda / jullie herinneringen"}
+        subtitle="Een klein vooruitzicht. Helemaal van jullie."
+        headerIcon={composerMode === "planned" ? <CalendarPlus size={21} /> : <Heart size={21} weight="fill" />}
         scrollable
-      >
-        <SheetContent
-          className="min-w-0 max-w-full overflow-x-hidden overflow-y-auto px-5 pb-[max(24px,env(safe-area-inset-bottom))] pt-4"
-          style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - 1rem)" }}
-        >
-          <div className="mb-5 flex items-center gap-3">
-            <div
-              className="flex h-11 w-11 flex-none items-center justify-center rounded-xl"
-              style={{ background: "color-mix(in srgb, var(--accent) 10%, transparent)", color: "var(--accent)" }}
-              aria-hidden="true"
+        variant="surface"
+        footer={
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={closeComposer}
+              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              style={{ background: "var(--surface2)", color: "var(--text2)" }}
             >
-              {composerMode === "planned" ? <CalendarPlus size={21} /> : <Heart size={21} weight="fill" />}
-            </div>
-            <div className="min-w-0">
-              <h2 className="text-base font-semibold" style={{ color: "var(--text)" }}>
-                {composerTitle}
-              </h2>
-              <p className="text-sm" style={{ color: "var(--text2)" }}>
-                Privé en alleen lokaal opgeslagen
-              </p>
-            </div>
+              Annuleer
+            </button>
+            <button
+              type="button"
+              onClick={saveEntry}
+              className="ks-modal-primary ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
+              style={{ color: "var(--on-accent-fill)" }}
+            >
+              {saveLabel}
+            </button>
           </div>
-
-          <div className="min-w-0 space-y-4">
-            <div className="grid min-w-0 grid-cols-1 gap-3 min-[430px]:grid-cols-2">
+        }
+      >
+        <p className="mb-5 text-sm leading-5" style={{ color: "var(--text2)" }}>
+          Privé en alleen lokaal opgeslagen
+        </p>
+          <div className="min-w-0 space-y-5">
+            <div data-testid="planner-date-time" className="grid min-w-0 grid-cols-1 gap-4 sm:grid-cols-2">
               <label className="min-w-0 text-sm font-medium" style={{ color: "var(--text2)" }}>
                 Datum
                 <input
@@ -640,25 +646,6 @@ export default function IntimacyPlanner() {
             <p role="alert" className="mt-3 text-sm" style={{ color: "var(--hard-no)" }}>{formError}</p>
           )}
 
-          <div className="mt-5 flex gap-2">
-            <button
-              type="button"
-              onClick={closeComposer}
-              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
-              style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text2)" }}
-            >
-              Annuleer
-            </button>
-            <button
-              type="button"
-              onClick={saveEntry}
-              className="ks-motion-choice focus-ring min-h-11 flex-1 rounded-xl px-3 text-sm font-semibold"
-              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-            >
-              {saveLabel}
-            </button>
-          </div>
-        </SheetContent>
       </Sheet>
 
       <Sheet

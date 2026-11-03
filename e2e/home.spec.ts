@@ -184,12 +184,19 @@ test.describe("Profiel aanmaken via UI", () => {
     await page.getByRole("button", { name: /^Maak mijn profiel\b/ }).click();
     const createDialog = page.getByRole("dialog", { name: "Nieuw profiel maken" });
     await expect(createDialog).toBeVisible();
+    await expect(createDialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(createDialog.getByTestId("sheet-scroll-body")).toHaveCount(1);
+    await expect(createDialog.getByTestId("sheet-footer")).toBeVisible();
+    await expect(createDialog.getByRole("progressbar", { name: "Voortgang profielaanmaak" })).toHaveAttribute("aria-valuenow", "1");
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
     await expect(createDialog.getByText("Stap 1 van 2", { exact: true })).toBeVisible();
     await createDialog.getByLabel("Naam of alias").fill("TestPersoon");
     await createDialog.getByRole("button", { name: /^Dominant/ }).click();
     await createDialog.getByLabel("Ervaringsniveau").selectOption("ervaren");
     await createDialog.getByRole("button", { name: "Verder", exact: true }).click();
     await expect(createDialog.getByText("Stap 2 van 2", { exact: true })).toBeVisible();
+    await expect(createDialog.getByRole("progressbar", { name: "Voortgang profielaanmaak" })).toHaveAttribute("aria-valuenow", "2");
+    await expect(createDialog.getByTestId("sheet-footer").getByRole("button", { name: "Start vragen" })).toBeVisible();
     await createDialog.getByRole("button", { name: "Start vragen" }).click();
 
     await expect(page).toHaveURL(/\/profile\/[^/]+\/questions$/, { timeout: 8000 });
