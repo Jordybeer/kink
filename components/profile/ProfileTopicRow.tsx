@@ -29,6 +29,15 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const visible = !entry.privateResponse || !concealed;
+  const privateLabel = (
+    <>
+      <span className="block break-words text-sm font-semibold" style={{ color: "var(--text)" }}>{kink.name}</span>
+      <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(kink.category)}</span>
+      {visible && entry.comment && (
+        <span className="mt-1 block break-words text-xs leading-5" style={{ color: "var(--text2)" }}>{entry.comment}</span>
+      )}
+    </>
+  );
   function close() {
     trigger.current?.focus({ preventScroll: true });
     onToggle();
@@ -37,22 +46,21 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
     <div data-testid="profile-topic-row" data-kink-id={kink.id} className="min-w-0">
       {compactPrivate ? (
         <div className="flex min-h-14 min-w-0 items-start gap-3 py-3">
-          <button
-            type="button"
-            ref={trigger}
-            disabled={!editable || !visible}
-            onClick={onToggle}
-            aria-label={`${kink.name}, bewerken`}
-            aria-expanded={selected && open}
-            aria-controls={id}
-            className="ks-motion-choice focus-ring min-w-0 flex-1 rounded-lg text-left disabled:cursor-default"
-          >
-            <span className="block break-words text-sm font-semibold" style={{ color: "var(--text)" }}>{kink.name}</span>
-            <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(kink.category)}</span>
-            {visible && entry.comment && (
-              <span className="mt-1 block break-words text-xs leading-5" style={{ color: "var(--text2)" }}>{entry.comment}</span>
-            )}
-          </button>
+          {visible && editable ? (
+            <button
+              type="button"
+              ref={trigger}
+              onClick={onToggle}
+              aria-label={`${kink.name}, bewerken`}
+              aria-expanded={selected && open}
+              aria-controls={id}
+              className="ks-motion-choice focus-ring min-w-0 flex-1 rounded-lg text-left"
+            >
+              {privateLabel}
+            </button>
+          ) : (
+            <div className="min-w-0 flex-1 text-left">{privateLabel}</div>
+          )}
           <PrivateResponseStatus
             status={entry.status}
             privateResponse

@@ -77,6 +77,7 @@ interface Props {
   eyebrow?: string;
   subtitle?: string;
   contentSized?: boolean;
+  titleTone?: "editorial" | "utility";
   headerAfter?: ReactNode;
   scrollBodyRef?: Ref<HTMLDivElement>;
   testIds?: SheetTestIds;
@@ -93,6 +94,7 @@ function TitledSheetFrame({
   eyebrow,
   subtitle,
   contentSized = false,
+  titleTone = "editorial",
   headerAfter,
   scrollBodyRef,
   testIds,
@@ -107,6 +109,7 @@ function TitledSheetFrame({
   eyebrow?: string;
   subtitle?: string;
   contentSized?: boolean;
+  titleTone?: "editorial" | "utility";
   headerAfter?: ReactNode;
   scrollBodyRef?: Ref<HTMLDivElement>;
   testIds?: SheetTestIds;
@@ -145,8 +148,8 @@ function TitledSheetFrame({
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
           <h2
-            className={`break-words text-balance ${surface ? "text-[clamp(1.65rem,7.5vw,2rem)] font-medium leading-[1.06] tracking-[-0.025em]" : quickSheet ? "text-[25px] font-medium leading-tight" : "text-lg font-bold"}`}
-            style={surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+            className={`break-words ${titleTone === "utility" ? "text-base font-semibold leading-tight" : surface ? "text-balance text-[clamp(1.65rem,7.5vw,2rem)] font-medium leading-[1.06] tracking-[-0.025em]" : quickSheet ? "text-balance text-[25px] font-medium leading-tight" : "text-lg font-bold"}`}
+            style={titleTone === "utility" ? undefined : surface || quickSheet ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
           >{title}</h2>
           {subtitle && <p className="mt-2 max-w-[32rem] text-sm leading-5" style={{ color: "var(--text2)" }}>{subtitle}</p>}
         </div>
@@ -209,6 +212,7 @@ export default function Sheet({
   eyebrow,
   subtitle,
   contentSized = false,
+  titleTone = "editorial",
   headerAfter,
   scrollBodyRef,
   testIds,
@@ -300,6 +304,7 @@ export default function Sheet({
                       eyebrow={eyebrow}
                       subtitle={subtitle}
                       contentSized={contentSized}
+                      titleTone={titleTone}
                       headerAfter={headerAfter}
                       scrollBodyRef={scrollBodyRef}
                       testIds={testIds}
