@@ -67,10 +67,10 @@ export async function checkScrolledHomeReload(page: Page, isMobile: boolean, bro
   const geometry = await masthead.evaluate((element) => {
     const bounds = element.getBoundingClientRect();
     const nav = element.querySelector("nav")!.getBoundingClientRect();
-    const wordmark = element.querySelector("[data-home-nav-wordmark]")!.getBoundingClientRect();
+    const utility = element.querySelector('[data-testid="home-topnav-settings"]')!.getBoundingClientRect();
     const subtitle = element.querySelector("[data-home-subtitle]")!.getBoundingClientRect();
     return {
-      topInset: wordmark.top - nav.top,
+      utilityTopInset: utility.top - nav.top,
       subtitleBottom: subtitle.bottom,
       mastheadBottom: bounds.bottom,
       background: getComputedStyle(element).backgroundColor,
@@ -78,8 +78,8 @@ export async function checkScrolledHomeReload(page: Page, isMobile: boolean, bro
       shieldsCoveredContent: element.contains(document.elementFromPoint(bounds.left + bounds.width / 2, bounds.bottom - 1)),
     };
   });
-  expect(geometry.topInset).toBeGreaterThanOrEqual(31);
-  expect(geometry.topInset).toBeLessThanOrEqual(33);
+  expect(geometry.utilityTopInset).toBeGreaterThanOrEqual(31);
+  expect(geometry.utilityTopInset).toBeLessThanOrEqual(33);
   expect(geometry.subtitleBottom).toBeLessThanOrEqual(geometry.mastheadBottom);
   expect(geometry.background).toBe(geometry.pageBackground);
   expect(geometry.shieldsCoveredContent).toBe(true);
