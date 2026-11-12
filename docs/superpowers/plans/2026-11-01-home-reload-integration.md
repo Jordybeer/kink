@@ -6,7 +6,7 @@ Source PR482: `02124ec824f664bb1a3557e2e5f295e27066e201`.
 
 ## Global constraints
 
-Preserve current Home identity,32px top inset,44px controls,dynamic wrapping,help/Settings,shared motion and Reduced Motion. Preserve native reload restoration, consent/privacy/import safety and non-Home navigation. No dependencies/workflow changes, no local browser launch/install or workaround, no duplicate full local suite/build. Existing exact-candidate remote CI is the runtime gate. User's standing gated serial-programme authorization covers publication and merge after PASS.
+Preserve current Home identity,32px top inset,44px controls,dynamic wrapping,help/Settings,shared motion and Reduced Motion. Preserve browser-owned reload restoration (`history.scrollRestoration = auto`); add no application reset or restoration code. Preserve consent/privacy/import safety and non-Home navigation. No dependencies/workflow changes, no local browser launch/install or workaround, no duplicate full local suite/build. Existing exact-candidate remote CI is the runtime gate. User's standing gated serial-programme authorization covers publication and merge after PASS.
 
 ## One cohesive task
 

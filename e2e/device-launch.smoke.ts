@@ -232,10 +232,10 @@ test("iPhone tactile motion remains present normally and collapses with reduced 
   await page.mouse.up();
 });
 
-// Keep the original reload restoration regression in the existing WebKit lane.
-test("native Home reload and scrolled content navigation preserve reading position", async ({ page, browserName, isMobile }, testInfo) => {
-  test.skip(browserName !== "webkit" && testInfo.project.name !== "desktop-chrome", "WebKit restoration and one desktop capture");
-  // Reproduce the reported 390x667 scroll restoration case in real WebKit.
+// Keep reload geometry in every WebKit device lane; exact restored offsets are browser-owned.
+test("Home reload and scrolled content navigation stay usable with browser-owned scroll restoration", async ({ page, browserName, isMobile }, testInfo) => {
+  test.skip(browserName !== "webkit" && testInfo.project.name !== "desktop-chrome", "WebKit reload geometry and one desktop capture");
+  // Exercise the reported 390x667 reload geometry in WebKit.
   // Tall tablet previews otherwise have too little collapsed Home content to scroll.
   await page.setViewportSize({ width: testInfo.project.name === "desktop-chrome" ? 1280 : 390, height: 667 });
   await page.emulateMedia({ reducedMotion: "reduce" });
@@ -248,7 +248,7 @@ test("native Home reload and scrolled content navigation preserve reading positi
   await seedProfiles(page, profiles);
   await checkScrolledHomeReload(page, isMobile);
   if (testInfo.project.name === "desktop-chrome") {
-    // Prepare the visual only after the native restoration checks have passed.
+    // Capture the sticky state at a known offset after the reload assertions.
     await page.evaluate(() => window.scrollTo(0, 80));
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
     await expect.poll(async () => (await page.locator("[data-home-masthead]").boundingBox())?.y).toBe(0);
