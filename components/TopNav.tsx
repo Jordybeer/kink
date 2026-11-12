@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
@@ -34,6 +34,8 @@ export default function TopNav() {
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
+  const homeMastheadRef = useRef<HTMLElement>(null);
+  const homeMastheadVisible = path === "/" && (!hydrated || onboardingComplete);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -70,6 +72,25 @@ export default function TopNav() {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
   }, []);
 
+  useLayoutEffect(() => {
+    const masthead = homeMastheadRef.current;
+    if (!homeMastheadVisible || !masthead) return;
+
+    const root = document.documentElement;
+    const updateHeight = () => {
+      // Measure only the intrinsic masthead, never its downstream page budget.
+      // ResizeObserver catches wrapping, font loading, text and viewport changes.
+      root.style.setProperty("--home-masthead-h", `${masthead.getBoundingClientRect().height}px`);
+    };
+    updateHeight();
+    const observer = new ResizeObserver(updateHeight);
+    observer.observe(masthead, { box: "border-box" });
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty("--home-masthead-h");
+    };
+  }, [homeMastheadVisible]);
+
   if (path === "/scene") return null;
   if (hydrated && path === "/" && !onboardingComplete) return null;
 
@@ -81,8 +102,9 @@ export default function TopNav() {
   if (path === "/") {
     return (
       <header
-        className="relative z-40"
-        style={safeAreaShell}
+        className="sticky top-0 z-40"
+        style={{ ...safeAreaShell, pointerEvents: "auto", background: "var(--bg)" }}
+        ref={homeMastheadRef}
         data-home-masthead
       >
         {/* Keep utility slots fixed while enlarged identity text wraps and grows the masthead. */}
@@ -125,7 +147,7 @@ export default function TopNav() {
               type="button"
               data-testid="home-topnav-settings"
               onClick={(event) => {
-                event.currentTarget.focus();
+                event.currentTarget.focus({ preventScroll: true });
                 window.dispatchEvent(new CustomEvent("ks:open-settings"));
               }}
               aria-label="Instellingen"

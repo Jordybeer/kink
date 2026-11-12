@@ -17,6 +17,13 @@
   --glow-accent: 0 0 32px var(--accent-glow);
 }
 
+/* TopNav measures Home's intrinsic occupied height, including wrapped text and
+   the safe area. The default is its normal-text budget before hydration. Scope
+   it to the masthead so content routes and onboarding immediately recover. */
+html:has([data-home-masthead]) {
+  --nav-h: var(--home-masthead-h, calc(env(safe-area-inset-top) + 104px));
+}
+
 * { box-sizing: border-box; }
 
 html, body {

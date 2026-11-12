@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
-import { PROFILE_ALEX, seedAndGo } from "./fixtures";
+import { PROFILE_ALEX, PROFILE_SAM, seedAndGo } from "./fixtures";
+import { checkScrolledContentMenu, checkScrolledHomeReload } from "./home-navigation";
 
 async function expectRouteAtTop(page: import("@playwright/test").Page) {
   await expect.poll(() => page.evaluate(() => Math.round(window.scrollY))).toBeLessThanOrEqual(1);
@@ -20,4 +21,25 @@ test("routewissels landen bovenaan ondanks de sticky navigatie", async ({ page }
   await page.getByRole("link", { name: "Security & privacy" }).click();
   await expect(page).toHaveURL(/\/security$/);
   await expectRouteAtTop(page);
+});
+
+for (const theme of ["light", "dark"] as const) {
+  test(`Home masthead stays visible across reload while scroll restoration remains browser-owned in ${theme}`, async ({ page, isMobile }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 667 });
+    await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
+    const shared = { ...PROFILE_SAM, origin: "shared" as const, isImported: true };
+    await seedAndGo(page, "/", [PROFILE_ALEX, shared], { onboardingComplete: true });
+    await checkScrolledHomeReload(page, isMobile);
+    // Capture the sticky state at a known offset after the reload assertions.
+    await page.evaluate(() => window.scrollTo(0, 80));
+    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
+    await expect.poll(async () => (await page.locator("[data-home-masthead]").boundingBox())?.y).toBe(0);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/home-reload-${theme}-390.png`, fullPage: false });
+  });
+}
+
+test("scrolled content overflow supports keyboard dismissal without moving the document", async ({ page, isMobile }) => {
+  await page.setViewportSize({ width: 390, height: 667 });
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
+  await checkScrolledContentMenu(page, isMobile);
 });
