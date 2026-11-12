@@ -35,7 +35,7 @@ export async function expectContentHeightBudget(page: Page) {
   )).toBe("");
 }
 
-export async function checkScrolledHomeReload(page: Page, isMobile: boolean, browserName: string) {
+export async function checkScrolledHomeReload(page: Page, isMobile: boolean) {
   const heading = page.getByRole("heading", { name: "Mijn profielen", exact: true });
   await expect(heading).toBeVisible();
   await page.evaluate(async () => { await document.fonts.ready; });
@@ -55,13 +55,13 @@ export async function checkScrolledHomeReload(page: Page, isMobile: boolean, bro
   await expect(settingsTrigger).toBeFocused();
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
 
-  await page.reload();
+  await Promise.all([
+    page.waitForEvent("load"),
+    page.evaluate(() => window.location.reload()),
+  ]);
   await expect(heading).toBeVisible();
   expect(await page.evaluate(() => history.scrollRestoration)).toBe("auto");
-  // WebKit is the original native restoration defect and the device gate.
-  if (browserName === "webkit") {
-    await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
-  }
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);
   await expectHomeHeightBudget(page);
   await expect.poll(async () => (await masthead.boundingBox())?.y).toBe(0);
   const geometry = await masthead.evaluate((element) => {

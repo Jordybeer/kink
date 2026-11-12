@@ -24,12 +24,12 @@ test("routewissels landen bovenaan ondanks de sticky navigatie", async ({ page }
 });
 
 for (const theme of ["light", "dark"] as const) {
-  test(`Home Settings and native reload preserve scrolled navigation in ${theme}`, async ({ page, browserName, isMobile }, testInfo) => {
+  test(`Home Settings and native reload preserve scrolled navigation in ${theme}`, async ({ page, isMobile }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 667 });
     await page.emulateMedia({ reducedMotion: "reduce", colorScheme: theme });
     const shared = { ...PROFILE_SAM, origin: "shared" as const, isImported: true };
     await seedAndGo(page, "/", [PROFILE_ALEX, shared], { onboardingComplete: true });
-    await checkScrolledHomeReload(page, isMobile, browserName);
+    await checkScrolledHomeReload(page, isMobile);
     // Prepare the visual only after the native restoration checks have passed.
     await page.evaluate(() => window.scrollTo(0, 80));
     await expect.poll(() => page.evaluate(() => window.scrollY)).toBe(80);

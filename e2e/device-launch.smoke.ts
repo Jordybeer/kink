@@ -246,7 +246,7 @@ test("native Home reload and scrolled content navigation preserve reading positi
     ...shared, id: `reload-shared-${index}`, name: `Gedeeld ${index}`,
   }))];
   await seedProfiles(page, profiles);
-  await checkScrolledHomeReload(page, isMobile, browserName);
+  await checkScrolledHomeReload(page, isMobile);
   if (testInfo.project.name === "desktop-chrome") {
     // Prepare the visual only after the native restoration checks have passed.
     await page.evaluate(() => window.scrollTo(0, 80));
