@@ -1,4 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import ProfileTopicRow from "@/components/profile/ProfileTopicRow";
 import { buildCompareModel } from "@/lib/compareV2";
 import {
   comparableEntry,
@@ -9,6 +12,22 @@ import {
   visibleStatus,
 } from "@/lib/privateResponses";
 import type { KinkEntry, Profile } from "@/types";
+
+function renderPrivateRow(concealed: boolean, status: KinkEntry["status"]) {
+  return renderToStaticMarkup(createElement(ProfileTopicRow, {
+    kink: { id: "private-topic", name: "Private topic", category: "custom", level: 1, description: "" },
+    entry: { ...PRIVATE_ENTRY, status },
+    editable: true,
+    selected: false,
+    open: false,
+    concealed,
+    compactPrivate: true,
+    onToggle() {},
+    onReveal() {},
+    onConceal() {},
+    onChange() {},
+  }));
+}
 
 const PRIVATE_ENTRY: KinkEntry = {
   status: "yes",
@@ -35,6 +54,22 @@ function profile(id: string, overrides: Partial<Profile> = {}): Profile {
 }
 
 describe("private responses", () => {
+  it("names both compact private controls with the deliberately revealed status", () => {
+    for (const [status, label] of [["yes", "Heel graag"], ["hard_no", "Harde grens"]] as const) {
+      const html = renderPrivateRow(false, status);
+      expect(html).toContain(`aria-label="Private topic, ${label}, bewerken"`);
+      expect(html).toContain(`aria-label="Privéantwoord voor Private topic, ${label}, opnieuw verbergen"`);
+    }
+  });
+
+  it("does not expose concealed private status or context in compact row markup", () => {
+    const html = renderPrivateRow(true, "hard_no");
+    expect(html).toContain('aria-label="Privéantwoord voor Private topic tonen"');
+    expect(html).not.toContain("Harde grens");
+    expect(html).not.toContain("alleen voor ons");
+    expect(html).not.toContain(", bewerken");
+  });
+
   it("uses a profile-scoped reveal key", () => {
     expect(privateResponseKey("profile-a", "spanking")).toBe("profile-a:spanking");
   });

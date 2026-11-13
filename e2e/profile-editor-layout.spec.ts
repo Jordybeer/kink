@@ -106,7 +106,7 @@ test("private reveal gates editing, conceal hides context and privacy removes pu
   await row.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /^Heel graag\b/ }).click();
   await expect(row.getByRole("group", { name: "Status kiezen" })).toBeVisible();
   await row.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /^Heel graag\b/ }).click();
-  await row.getByRole("button", { name: `Privéantwoord voor ${topic.name} opnieuw verbergen`, exact: true }).click();
+  await row.getByRole("button", { name: `Privéantwoord voor ${topic.name}, Heel graag, opnieuw verbergen`, exact: true }).click();
   await expect(page.getByText("Changed secret", { exact: true })).toHaveCount(0);
   await expect(row.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
   await page.reload();

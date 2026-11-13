@@ -36,7 +36,7 @@ test.describe("Intimiteitsagenda", () => {
     await expect(logbook).toBeFocused();
   });
 
-  test("plant, corrigeert en houdt een lokaal moment bij op mobiel", async ({ page }) => {
+  test("plant, corrigeert en houdt een lokaal moment bij op mobiel", async ({ page }, testInfo) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
 
@@ -48,11 +48,26 @@ test.describe("Intimiteitsagenda", () => {
 
     const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
     await expect(planDialog).toBeVisible();
+    await expect(planDialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(planDialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
+    await expect(planDialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
+    // A smaller iPhone cannot reliably display two native date/time inputs side by side.
+    await page.setViewportSize({ width: 320, height: 667 });
+    await expect.poll(() => planDialog.getByTestId("planner-date-time").evaluate(
+      (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
+    )).toBe(1);
+    await expect(planDialog.getByLabel("Datum")).toBeVisible();
+    await expect(planDialog.getByLabel("Tijd")).toBeVisible();
+    const smallFooter = await planDialog.getByTestId("sheet-footer").boundingBox();
+    expect(smallFooter).not.toBeNull();
+    expect(smallFooter!.y + smallFooter!.height).toBeLessThanOrEqual(667 + 1);
+    await page.setViewportSize({ width: 390, height: 844 });
     const viewportWidth = page.viewportSize()!.width;
     const planDialogBox = await planDialog.boundingBox();
     expect(planDialogBox?.x).toBeGreaterThanOrEqual(0);
     expect((planDialogBox?.x ?? 0) + (planDialogBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth + 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewportWidth);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/modal-cohesion/${testInfo.project.name}/intimacy-planner-390.png`, fullPage: false });
     await planDialog.getByLabel("Datum").fill("2026-08-30");
     await planDialog.getByLabel("Tijd").fill("20:30");
     await planDialog.getByLabel("Titel (optioneel)").fill("Date night");

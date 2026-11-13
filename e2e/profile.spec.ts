@@ -104,6 +104,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const dialog = page.getByRole("dialog", { name: "Profiel bewerken" });
     const header = dialog.getByTestId("profile-edit-header");
     const scrollBody = dialog.getByTestId("profile-edit-scroll-body");
+    await expect(dialog.getByTestId("sheet-scroll-body")).toHaveCount(0);
     const footer = dialog.getByTestId("profile-edit-footer");
     const nameInput = dialog.getByLabel("Naam of alias");
 
@@ -531,12 +532,15 @@ test.describe("Privé antwoorden op eigen profiel", () => {
 
     const reveal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving tonen", exact: true });
     await expect(reveal).toBeVisible();
-    await reveal.click();
+    await reveal.focus();
+    await page.keyboard.press("Enter");
     await expect(secret).toBeVisible();
 
-    const conceal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving opnieuw verbergen", exact: true });
+    const conceal = page.getByRole("button", { name: "Privéantwoord voor Spanking (hand) — giving, Heel graag, opnieuw verbergen", exact: true });
     await expect(conceal).toBeVisible();
-    await conceal.click();
+    await expect(conceal).toBeFocused();
+    await page.keyboard.press("Enter");
+    await expect(reveal).toBeFocused();
     await expect(secret).toHaveCount(0);
   });
 });

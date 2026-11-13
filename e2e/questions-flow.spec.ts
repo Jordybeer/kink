@@ -97,6 +97,11 @@ test("questions route locks the document while sheets keep their own scroll", as
   await card.getByRole("button", { name: /Info & uitleg/ }).click();
   const dialog = page.getByRole("dialog", { name: "Info en uitleg bij Cuckolding" });
   await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
+  const dialogBox = await dialog.boundingBox();
+  expect(dialogBox).not.toBeNull();
+  expect(dialogBox!.height).toBeLessThan(650);
+  await expect(dialog.getByTestId("question-detail-essence")).toBeVisible();
   await expect(dialog).toHaveCSS("touch-action", "auto");
   const sheetContent = dialog.getByTestId("sheet-scroll-body");
   await expect(sheetContent).toHaveCSS("overflow-y", "auto");

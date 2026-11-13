@@ -1,0 +1,47 @@
+/* KinkSync modal craft: one quiet ambient material, local feedback, no card wall.
+   Non-interactive atmosphere only; content, geometry, and focus never rely on motion. */
+.ks-modal-atmosphere { position:relative; isolation:isolate; }
+/* One static highlight; existing AmbientGlow owns ambient movement. */
+.ks-modal-atmosphere::before {
+  content:""; pointer-events:none; position:absolute; z-index:0;
+  width:22rem; height:17rem; top:-9rem; right:-8rem; border-radius:50%;
+  opacity:var(--ambient-layer-opacity,1); filter:blur(38px);
+  background:radial-gradient(circle, color-mix(in srgb, var(--accent2) 25%, transparent), transparent 72%);
+}
+.ks-modal-atmosphere > * { position:relative; z-index:1; }
+.ks-modal-eyebrow { color:var(--accent2-text); font-size:10px; line-height:1.4; font-weight:750; letter-spacing:.16em; text-transform:uppercase; }
+.ks-modal-choice {
+  display:flex; width:100%; min-height:54px; align-items:center; gap:12px;
+  border-bottom:1px solid color-mix(in srgb,var(--border) 76%,transparent);
+  background:transparent; padding:8px 10px; text-align:left;
+  transition:background var(--motion-state) var(--motion-ease), padding var(--motion-state) var(--motion-ease);
+}
+.ks-modal-choice[data-added="true"] {
+  border-radius:12px;
+  background:linear-gradient(105deg,color-mix(in srgb,var(--choice-color,var(--accent)) 13%,var(--surface2)),color-mix(in srgb,var(--choice-color,var(--accent)) 3%,var(--surface2)));
+}
+.ks-modal-choice-rail { display:block; width:3px; height:28px; flex:none; border-radius:4px;
+  background:color-mix(in srgb,var(--choice-color,var(--accent)) 56%,var(--surface3)); }
+.ks-modal-choice[data-added="true"] .ks-modal-choice-rail { background:var(--choice-color,var(--accent)); }
+.ks-modal-choice-action { display:grid; place-items:center; height:34px; width:34px; flex:none; border-radius:50%;
+  border:1px solid color-mix(in srgb,var(--choice-color,var(--accent)) 23%,var(--border));
+  color:var(--choice-color,var(--accent)); background:color-mix(in srgb,var(--choice-color,var(--accent)) 7%,var(--surface2));}
+.ks-modal-choice[data-added="true"] .ks-modal-choice-action { color:var(--on-accent-fill); background:var(--accent-fill); border-color:transparent; }
+.ks-modal-choice-featured {
+  min-height:76px; padding:14px; margin-top:5px; border-radius:18px;
+  border:1px solid color-mix(in srgb,var(--accent2) 38%,var(--border));
+  background:linear-gradient(112deg,color-mix(in srgb,var(--accent2) 21%,var(--surface2)),var(--surface2) 70%,color-mix(in srgb,var(--accent) 13%,var(--surface2)));
+}
+.ks-modal-choice-featured .ks-modal-choice-rail { height:34px; width:4px; }
+.ks-modal-section-title { color:var(--accent2-text); font-size:11px; letter-spacing:.13em; font-weight:750; text-transform:uppercase; }
+.ks-modal-primary { background:linear-gradient(108deg,var(--accent-fill),color-mix(in srgb,var(--accent-fill) 86%,var(--accent2))); box-shadow:0 5px 20px var(--accent-glow); }
+
+.ks-modal-planner-date input { font-weight:650; font-size:16px; }
+.ks-modal-role-group { overflow:hidden; border-top:1px solid color-mix(in srgb,var(--border) 80%,transparent); }
+.ks-modal-role { position:relative; border-bottom:1px solid color-mix(in srgb,var(--border) 80%,transparent); transition:background var(--motion-state) var(--motion-ease); }
+.ks-modal-role[data-selected="true"] { background:linear-gradient(90deg,color-mix(in srgb,var(--accent) 14%,var(--surface2)),transparent 100%); }
+.ks-modal-role:focus-visible { outline:2px solid var(--focus); outline-offset:-3px; box-shadow:none; z-index:1; }
+.ks-modal-role[data-selected="true"]::before { content:"";position:absolute;top:12px;bottom:12px;left:0;width:3px;border-radius:4px;background:var(--accent); }
+@media (prefers-reduced-motion:reduce) {
+  .ks-modal-choice,.ks-modal-role { transition:none; }
+}

@@ -37,6 +37,57 @@ test.describe("Scene planner", () => {
     await expect(page.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen" })).toBeVisible();
   });
 
+  test("setlist-suggesties gebruiken één scrollvlak met zoeken en een vaste actie", async ({ page }, testInfo) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByRole("button", { name: "Kinks toevoegen" }).click();
+    const dialog = page.getByRole("dialog", { name: "Kinks toevoegen" });
+    await expect(dialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(dialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
+    await expect(dialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
+    // Without prior scene use this is empty; never highlight more than one suggestion.
+    expect(await dialog.locator(".ks-modal-choice-featured").count()).toBeLessThanOrEqual(1);
+    const search = dialog.getByRole("searchbox", { name: "Zoek een interesse" });
+    await search.fill("onvindbare-selectie-123");
+    await expect(dialog.getByText(/Geen suggesties gevonden/)).toBeVisible();
+    await search.fill("Spanking");
+    const addSuggestion = dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen, Toevoegen aan setlist", exact: true }).first();
+    await expect(addSuggestion).toBeVisible();
+    await expect(addSuggestion).toHaveAccessibleName("Spanking (hand) — geven ↔ ontvangen, Toevoegen aan setlist");
+    await search.fill("");
+    await addSuggestion.click();
+    const addedSuggestion = dialog.getByRole("button", { name: "Spanking (hand) — geven ↔ ontvangen, Toegevoegd", exact: true }).first();
+    await expect(addedSuggestion).toHaveAccessibleName("Spanking (hand) — geven ↔ ontvangen, Toegevoegd");
+    await expect(addedSuggestion).toBeDisabled();
+    const footer = dialog.locator('[data-testid="sheet-footer"]');
+    await expect(footer).toContainText("1 item");
+    await page.screenshot({ path: `screenshots/theme-rehearsal/modal-cohesion/${testInfo.project.name}/scene-setlist-suggestion-added.png`, fullPage: false });
+
+    await page.setViewportSize({ width: 320, height: 844 });
+    await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
+    const count = footer.getByText("1 item in de setlist", { exact: true });
+    const done = footer.getByRole("button", { name: "Klaar" });
+    await expect(count).toBeVisible();
+    await expect(done).toBeVisible();
+    const [footerBox, countBox, doneBox] = await Promise.all([
+      footer.boundingBox(),
+      count.boundingBox(),
+      done.boundingBox(),
+    ]);
+    expect(footerBox).not.toBeNull();
+    expect(countBox).not.toBeNull();
+    expect(doneBox).not.toBeNull();
+    expect(await footer.evaluate((element) => element.scrollWidth - element.clientWidth)).toBeLessThanOrEqual(1);
+    expect(countBox!.x + countBox!.width).toBeLessThanOrEqual(footerBox!.x + footerBox!.width + 1);
+    expect(doneBox!.x + doneBox!.width).toBeLessThanOrEqual(footerBox!.x + footerBox!.width + 1);
+    expect(countBox!.y + countBox!.height).toBeLessThanOrEqual(doneBox!.y + 1);
+    await page.screenshot({ path: `screenshots/theme-rehearsal/modal-cohesion/${testInfo.project.name}/scene-setlist-320-text-200.png`, fullPage: false });
+
+    await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
+    await page.setViewportSize({ width: 390, height: 844 });
+    await dialog.getByRole("button", { name: "Klaar" }).click();
+    await expect(dialog).toHaveCount(0);
+  });
+
   test("geen overflow op mobiel (390px)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await page.goto("/scene?a=pw-alex-001&b=pw-sam-002");
