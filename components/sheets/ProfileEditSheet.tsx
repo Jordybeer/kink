@@ -13,7 +13,7 @@ import {
   Sparkle,
   Trash,
 } from "@phosphor-icons/react";
-import Sheet, { SheetContent } from "@/components/Sheet";
+import Sheet from "@/components/Sheet";
 import { avatarStyle } from "@/lib/avatar";
 import { resizeImage } from "@/lib/imageUtils";
 import {
@@ -361,36 +361,18 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
   const compactQuestionnaireOverview = step === 2 && panel === null;
 
   return (
-    <Sheet open={open} onClose={onClose} scrollable variant="surface" aria-label="Profiel bewerken">
-      <SheetContent
-        showClose={false}
-        showHandle={false}
-        className={`flex flex-col overflow-hidden rounded-t-[24px] px-0 pb-0 pt-0 sm:h-auto sm:rounded-[24px] ${compactQuestionnaireOverview
-          ? "h-auto sm:min-h-0"
-          : "h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] sm:min-h-[42rem] sm:max-h-[min(48rem,calc(100dvh-3rem))]"}`}
-        style={{
-          maxHeight: compactQuestionnaireOverview
-            ? "min(34rem, calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance)))"
-            : "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top) - var(--sheet-edge-clearance))",
-          backgroundImage: "var(--profile-edit-glow)",
-          backgroundRepeat: "no-repeat",
-        }}
-      >
-        <header className="flex-none px-5 pb-2 pt-3" data-testid="profile-edit-header">
-          <div className="grid min-h-11 grid-cols-[1fr_auto_1fr] items-center gap-2">
-            <span aria-hidden="true" />
-            <h2 className="text-base font-semibold">Profiel bewerken</h2>
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Profiel bewerken sluiten"
-              className="ks-motion-choice focus-ring min-h-11 justify-self-end px-1 text-sm font-medium"
-              style={{ color: "var(--text2)" }}
-            >
-              Annuleren
-            </button>
-          </div>
-
+    <Sheet
+      open={open}
+      onClose={onClose}
+      scrollable
+      variant="surface"
+      contentSized={compactQuestionnaireOverview}
+      title="Profiel bewerken"
+      eyebrow={`Profiel / stap ${step} van 2`}
+      aria-label="Profiel bewerken"
+      scrollBodyRef={scrollBodyRef}
+      testIds={{ header: "profile-edit-header", body: "profile-edit-scroll-body", footer: "profile-edit-footer" }}
+      headerAfter={
           <nav className="mx-auto mt-1 flex max-w-[12rem] items-center gap-3" aria-label="Profielstappen">
             <button
               type="button"
@@ -422,9 +404,49 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               2
             </button>
           </nav>
-        </header>
+      }
+      footer={
+        <>
 
-        <div ref={scrollBodyRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-6 pt-3" data-testid="profile-edit-scroll-body">
+          {error && !errorField && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
+          {step === 1 ? (
+            <button
+              type="button"
+              onClick={goNext}
+              className="ks-modal-primary ks-motion-choice focus-ring min-h-12 w-full rounded-xl text-sm font-semibold"
+              style={{ color: "var(--on-accent-fill)" }}
+            >
+              Volgende <CaretRight size={15} className="ml-1 inline" aria-hidden="true" />
+            </button>
+          ) : (
+            <div className="grid grid-cols-[0.82fr_1.18fr] gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  if (panel) setPanel(null);
+                  else setStep(1);
+                  clearError();
+                }}
+                className="ks-motion-choice focus-ring min-h-12 rounded-xl text-sm font-semibold"
+                style={{ color: "var(--text)", border: "1px solid var(--control-border)" }}
+              >
+                <CaretLeft size={15} className="mr-1 inline" aria-hidden="true" /> Vorige
+              </button>
+              <button
+                type="button"
+                onClick={save}
+                className="ks-motion-choice focus-ring min-h-12 rounded-full text-sm font-semibold"
+                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
+              >
+                Opslaan
+              </button>
+            </div>
+          )}
+
+        </>
+      }
+    >
+      <div className="pb-4">
           {step === 1 && panel === "sources" ? (
             <section data-testid="profile-edit-sources-panel">
               <button
@@ -549,7 +571,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
             </section>
           ) : step === 1 ? (
             <section data-testid="profile-edit-identity-step">
-              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-2xl leading-tight focus:outline-none" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 600 }}>
+              <h3 ref={panelHeadingRef} tabIndex={-1} className="text-xl font-semibold leading-tight focus:outline-none">
                 Identiteit
               </h3>
               <p className="mt-1 text-sm leading-5" style={{ color: "var(--text2)" }}>
@@ -792,49 +814,7 @@ export default function ProfileEditSheet({ open, profile, onClose }: ProfileEdit
               </div>
             </section>
           )}
-        </div>
-
-        <footer
-          className="flex-none px-5 pb-[calc(1rem+env(safe-area-inset-bottom))] pt-3"
-          data-testid="profile-edit-footer"
-          style={{ borderTop: "1px solid var(--border)", background: "color-mix(in srgb, var(--surface) 96%, transparent)" }}
-        >
-          {error && !errorField && <p className="mb-2 text-sm" role="alert" style={{ color: "var(--hard-no)" }}>{error}</p>}
-          {step === 1 ? (
-            <button
-              type="button"
-              onClick={goNext}
-              className="ks-motion-choice focus-ring min-h-12 w-full rounded-full text-sm font-semibold"
-              style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-            >
-              Volgende <CaretRight size={15} className="ml-1 inline" aria-hidden="true" />
-            </button>
-          ) : (
-            <div className="grid grid-cols-[0.82fr_1.18fr] gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  if (panel) setPanel(null);
-                  else setStep(1);
-                  clearError();
-                }}
-                className="ks-motion-choice focus-ring min-h-12 rounded-full text-sm font-semibold"
-                style={{ color: "var(--text)", border: "1px solid var(--control-border)" }}
-              >
-                <CaretLeft size={15} className="mr-1 inline" aria-hidden="true" /> Vorige
-              </button>
-              <button
-                type="button"
-                onClick={save}
-                className="ks-motion-choice focus-ring min-h-12 rounded-full text-sm font-semibold"
-                style={{ background: "var(--accent-fill)", color: "var(--on-accent-fill)" }}
-              >
-                Opslaan
-              </button>
-            </div>
-          )}
-        </footer>
-      </SheetContent>
+      </div>
     </Sheet>
   );
 }

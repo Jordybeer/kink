@@ -37,7 +37,7 @@ export default function PrivateResponseStatus({
       ? "text-sm px-1.5 py-0.5"
       : "text-sm px-1.5 py-0.5 w-[var(--status-pill-width)]";
   const sharedClass = plain
-    ? "focus-ring inline-flex min-h-11 items-center justify-center gap-1.5 whitespace-nowrap text-sm font-medium"
+    ? "focus-ring inline-flex min-h-11 min-w-11 max-w-full flex-wrap items-center justify-center gap-1.5 whitespace-normal text-center text-sm font-medium [overflow-wrap:anywhere]"
     : `focus-ring rounded-full border inline-flex items-center justify-center gap-1 ${readable ? "min-w-0 max-w-full whitespace-normal [overflow-wrap:anywhere] text-center" : "whitespace-nowrap"} ${sizeClass}`;
 
   if (!status) {
@@ -63,46 +63,46 @@ export default function PrivateResponseStatus({
     );
   }
 
+  const control = concealed ? (
+    <motion.button
+      key={plain ? undefined : "concealed"}
+      type="button"
+      onClick={onReveal}
+      aria-label={`Privéantwoord voor ${subject} tonen`}
+      className={`${sharedClass} col-start-1 row-start-1`}
+      style={plain
+        ? { color: "var(--text2)" }
+        : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
+      initial={plain ? false : { opacity: 0, filter: "blur(4px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, filter: "blur(4px)" }}
+      transition={t.fast}
+    >
+      <EyeSlash size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
+      Privé
+    </motion.button>
+  ) : (
+    <motion.button
+      key={plain ? undefined : "revealed"}
+      type="button"
+      onClick={onConceal}
+      aria-label={`Privéantwoord voor ${subject}, ${STATUS_LABEL[status]}, opnieuw verbergen`}
+      className={`${sharedClass} col-start-1 row-start-1`}
+      style={statusStyle}
+      initial={plain ? false : { opacity: 0, filter: "blur(4px)" }}
+      animate={{ opacity: 1, filter: "blur(0px)" }}
+      exit={{ opacity: 0, filter: "blur(4px)" }}
+      transition={t.fast}
+    >
+      <Eye size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
+      <StatusGlyph status={status} />
+      <span className={plain ? "min-w-0" : undefined}>{STATUS_LABEL[status]}</span>
+    </motion.button>
+  );
+
   return (
-    <span className="inline-grid flex-none">
-      <AnimatePresence initial={false} mode="wait">
-        {concealed ? (
-          <motion.button
-            key="concealed"
-            type="button"
-            onClick={onReveal}
-            aria-label={`Privéantwoord voor ${subject} tonen`}
-            className={`${sharedClass} col-start-1 row-start-1`}
-            style={plain
-              ? { color: "var(--text2)" }
-              : { color: "var(--text2)", borderColor: "var(--border)", background: "var(--tag-muted)" }}
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, filter: "blur(4px)" }}
-            transition={t.fast}
-          >
-            <EyeSlash size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
-            Privé
-          </motion.button>
-        ) : (
-          <motion.button
-            key="revealed"
-            type="button"
-            onClick={onConceal}
-            aria-label={`Privéantwoord voor ${subject} opnieuw verbergen`}
-            className={`${sharedClass} col-start-1 row-start-1`}
-            style={statusStyle}
-            initial={{ opacity: 0, filter: "blur(4px)" }}
-            animate={{ opacity: 1, filter: "blur(0px)" }}
-            exit={{ opacity: 0, filter: "blur(4px)" }}
-            transition={t.fast}
-          >
-            <Eye size={readable ? 13 : compact ? 10 : 10} aria-hidden="true" />
-            <StatusGlyph status={status} />
-            {STATUS_LABEL[status]}
-          </motion.button>
-        )}
-      </AnimatePresence>
+    <span className={plain ? "inline-grid min-w-0 max-w-full" : "inline-grid flex-none"}>
+      {plain ? control : <AnimatePresence initial={false} mode="wait">{control}</AnimatePresence>}
     </span>
   );
 }

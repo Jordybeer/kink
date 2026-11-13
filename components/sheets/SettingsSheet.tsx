@@ -234,6 +234,7 @@ export default function SettingsSheet({
       open={open}
       onClose={onClose}
       title="Instellingen"
+      titleTone="utility"
       scrollable
       variant="surface"
       aria-label="Instellingen"

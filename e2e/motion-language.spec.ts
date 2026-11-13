@@ -147,7 +147,7 @@ test("relationship ornament pauses offscreen while contract help traps and resto
   await expect(why).toBeFocused();
 });
 
-test("quick sheet keeps finite backdrop opacity through interruption, live reduced motion and numeric dragging", async ({ page }, testInfo) => {
+test("modal interruption preserves finite opacity and non-draggable surface backdrop", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
   await page.evaluate(() => {
@@ -185,6 +185,7 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   const addKinks = page.getByRole("button", { name: "Kinks toevoegen", exact: true });
   await addKinks.click();
   const draggable = page.getByRole("dialog", { name: "Kinks toevoegen", exact: true });
+  await expect(draggable).toHaveAttribute("data-sheet-variant", "surface");
   await expect(draggable).toBeFocused();
   const handle = draggable.getByRole("heading", { name: "Toevoegen aan setlist", exact: true });
   await expect.poll(() => draggable.evaluate((element) => Math.abs(element.getBoundingClientRect().bottom - window.innerHeight))).toBeLessThan(1);
@@ -194,7 +195,8 @@ test("quick sheet keeps finite backdrop opacity through interruption, live reduc
   await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2 + 65, { steps: 12 });
   const opacity = await page.locator('[aria-hidden="true"].fixed.inset-0 > div').last().evaluate((element) => Number(getComputedStyle(element).opacity));
   expect(opacity).toBeGreaterThan(0);
-  expect(opacity).toBeLessThan(1);
+  // Scrollable editorial surfaces do not drag; keep the backdrop fully dimmed.
+  expect(opacity).toBeCloseTo(1, 2);
   await testInfo.attach("sheet-motion-measurements", {
     body: JSON.stringify({ finiteOpacityWrites: writes.length, numericDragOpacity: opacity, scrollBefore, scrollAfter: await page.evaluate(() => window.scrollY) }),
     contentType: "application/json",
