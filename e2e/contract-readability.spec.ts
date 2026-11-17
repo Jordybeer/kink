@@ -7,7 +7,7 @@ const nameB = "Sam met volledige alias " + "Ononderbroken".repeat(6);
 const topic = "Een eigen onderwerp met volledige betekenis " + "Onderwerp".repeat(7);
 const profiles: Profile[] = [
   { ...PROFILE_ALEX, name: nameA, customKinks: [{ id: "readable-limit", name: topic }], entries: {
-    "readable-limit": { status: "hard_no", comment: "", desire: 2 },
+    "readable-limit": { status: "hard_no", comment: "" },
     pegging_give: { status: "yes", comment: "", desire: 4 },
   } },
   { ...PROFILE_SAM, name: nameB, customKinks: [], entries: { pegging_receive: { status: "willing", comment: "", desire: 3 } } },
@@ -29,10 +29,18 @@ for (const theme of ["dark", "light"] as const) {
       await expect(answers.nth(0).locator("dt")).toHaveText(nameA);
       await expect(answers.nth(1).locator("dt")).toHaveText(nameB);
       await expect(answers.nth(0).locator("dd")).toContainText("Harde grens");
-      await expect(answers.nth(0).locator("dd")).toContainText("Verlangen: 2/5");
+      await expect(row).not.toContainText("Verlangen:");
       await expect(answers.nth(1).locator("dd")).toContainText("geen antwoord");
       await expect(row.getByText(`Eigen onderwerp van ${nameA}`, { exact: true })).toBeVisible();
-      await expect(page.getByText("Pegging — geven ↔ ontvangen", { exact: true })).toBeVisible();
+      const directional = page.locator("[data-contract-topic]").filter({ hasText: "Pegging — geven ↔ ontvangen" });
+      await expect(directional.getByText("Pegging — geven ↔ ontvangen", { exact: true })).toBeVisible();
+      const directionalAnswers = directional.locator("[data-contract-answer]");
+      await expect(directionalAnswers.nth(0).locator("dt")).toHaveText(nameA);
+      await expect(directionalAnswers.nth(1).locator("dt")).toHaveText(nameB);
+      await expect(directionalAnswers.nth(0).locator("dd")).toContainText("Heel graag");
+      await expect(directionalAnswers.nth(0).locator("dd")).toContainText("Verlangen: 4/5");
+      await expect(directionalAnswers.nth(1).locator("dd")).toContainText("Ja");
+      await expect(directionalAnswers.nth(1).locator("dd")).toContainText("Verlangen: 3/5");
       await row.getByRole("button", { name: `Notitie toevoegen bij ${topic}`, exact: true }).click();
       await row.getByPlaceholder(`Notitie van ${nameA}`, { exact: true }).fill("Een afspraak " + "x".repeat(120));
       await expect(row).toContainText("Ingevulde notities worden onderdeel van deze contractversie en komen ook in de PDF.");

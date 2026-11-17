@@ -472,13 +472,14 @@ function ScenePage() {
   return (
     <>
       <main
+        data-scene-main
         className="mx-auto flex min-h-[100dvh] w-full max-w-3xl flex-col px-4"
         style={{
           paddingTop: 20,
           paddingBottom: showEditorBar
-            ? "calc(136px + env(safe-area-inset-bottom))"
+            ? "var(--scene-toolbar-clearance, calc(136px + env(safe-area-inset-bottom)))"
             : showPlayBar
-              ? "calc(72px + env(safe-area-inset-bottom))"
+              ? "var(--scene-toolbar-clearance, calc(72px + env(safe-area-inset-bottom)))"
               : 32,
         }}
       >
@@ -665,6 +666,7 @@ function ScenePage() {
 
       {showEditorBar && (
         <div
+          data-scene-toolbar
           className="fixed bottom-0 left-0 right-0 z-40"
           style={{ background: "color-mix(in srgb, var(--bg) 92%, transparent)", backdropFilter: "blur(18px)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
         >
@@ -726,6 +728,7 @@ function ScenePage() {
       {showPlayBar && currentScene && (
         <div
           data-scene-play-bar
+          data-scene-toolbar
           className="fixed bottom-0 left-0 right-0 z-40"
           style={{ background: "color-mix(in srgb, var(--bg) 94%, transparent)", backdropFilter: "blur(18px)", borderTop: "1px solid var(--border)", padding: "10px 16px", paddingBottom: "max(10px, env(safe-area-inset-bottom))" }}
         >

@@ -21,6 +21,58 @@ async function expectTarget(control: Locator) {
   expect(box.height).toBeGreaterThanOrEqual(44);
 }
 
+async function expectFullyVisible(locator: Locator) {
+  await expect.poll(() => locator.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    if (box.width <= 0 || box.height <= 0 || box.left < -1 || box.top < -1 ||
+      box.right > window.innerWidth + 1 || box.bottom > window.innerHeight + 1) return false;
+    for (let ancestor = node.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const style = getComputedStyle(ancestor);
+      const bounds = ancestor.getBoundingClientRect();
+      const left = bounds.left + ancestor.clientLeft;
+      const top = bounds.top + ancestor.clientTop;
+      if (/auto|scroll|hidden|clip/.test(style.overflowX) &&
+        (box.left < left - 1 || box.right > left + ancestor.clientWidth + 1)) return false;
+      if (/auto|scroll|hidden|clip/.test(style.overflowY) &&
+        (box.top < top - 1 || box.bottom > top + ancestor.clientHeight + 1)) return false;
+    }
+    return true;
+  })).toBe(true);
+}
+
+async function expectReachableCenter(locator: Locator) {
+  await expect.poll(() => locator.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const hit = document.elementFromPoint(box.left + box.width / 2, box.top + box.height / 2);
+    return Boolean(hit && node.contains(hit));
+  })).toBe(true);
+}
+
+async function expectTaskFrame(dialog: Locator, closeLabel: string) {
+  const body = dialog.getByTestId("sheet-scroll-body");
+  await expect(body).toHaveCount(1);
+  expect((await body.boundingBox())!.height).toBeGreaterThan(44);
+  await expectFullyVisible(body);
+  await expectFullyVisible(dialog.getByRole("heading", { level: 2 }));
+  const footer = dialog.getByTestId("sheet-footer");
+  await expectFullyVisible(footer);
+  for (const control of [dialog.getByRole("button", { name: closeLabel, exact: true }), ...await footer.getByRole("button").all()]) {
+    await expectTarget(control);
+    await expectFullyVisible(control);
+    await expectReachableCenter(control);
+  }
+}
+
+async function expectCanvasReachableByScrolling(body: Locator, canvas: Locator) {
+  await body.evaluate((node) => {
+    const box = node.getBoundingClientRect();
+    const pad = node.querySelector("canvas")!.getBoundingClientRect();
+    node.scrollTop += pad.top + pad.height / 2 - box.top - node.clientHeight / 2;
+  });
+  expect(await body.evaluate((node) => node.scrollTop)).toBeGreaterThan(0);
+  await expectReachableCenter(canvas);
+}
+
 async function expectTrap(dialog: Locator, page: Page) {
   await expect(dialog).toBeFocused();
   const buttons = dialog.getByRole("button");
@@ -64,21 +116,16 @@ test("signature Sheet traps focus, preserves ink, clears and fits short enlarged
   await page.setViewportSize({ width: 640, height: 360 });
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await expectFit(dialog, page);
-  await expect(dialog.getByTestId("sheet-scroll-body")).toHaveCount(1);
-  await expectTarget(dialog.getByRole("button", { name: "Handtekening sluiten", exact: true }));
-  await expect(dialog.getByTestId("sheet-footer")).toBeInViewport();
+  await expectTaskFrame(dialog, "Handtekening sluiten");
+  const body = dialog.getByTestId("sheet-scroll-body");
+  await expectCanvasReachableByScrolling(body, canvas);
   await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/audit-signature-short.png` });
   await page.setViewportSize({ width: 320, height: 667 });
   await expectFit(dialog, page);
-  await expect(dialog.getByRole("heading", { name: "Handtekening", exact: true })).toBeInViewport();
-  await expect(dialog.getByRole("button", { name: "Handtekening sluiten", exact: true })).toBeInViewport();
-  await expect(dialog.getByTestId("sheet-footer")).toBeInViewport();
-  const body = dialog.getByTestId("sheet-scroll-body");
-  expect((await body.boundingBox())!.height).toBeGreaterThan(44);
+  await expectTaskFrame(dialog, "Handtekening sluiten");
   await expect(body.getByText(longAlias, { exact: true })).toBeVisible();
   expect(await body.getByText(longAlias, { exact: true }).evaluate((node) => node.scrollWidth <= node.clientWidth + 1)).toBe(true);
-  await body.evaluate((node) => { node.scrollTop = node.scrollHeight; });
-  await expect(canvas).toBeInViewport();
+  await expectCanvasReachableByScrolling(body, canvas);
   await dialog.getByRole("button", { name: "Wis", exact: true }).click();
   expect(await ink(canvas)).toBe(false);
   await page.keyboard.press("Escape");
@@ -91,6 +138,9 @@ test("time Sheet uses 44px choices, explicit confirmation, focus return and a sh
   await seedAndGo(page, `/scene?${pair}`, profiles);
   await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   const trigger = page.getByLabel("Tijd", { exact: true });
+  await trigger.scrollIntoViewIfNeeded();
+  await expectFullyVisible(trigger);
+  await expectReachableCenter(trigger);
   await trigger.click();
   const dialog = page.getByRole("dialog", { name: "Starttijd", exact: true });
   await expectTrap(dialog, page);
@@ -100,8 +150,7 @@ test("time Sheet uses 44px choices, explicit confirmation, focus return and a sh
   await expect(hours).toHaveCount(24);
   await expect(minutes).toHaveCount(4);
   for (const control of [...await hours.all(), ...await minutes.all()]) await expectTarget(control);
-  await expect(dialog.getByTestId("sheet-scroll-body")).toHaveCount(1);
-  await expect(dialog.getByTestId("sheet-footer")).toBeInViewport();
+  await expectTaskFrame(dialog, "Starttijd sluiten");
   await dialog.getByRole("button", { name: "21", exact: true }).click();
   await dialog.getByRole("button", { name: ":45", exact: true }).click();
   await expect(trigger).not.toHaveText("21:45");
@@ -190,10 +239,14 @@ test("quick sharing is centered and bounded on desktop, with a static readable Q
 test("long-name quick actions and linked deletion scroll at 320px/200% without content drag dismissal", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 320, height: 667 });
   await seedAndGo(page, "/", profiles.map((profile) => ({ ...profile, name: longAlias, personGroupId: "audit-linked-person" })));
-  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   const trigger = page.getByRole("button", { name: `Meer acties voor ${longAlias}`, exact: true }).first();
   await trigger.click();
   const actions = page.getByRole("dialog", { name: `Acties voor ${longAlias}`, exact: true });
+  await expectFit(actions, page);
+  const handle = actions.locator("[data-sheet-handle]");
+  // Enlarged rem sizing can mask an undersized hit area at normal text size.
+  await expectTarget(handle);
+  await page.evaluate(() => { document.documentElement.style.fontSize = "200%"; });
   await expectFit(actions, page);
   const scrollBody = actions.locator("[data-sheet-scroll-owner]");
   await expect(scrollBody).toHaveCount(1);
@@ -214,8 +267,8 @@ test("long-name quick actions and linked deletion scroll at 320px/200% without c
   await expect(cancel).toBeInViewport();
   await page.screenshot({ path: `screenshots/theme-rehearsal/${testInfo.project.name}/audit-quick-actions-enlarged.png` });
   await scrollBody.evaluate((node) => { node.scrollTop = 0; });
-  const handle = actions.locator("[data-sheet-handle]");
   await handle.scrollIntoViewIfNeeded();
+  await expectTarget(handle);
   const handleBox = (await handle.boundingBox())!;
   await page.mouse.move(handleBox.x + handleBox.width / 2, handleBox.y + handleBox.height / 2);
   await page.mouse.down();

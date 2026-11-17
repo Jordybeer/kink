@@ -750,6 +750,10 @@ span[class~="mr-auto"][class~="text-xs"] {
     font-size: 3rem !important;
     line-height: 1;
   }
+
+  /* The enlarged editor actions must not cover the fields above them. */
+  [data-scene-main] { --scene-toolbar-clearance: 32px; }
+  [data-scene-toolbar] { position: static; }
 }
 
 :root { --bottom-nav-h: calc(env(safe-area-inset-bottom) + 3.5rem); }

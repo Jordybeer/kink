@@ -9,8 +9,12 @@ const a: Profile = { ...PROFILE_ALEX, customKinks: [
   "public-limit": { status: "hard_no", comment: "Privénotitie" },
   "private-limit": { status: "hard_no", privateResponse: true, comment: "Geheime notitie" },
   praise_kink: { status: "yes", comment: "" },
+  wax_play: { status: "yes", comment: "" },
 } };
-const b: Profile = { ...PROFILE_SAM, customKinks: [], entries: { praise_kink: { status: "yes", comment: "" } } };
+const b: Profile = { ...PROFILE_SAM, customKinks: [], entries: {
+  praise_kink: { status: "yes", comment: "" },
+  wax_play: { status: "maybe", comment: "" },
+} };
 
 test("public unpaired hard boundary remains visible through result, category and discussed filters", async ({ page }, testInfo) => {
   await seedAndGo(page, `/compare?a=${a.id}&b=${b.id}`, [a, b]);
@@ -24,13 +28,32 @@ test("public unpaired hard boundary remains visible through result, category and
     await expect(page.getByText(/Geheime eigen grens|Geheime notitie|Privénotitie/)).toHaveCount(0);
   };
   await checkSafety();
-  await page.locator(".compare-kink-row").getByRole("button", { name: /als besproken markeren/ }).click();
+  const rows = page.locator(".compare-kink-row");
+  const shared = page.locator('.compare-kink-row[data-fact-kind="shared"]');
+  const discuss = page.locator('.compare-kink-row[data-fact-kind="discuss"]');
+  await expect(rows).toHaveCount(2);
+  await expect(shared).toHaveCount(1);
+  await expect(discuss).toHaveCount(1);
+  await expect(shared.getByRole("button", { name: /als besproken markeren/ })).toHaveCount(0);
+  const markDiscussed = discuss.getByRole("button", { name: /als besproken markeren/ });
+  await markDiscussed.click();
+  await expect(discuss.getByRole("button", { name: /als niet besproken markeren/ })).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("button", { name: /Verberg besproken/ }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(shared).toBeVisible();
+  await expect(discuss).toHaveCount(0);
+  await checkSafety();
+  await page.getByRole("button", { name: /Toon alles/ }).click();
+  await expect(rows).toHaveCount(2);
+  await expect(discuss).toBeVisible();
   await checkSafety();
   await page.getByTestId("compare-results-filter").click();
   const results = page.getByRole("dialog", { name: "Resultaten filteren" });
   await results.getByRole("button", { name: /Zelfde interesse/ }).click();
   await results.getByRole("button", { name: "Klaar", exact: true }).click();
+  await expect(rows).toHaveCount(1);
+  await expect(shared).toBeVisible();
+  await expect(discuss).toHaveCount(0);
   await checkSafety();
   await page.getByTestId("compare-categories-filter").click();
   const categories = page.getByRole("dialog", { name: "Categorieën filteren" });

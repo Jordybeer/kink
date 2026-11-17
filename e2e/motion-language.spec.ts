@@ -126,14 +126,24 @@ test("scene reorder keeps the focused control and aftercare honours disabled and
   await expect(save).toHaveCSS("transition-duration", /^(0s)(, 0s)*$/);
 });
 
-test("relationship ornament pauses offscreen while contract help traps and restores keyboard focus", async ({ page }) => {
-  await seedAndGo(page, `/contract?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, [PROFILE_ALEX, PROFILE_SAM]);
+test("Compare ornament pauses offscreen and for reduced motion while contract help traps and restores keyboard focus", async ({ page }) => {
+  await seedAndGo(page, `/compare?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, [PROFILE_ALEX, PROFILE_SAM]);
   const thread = page.locator(".ks-relation-thread").first();
   await thread.scrollIntoViewIfNeeded();
+  await expect(thread).toBeInViewport();
   await expect(thread).toHaveCSS("animation-play-state", "running");
+  await page.getByRole("link", { name: "Plan een scène", exact: true }).scrollIntoViewIfNeeded();
+  await expect(thread).not.toBeInViewport();
+  await expect(thread).toHaveCSS("animation-play-state", "paused");
+  await thread.scrollIntoViewIfNeeded();
+  await expect(thread).toHaveCSS("animation-play-state", "running");
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await expect(thread).toHaveCSS("animation-name", "none");
+
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await page.goto(`/contract?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`);
   const why = page.getByRole("button", { name: "Waarom een echte naam toevoegen?", exact: true });
   await why.scrollIntoViewIfNeeded();
-  await expect(thread).toHaveCSS("animation-play-state", "paused");
   await why.focus();
   await page.keyboard.press("Enter");
   const dialog = page.getByRole("dialog", { name: "Waarom echte namen toevoegen" });

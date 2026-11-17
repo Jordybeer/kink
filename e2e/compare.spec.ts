@@ -221,13 +221,18 @@ test.describe("Vergelijkingspagina", () => {
   });
 
   test("belangrijke vergelijktekst blijft minstens 14px", async ({ page }) => {
-    const selectors = [
-      "[data-testid='compare-results-filter']",
-      "[data-testid='compare-categories-filter']",
-      "details summary",
+    const limits = page.getByRole("region", { name: "Harde grenzen met één zichtbaar antwoord" });
+    const elements = [
+      page.getByTestId("compare-results-filter"),
+      page.getByTestId("compare-categories-filter"),
+      limits.getByRole("heading", { name: "Harde grenzen met één zichtbaar antwoord" }),
+      limits.getByText("Deze grenzen blijven zichtbaar bij alle filters. Ze tellen niet mee als gezamenlijke vergelijking.", { exact: true }),
+      limits.getByRole("listitem").locator("p").first(),
+      limits.getByText("Alex", { exact: true }),
+      limits.getByText("Harde grens", { exact: true }),
+      limits.getByText("Sam: geen zichtbaar antwoord.", { exact: true }),
     ];
-    for (const selector of selectors) {
-      const element = page.locator(selector).first();
+    for (const element of elements) {
       await expect(element).toBeVisible();
       const size = await element.evaluate((node) => Number.parseFloat(getComputedStyle(node).fontSize));
       expect(size).toBeGreaterThanOrEqual(14);

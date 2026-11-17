@@ -27,7 +27,7 @@ type SheetTestIds = { header?: string; body?: string; footer?: string };
 export function SheetDragHandle({ children, className = "mb-1 h-7" }: { children: ReactNode; className?: string }) {
   const dragControls = useContext(SheetDragContext);
   return (
-    <div className={`touch-none ${className}`} aria-hidden="true" data-sheet-handle onPointerDown={(event) => dragControls?.start(event)}>
+    <div className={`min-h-[44px] shrink-0 touch-none ${className}`} aria-hidden="true" data-sheet-handle onPointerDown={(event) => dragControls?.start(event)}>
       {children}
     </div>
   );
@@ -133,6 +133,7 @@ function TitledSheetFrame({
 }) {
   const quickSheet = variant === "sheet";
   const surface = variant === "surface";
+  const task = variant === "task";
 
   const sheetAmbient = "linear-gradient(156deg, color-mix(in srgb, var(--accent2) 5%, var(--surface)) 0%, var(--surface) 46%, color-mix(in srgb, var(--accent) 3%, var(--surface)) 100%)";
 
@@ -144,7 +145,7 @@ function TitledSheetFrame({
       ? contentSized
         ? "flex max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-1.5rem)] flex-col overflow-hidden rounded-2xl border px-[min(var(--sheet-gutter),20px)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:px-[min(var(--sheet-gutter),24px)]"
         : "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
-      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
+      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-min(1rem,16px))] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-[min(0.75rem,12px)] sm:max-h-[min(720px,calc(100dvh-min(3rem,48px)))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)]";
 
   return (
     <div
@@ -158,8 +159,8 @@ function TitledSheetFrame({
           <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
         </SheetDragHandle>
       )}
-      {/* Bound structural spacing so enlarged text retains the reading width. */}
-      <div data-testid={testIds?.header} className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
+      {/* Bound task chrome so enlarged text leaves room for the scroll body. */}
+      <div data-testid={testIds?.header} className={`${quickSheet ? "mb-4" : task ? "mb-[min(0.75rem,12px)]" : "mb-3"} flex ${task ? "min-h-[44px]" : "min-h-11"} min-w-0 flex-none items-start ${surface || task ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
@@ -173,25 +174,25 @@ function TitledSheetFrame({
           type="button"
           onClick={onClose}
           aria-label={`${title} sluiten`}
-          className={`ks-motion-choice focus-ring flex ${surface ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
+          className={`ks-motion-choice focus-ring flex ${surface || task ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
           style={{ color: "var(--text2)" }}
         >
           <X size={20} aria-hidden="true" />
         </button>
       </div>
-      {headerAfter && <div className="mb-3 flex-none">{headerAfter}</div>}
+      {headerAfter && <div className={`${task ? "mb-[min(0.75rem,12px)]" : "mb-3"} flex-none`}>{headerAfter}</div>}
       {scrollable ? (
         <>
           <div
             ref={scrollBodyRef}
-            className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? task ? "pb-[min(1rem,16px)]" : "pb-4" : task ? "pb-[calc(min(2rem,32px)+env(safe-area-inset-bottom))]" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid={testIds?.body ?? "sheet-scroll-body"}
           >
             {children}
           </div>
           {footer && (
             <div
-              className="flex-none border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              className={`flex-none border-t ${task ? "pt-[min(0.75rem,12px)] pb-[calc(min(0.75rem,12px)+env(safe-area-inset-bottom))]" : "pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}
               style={{ borderColor: "var(--border)" }}
               data-testid={testIds?.footer ?? "sheet-footer"}
             >
@@ -207,7 +208,7 @@ function TitledSheetFrame({
 function TaskSheetFrame({ children }: { children: ReactNode }) {
   return (
     <div
-      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b"
+      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-min(1rem,16px))] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pb-[calc(min(1rem,16px)+env(safe-area-inset-bottom))] pt-[min(1rem,16px)] sm:max-h-[min(720px,calc(100dvh-min(3rem,48px)))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)]"
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       data-testid="sheet-scroll-body"
     >
@@ -273,7 +274,7 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end sm:items-center sm:p-6" : contentSized ? "items-start pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:items-center sm:p-6" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end sm:items-center sm:p-6" : contentSized ? "items-start pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:items-center sm:p-6" : variant === "task" ? "items-end sm:items-center sm:p-[min(1.5rem,24px)]" : "items-end sm:items-center sm:p-6"}`}
             data-testid="sheet-visual-viewport"
             style={{
               top: "var(--visual-viewport-offset-top, 0px)",

@@ -228,6 +228,11 @@ Keep action headings short and place unrestricted identity text in the scroll
 body. Signature and time entry reuse the task Sheet's focus and viewport contract;
 time changes still require explicit confirmation.
 
+Bound task-dialog structural spacing independently of text enlargement. In short
+landscape viewports, the complete header and footer actions must fit while the
+single scroll body stays usable. Scene's editor toolbar joins normal document
+flow when a short landscape viewport cannot support fixed controls.
+
 Settings keeps the warm aubergine/rose utility surface: a fixed header and close,
 one scroll body, full-height mobile geometry and a contained desktop panel. Titled
 `surface` sheets use the existing editorial face at 28px with moderate weight;
