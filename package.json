@@ -18,24 +18,23 @@
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",
-    "@serwist/next": "^9.5.11",
+    "@serwist/next": "^9.5.15",
     "chart.js": "^4.5.1",
     "framer-motion": "^12.40.0",
     "jspdf": "^4.2.1",
     "jsqr": "^1.4.0",
-    "next": "16.4.3",
+    "next": "16.4.6",
     "qrcode": "^1.5.4",
     "react": "19.2.4",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "19.2.4",
-    "serwist": "^9.5.11",
+    "serwist": "^9.5.15",
     "vaul": "^1.1.2",
     "zustand": "^5.0.13"
   },
   "overrides": {
-    "browserslist": "4.28.8",
-    "postcss": "^8.5.15",
-    "zod": "4.6.6"
+    "browserslist": "4.29.3",
+    "postcss": "^8.5.15"
   },
   "devDependencies": {
     "@playwright/test": "^1.60.0",
@@ -47,7 +46,7 @@
     "@vitest/coverage-v8": "^4.1.12",
     "braces": "file:vendor/braces",
     "eslint": "^9.39.4",
-    "eslint-config-next": "16.4.3",
+    "eslint-config-next": "16.4.6",
     "tailwindcss": "^4",
     "typescript": "^5",
     "vitest": "^4.1.12"
