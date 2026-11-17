@@ -128,7 +128,8 @@ test("scene reorder keeps the focused control and aftercare honours disabled and
 
 test("Compare ornament pauses offscreen and for reduced motion while contract help traps and restores keyboard focus", async ({ page }) => {
   await seedAndGo(page, `/compare?a=${PROFILE_ALEX.id}&b=${PROFILE_SAM.id}`, [PROFILE_ALEX, PROFILE_SAM]);
-  const thread = page.locator(".ks-relation-thread").first();
+  // The header connector is desktop-only; the result rows connect both answers on these viewports.
+  const thread = page.locator(".compare-kink-row .ks-relation-thread").first();
   await thread.scrollIntoViewIfNeeded();
   await expect(thread).toBeInViewport();
   await expect(thread).toHaveCSS("animation-play-state", "running");
