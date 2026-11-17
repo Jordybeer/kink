@@ -42,8 +42,8 @@ test("one-sided public custom limit belongs in hard limits", async ({ page }) =>
   await seedAndGo(page, URL, customProfiles("hard_no"));
   const limits = page.getByText("Harde grenzen", { exact: true }).locator("..");
   await expect(limits.getByText("Eigen onderwerp", { exact: true })).toHaveCount(1);
-  await expect(limits.getByText("Alex: Harde grens", { exact: true })).toBeVisible();
-  await expect(limits.getByText("geen antwoord: Sam", { exact: true })).toBeVisible();
+  await expect(limits.locator("[data-contract-answer]").filter({ hasText: "Alex" })).toContainText("Harde grens");
+  await expect(limits.locator("[data-contract-answer]").filter({ hasText: "Sam" })).toContainText("geen antwoord");
 });
 
 test("a concealed custom limit reveals neither its label nor status", async ({ page }) => {

@@ -220,6 +220,14 @@ Do not use a tab-semantic segmented control for a choice that is not actually ta
 
 ## Settings and compact disclosures
 
+Quick sheets retain their mobile placement and share a centered, bounded desktop
+width. Every long dialog has one vertical scroll owner: SheetContent supplies it
+unless the consumer already owns a fixed header and scroll body. Only the shared
+drag handle starts dismissal; dragging or scrolling content must not dismiss it.
+Keep action headings short and place unrestricted identity text in the scroll
+body. Signature and time entry reuse the task Sheet's focus and viewport contract;
+time changes still require explicit confirmation.
+
 Settings keeps the warm aubergine/rose utility surface: a fixed header and close,
 one scroll body, full-height mobile geometry and a contained desktop panel. Titled
 `surface` sheets use the existing editorial face at 28px with moderate weight;
@@ -268,6 +276,23 @@ visible. Scene position projection remains separate; large Profile/catalogue/
 Compare lists, ContractSection and the contract preamble retain their established
 behavior. No page choreography, height measurement or animation-completion side
 effects belong to this pattern.
+
+## Compare and contract reading
+
+Public unpaired hard limits stay named in an always-visible Compare safety
+section, independent of result, category and discussed filters. Name the owner
+and say that the other person has no visible answer; never imply that a private
+answer exists. These rows do not enter paired comparison counts and do not repeat
+inside the generic unpaired disclosure.
+
+Contract uses the same A/B identity colours as Compare. Full aliases identify
+the people; status text and StatusGlyph retain their separate semantic colours.
+Topic rows are flat, with quiet dividers and stacked name/answer groups on phones,
+expanding to two columns where space allows. Long aliases, topic names, ownership
+and notes wrap without clipping, nowrap pills or a forced horizontal thread.
+The editor uses whitespace and dividers for safewords, optional real names and
+signatures rather than nested cards. Preamble disclosure, full directional labels,
+notes/PDF meaning and the signing lifecycle remain unchanged.
 
 ## Motion
 

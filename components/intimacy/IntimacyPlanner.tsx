@@ -396,7 +396,7 @@ export default function IntimacyPlanner() {
           <ShieldCheck size={15} className="mt-0.5 flex-none" aria-hidden="true" style={{ color: "var(--accent)" }} />
           <span>Je planning en logboek blijven lokaal op dit toestel.</span>
         </div>
-        <p className="mt-3 text-xs italic tracking-wide" style={{ color: "var(--text2)", opacity: 0.78 }}>
+        <p className="mt-3 text-xs italic tracking-wide" style={{ color: "var(--text2)" }}>
           “Dominant on the streets. Submissive in the sheets.”
         </p>
       </section>

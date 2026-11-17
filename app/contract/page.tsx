@@ -5,6 +5,7 @@ import { ArrowRight, CaretDown, CaretUp, X } from "@phosphor-icons/react";
 import { useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useStore, useHasHydrated } from "@/lib/store";
+import { PROFILE_COLOUR_A as COLOUR_A, PROFILE_COLOUR_B as COLOUR_B } from "@/lib/compare";
 import { KINKS } from "@/lib/kinks";
 import type { ContractKinkDetail, ContractHardLimit } from "@/lib/contractLifecycle";
 import { projectCustomContractEvidence } from "@/lib/contractCustomProjection";
@@ -249,9 +250,6 @@ function ContractPage() {
     }
   }
 
-  const COLOUR_A = "var(--accent)";
-  const COLOUR_B = "var(--accent2)";
-
   function toggleAftercareA(option: string) {
     setAftercareA((previous) => previous.includes(option)
       ? previous.filter((item) => item !== option)
@@ -266,7 +264,7 @@ function ContractPage() {
 
   return (
     <>
-      <PageShell width="3xl" className="contract-print">
+      <PageShell width="3xl" className="contract-print [overflow-wrap:anywhere]">
         <section className="mx-auto mb-7 max-w-2xl text-center print:hidden" aria-labelledby="contract-editor-title">
           <p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: "var(--accent)" }}>
             Contract opstellen
@@ -285,10 +283,7 @@ function ContractPage() {
           </p>
         </section>
 
-        <div
-          className="mb-6 rounded-2xl p-5 sm:p-6"
-          style={{ background: "var(--surface)", border: "1px solid var(--border-accent)" }}
-        >
+        <div className="mb-8 min-w-0">
           <div className="mb-6 flex flex-wrap items-end justify-between gap-2 border-b pb-4" style={{ borderColor: "var(--border)" }}>
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.16em]" style={{ color: "var(--text2)" }}>Afspraken</p>
@@ -301,7 +296,7 @@ function ContractPage() {
             <p className="text-xs" style={{ color: "var(--text2)" }}>Opgesteld op {today}</p>
           </div>
 
-          <div data-testid="contract-preamble" className="mb-6 border-l-[3px] py-1 pl-4 sm:pl-5" style={{ borderColor: "var(--border-accent)" }}>
+          <div data-testid="contract-preamble" className="mb-6 min-w-0 py-1">
             <div className="space-y-3 text-sm italic leading-7 print:hidden" style={{ color: "var(--text2)" }}>
               {preambleOpen
                 ? preambleLayout.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)
@@ -329,19 +324,19 @@ function ContractPage() {
                 { profile: profileA, signals: signalsA, setSignals: setSignalsA, aftercare: aftercareA, toggle: toggleAftercareA, colour: COLOUR_A },
                 { profile: profileB, signals: signalsB, setSignals: setSignalsB, aftercare: aftercareB, toggle: toggleAftercareB, colour: COLOUR_B },
               ].map(({ profile, signals, setSignals, aftercare, toggle, colour }) => (
-                <div key={profile.id} className="flex flex-col gap-3 rounded-xl p-3" style={{ background: "var(--surface2)", border: "1px solid var(--border)" }}>
+                <div key={profile.id} className="flex min-w-0 flex-col gap-3">
                   <div className="text-xs font-semibold" style={{ color: colour }}>{profile.name}</div>
-                  <div className="flex flex-col gap-1.5">
+                  <div className="flex min-w-0 flex-col gap-1.5">
                     {SIGNAL_LEVELS.map((level) => (
-                      <div key={level.key} className="flex items-center gap-2">
+                      <div key={level.key} className="grid min-w-0 grid-cols-[auto_minmax(0,1fr)] items-center gap-x-2 gap-y-1">
                         <span className="inline-block h-3 w-3 flex-none rounded-full" style={{ background: level.color }} />
-                        <span className="w-32 flex-none text-xs" style={{ color: "var(--text2)" }}>{level.meaning}</span>
+                        <span className="min-w-0 text-xs" style={{ color: "var(--text2)" }}>{level.meaning}</span>
                         <input
                           type="text"
                           placeholder={DEFAULT_SIGNALS[level.key]}
                           value={signals[level.key]}
                           onChange={(event) => setSignals((current) => ({ ...current, [level.key]: event.target.value }))}
-                          className="min-w-0 flex-1 rounded-lg px-2 py-1.5 text-sm focus:outline-none focus:ring-2"
+                          className="col-span-2 min-h-11 min-w-0 w-full rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2"
                           style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
                           aria-label={`${level.meaning} signaalwoord voor ${profile.name}`}
                         />
@@ -438,7 +433,7 @@ function ContractPage() {
           </div>
         </div>
 
-        <div className="mb-6 rounded-2xl p-4 sm:p-6 print:hidden" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="mb-8 border-t pt-6 print:hidden" style={{ borderColor: "var(--border)" }}>
           <h2 className="mb-1 text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>
             Echte namen <span className="not-italic">(optioneel)</span>
           </h2>
@@ -446,13 +441,13 @@ function ContractPage() {
             Beide velden samen invullen of beide leeg laten. Bij invullen verschijnen de echte namen naast de nicknames onder de handtekening.
           </p>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <label className="flex flex-col gap-1.5">
+            <label className="flex min-w-0 flex-col gap-1.5">
               <span className="text-xs font-medium" style={{ color: COLOUR_A }}>Echte naam van {profileA.name}</span>
-              <input value={realNameA} onChange={(event) => setRealNameA(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
+              <input value={realNameA} onChange={(event) => setRealNameA(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring min-h-11 min-w-0 w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </label>
-            <label className="flex flex-col gap-1.5">
+            <label className="flex min-w-0 flex-col gap-1.5">
               <span className="text-xs font-medium" style={{ color: COLOUR_B }}>Echte naam van {profileB.name}</span>
-              <input value={realNameB} onChange={(event) => setRealNameB(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
+              <input value={realNameB} onChange={(event) => setRealNameB(event.target.value)} placeholder="Voor- en achternaam…" autoComplete="off" className="focus-ring min-h-11 min-w-0 w-full rounded-lg px-3 py-2.5 text-sm focus:outline-none" style={{ background: "var(--surface2)", border: "1px solid var(--border)", color: "var(--text)" }} />
             </label>
           </div>
           <button type="button" onClick={() => setWhyOpen(true)} className="ks-motion-choice focus-ring mt-3 inline-flex min-h-11 items-center gap-1 text-xs" style={{ color: "var(--accent)" }}>
@@ -460,14 +455,14 @@ function ContractPage() {
           </button>
         </div>
 
-        <div className="mb-6 rounded-2xl p-4 sm:p-6" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+        <div className="mb-8 border-t pt-6" style={{ borderColor: "var(--border)" }}>
           <h2 className="text-sm italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 400, color: "var(--accent)" }}>
             Handgeschreven handtekeningen
           </h2>
           <p className="mb-4 mt-1 text-sm leading-relaxed" style={{ color: "var(--text2)" }}>
             Verplicht voordat dit contract kan worden bewaard of digitaal bevestigd. Beide handtekeningen worden onderdeel van exact deze contractversie.
           </p>
-          <div className="flex flex-wrap gap-4">
+          <div className="grid min-w-0 grid-cols-1 gap-6 sm:grid-cols-2">
             <SignaturePad label={profileA.name} colour={COLOUR_A} canvasRef={canvasARef} onSignedChange={setSignedA} />
             <SignaturePad label={profileB.name} colour={COLOUR_B} canvasRef={canvasBRef} onSignedChange={setSignedB} />
           </div>

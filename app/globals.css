@@ -134,7 +134,7 @@ body { isolation: isolate; }
   to { transform: rotate(360deg); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .ks-spinner { animation-duration: 1.6s; }
+  .ks-spinner { animation: none; }
 }
 
 /* Settings cards — each feature gets its own glanceable block */

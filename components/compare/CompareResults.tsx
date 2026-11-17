@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { FileText, FilmSlate } from "@phosphor-icons/react";
+import StatusGlyph from "@/components/StatusGlyph";
 import CompareKinkRow from "@/components/CompareKinkRow";
 import { PROFILE_COLOUR_A, PROFILE_COLOUR_B, type CompareResultFilter } from "@/lib/compare";
 import type { CompareModel, ComparisonFact } from "@/lib/compareV2";
@@ -72,11 +73,34 @@ export default function CompareResults({
     />
   );
 
+  // Only read the privacy-filtered projection; a missing answer says nothing about privacy.
+  const unpairedLimits = model.unpaired.filter((item) => item.status === "hard_no");
+  const otherUnpaired = model.unpaired.filter((item) => item.status !== "hard_no");
+
   const uncategorized = facts.filter((fact) => fact.category === null);
   const filtersActive = selectedResults.size > 0 || selectedCategories.size > 0;
 
   return (
     <>
+      {unpairedLimits.length > 0 && (
+        <section className="mb-6" aria-labelledby="compare-unpaired-limits-heading">
+          <h2 id="compare-unpaired-limits-heading" className="mb-2 text-base" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400 }}>Harde grenzen met één zichtbaar antwoord</h2>
+          <p className="mb-2 text-sm" style={{ color: "var(--text2)" }}>Deze grenzen blijven zichtbaar bij alle filters. Ze tellen niet mee als gezamenlijke vergelijking.</p>
+          <ul>
+            {unpairedLimits.map((item) => {
+              const owner = item.visibleSide === "a" ? profileA : profileB;
+              const other = item.visibleSide === "a" ? profileB : profileA;
+              return (
+                <li key={item.id} className="border-b border-dashed py-3 text-sm [overflow-wrap:anywhere]" style={{ borderColor: "var(--border)" }}>
+                  <p className="font-medium">{item.label}</p>
+                  <p className="mt-1"><span style={{ color: item.visibleSide === "a" ? PROFILE_COLOUR_A : PROFILE_COLOUR_B }}>{owner.name}</span>: <span style={{ color: STATUS_VAR.hard_no }}><StatusGlyph status="hard_no" size={14} /> {STATUS_LABEL.hard_no}</span></p>
+                  <p className="mt-1" style={{ color: "var(--text2)" }}>{other.name}: geen zichtbaar antwoord.</p>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
       {CATEGORIES.map((category) => {
         const categoryFacts = facts.filter((fact) => fact.category === category);
         if (!categoryFacts.length) return null;
@@ -101,12 +125,12 @@ export default function CompareResults({
         </p>
       )}
 
-      {!filtersActive && model.unpaired.length > 0 && (
+      {!filtersActive && otherUnpaired.length > 0 && (
         <details className="mb-6 rounded-xl border" style={{ borderColor: "var(--border)", background: "var(--surface)" }}>
-          <summary className="ks-motion-choice focus-ring min-h-11 cursor-pointer px-3 py-3 text-sm font-medium">Nog niet door beiden beoordeeld · {model.unpaired.length}</summary>
+          <summary className="ks-motion-choice focus-ring min-h-11 cursor-pointer px-3 py-3 text-sm font-medium">Nog niet door beiden beoordeeld · {otherUnpaired.length}</summary>
           <div className="space-y-2 px-3 pb-3">
             <p className="text-sm leading-relaxed" style={{ color: "var(--text2)" }}>Deze voorkeuren tellen niet mee als vergelijking.</p>
-            {model.unpaired.map((item) => {
+            {otherUnpaired.map((item) => {
               const owner = item.visibleSide === "a" ? profileA.name : profileB.name;
               return (
                 <div key={item.id} className="flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3 py-2.5 text-sm" style={{ borderColor: "var(--border)", background: "var(--surface2)" }}>

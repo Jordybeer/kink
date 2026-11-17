@@ -181,12 +181,12 @@ test.describe("Vergelijkingspagina", () => {
   });
 
   test("houdt eenzijdige antwoorden apart van pair-resultaten", async ({ page }) => {
-    const details = page.locator("details").filter({ hasText: "Nog niet door beiden beoordeeld" });
-    await expect(details).toBeVisible();
-    await expect(details.locator("summary")).toContainText(/Nog niet door beiden beoordeeld · [1-9]/);
-    await details.locator("summary").click();
-    await expect(details).toContainText("Deze voorkeuren tellen niet mee als vergelijking");
-    await expect(details).toContainText(/Alex: (Heel graag|Ja|Misschien|Voor hen|Harde grens)|Sam: (Heel graag|Ja|Misschien|Voor hen|Harde grens)/);
+    const limits = page.getByRole("region", { name: "Harde grenzen met één zichtbaar antwoord" });
+    await expect(limits).toBeVisible();
+    await expect(limits).toContainText("Alex");
+    await expect(limits).toContainText("Harde grens");
+    await expect(limits).toContainText("Sam: geen zichtbaar antwoord.");
+    await expect(limits.locator("details")).toHaveCount(0);
   });
 
   test("benadrukt dat profieloverlap geen toestemming is", async ({ page }) => {

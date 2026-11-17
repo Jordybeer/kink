@@ -218,7 +218,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
 
         <div className="pb-3">
           {step === 0 && (
-            <div className="ks-fade-in">
+            <div>
               <label htmlFor={nameId} className="block text-sm font-semibold mb-1.5" style={{ color: "var(--text2)" }}>
                 Naam of alias
               </label>
@@ -327,7 +327,7 @@ export default function ProfileCreateSheet({ open, onClose }: Props) {
           )}
 
           {step === 1 && (
-            <div className="ks-fade-in">
+            <div>
               <p className="text-sm mb-4 leading-relaxed" style={{ color: "var(--text2)" }}>
                 Kies wat nu relevant voelt. Die onderwerpen verschijnen eerder. Je antwoorden worden nooit voorspeld of ingevuld.
               </p>
