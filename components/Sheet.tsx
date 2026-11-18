@@ -1,8 +1,9 @@
 "use client";
-import { motion, AnimatePresence, useMotionValue, useTransform } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, useMotionValue, useTransform, type DragControls } from "framer-motion";
 import { X } from "@phosphor-icons/react";
 import {
   createContext,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -16,15 +17,28 @@ import { useMotionSafe } from "@/lib/motion";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SheetCloseContext = createContext<(() => void) | null>(null);
+const SheetDragContext = createContext<DragControls | null>(null);
 
 export type SheetVariant = "sheet" | "task" | "surface";
 
 type SheetTestIds = { header?: string; body?: string; footer?: string };
 
+/** Only the handle starts a drag; gestures in the content remain native scrolling. */
+export function SheetDragHandle({ children, className = "mb-1 h-7" }: { children: ReactNode; className?: string }) {
+  const dragControls = useContext(SheetDragContext);
+  return (
+    <div className={`min-h-[44px] shrink-0 touch-none ${className}`} aria-hidden="true" data-sheet-handle onPointerDown={(event) => dragControls?.start(event)}>
+      {children}
+    </div>
+  );
+}
+
 interface SheetContentProps {
   children: ReactNode;
   className?: string;
   showHandle?: boolean;
+  /** Disable when children provide a fixed header and their own scroll body. */
+  scrollable?: boolean;
   /** Kept for source compatibility; visible close actions belong in the footer. */
   showClose?: boolean;
   style?: CSSProperties;
@@ -36,12 +50,14 @@ export function SheetContent({
   children,
   className = "px-[var(--sheet-gutter)] pb-[calc(1.25rem+env(safe-area-inset-bottom))] pt-3 sm:pb-6 sm:pt-4",
   showHandle = true,
+  scrollable = true,
   style,
   "data-testid": dataTestId,
 }: SheetContentProps) {
   return (
     <div
-      className={`min-w-0 max-w-full overflow-x-clip rounded-t-2xl text-pretty ${className}`}
+      className={`min-w-0 max-w-full rounded-t-2xl text-pretty sm:rounded-2xl ${scrollable ? "overflow-y-auto overscroll-contain" : ""} ${className}`}
+      data-sheet-scroll-owner={scrollable ? "" : undefined}
       style={{
         maxHeight: "calc(var(--visual-viewport-height, 100dvh) - var(--sheet-edge-clearance))",
         background: "var(--surface)",
@@ -53,12 +69,12 @@ export function SheetContent({
       data-testid={dataTestId}
     >
       {showHandle && (
-        <div className="mb-1 h-7" aria-hidden="true" data-sheet-handle>
+        <SheetDragHandle>
           <div
             className="mx-auto mt-2 h-1 w-10 rounded-full"
             style={{ background: "var(--border)" }}
           />
-        </div>
+        </SheetDragHandle>
       )}
       {children}
     </div>
@@ -117,18 +133,19 @@ function TitledSheetFrame({
 }) {
   const quickSheet = variant === "sheet";
   const surface = variant === "surface";
+  const task = variant === "task";
 
   const sheetAmbient = "linear-gradient(156deg, color-mix(in srgb, var(--accent2) 5%, var(--surface)) 0%, var(--surface) 46%, color-mix(in srgb, var(--accent) 3%, var(--surface)) 100%)";
 
   const frameClassName = quickSheet
     ? scrollable
-      ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl px-[var(--sheet-gutter)] pt-3"
-      : "rounded-t-3xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
+      ? "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-3xl sm:rounded-2xl px-[var(--sheet-gutter)] pt-3"
+      : "max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] overflow-y-auto overscroll-contain rounded-t-3xl sm:rounded-2xl px-[var(--sheet-gutter)] pb-[calc(1.5rem+env(safe-area-inset-bottom))] pt-3"
     : surface
       ? contentSized
         ? "flex max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-1.5rem)] flex-col overflow-hidden rounded-2xl border px-[min(var(--sheet-gutter),20px)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:px-[min(var(--sheet-gutter),24px)]"
         : "flex h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] max-h-[calc(min(var(--visual-viewport-height,100dvh),100dvh)-env(safe-area-inset-top)-var(--sheet-edge-clearance))] flex-col overflow-hidden rounded-t-xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-2 sm:h-auto sm:max-h-[min(760px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)] sm:pt-3"
-      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pt-3 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b";
+      : "flex max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-min(1rem,16px))] flex-col overflow-hidden rounded-t-2xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pt-[min(0.75rem,12px)] sm:max-h-[min(720px,calc(100dvh-min(3rem,48px)))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)]";
 
   return (
     <div
@@ -138,12 +155,12 @@ function TitledSheetFrame({
         : { background: sheetAmbient, borderColor: "var(--border)" }}
     >
       {quickSheet && (
-        <div className="mb-1 h-7" aria-hidden="true" data-sheet-handle>
+        <SheetDragHandle>
           <div className="mx-auto mt-2 h-1 w-10 rounded-full" style={{ background: "var(--surface3)" }} />
-        </div>
+        </SheetDragHandle>
       )}
-      {/* Bound structural spacing so enlarged text retains the reading width. */}
-      <div data-testid={testIds?.header} className={`${quickSheet ? "mb-4" : "mb-3"} flex min-h-11 min-w-0 flex-none items-start ${surface ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
+      {/* Bound task chrome so enlarged text leaves room for the scroll body. */}
+      <div data-testid={testIds?.header} className={`${quickSheet ? "mb-4" : task ? "mb-[min(0.75rem,12px)]" : "mb-3"} flex ${task ? "min-h-[44px]" : "min-h-11"} min-w-0 flex-none items-start ${surface || task ? "gap-[8px] px-[4px]" : "gap-2 px-1"}`}>
         {headerIcon && <span className="flex h-[24px] w-[20px] flex-none self-center items-center justify-center" style={{ color: "var(--accent)" }} aria-hidden="true">{headerIcon}</span>}
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
@@ -157,25 +174,25 @@ function TitledSheetFrame({
           type="button"
           onClick={onClose}
           aria-label={`${title} sluiten`}
-          className={`ks-motion-choice focus-ring flex ${surface ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
+          className={`ks-motion-choice focus-ring flex ${surface || task ? "h-[44px] w-[44px]" : "h-11 w-11"} flex-none items-center justify-center rounded-full`}
           style={{ color: "var(--text2)" }}
         >
           <X size={20} aria-hidden="true" />
         </button>
       </div>
-      {headerAfter && <div className="mb-3 flex-none">{headerAfter}</div>}
+      {headerAfter && <div className={`${task ? "mb-[min(0.75rem,12px)]" : "mb-3"} flex-none`}>{headerAfter}</div>}
       {scrollable ? (
         <>
           <div
             ref={scrollBodyRef}
-            className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? "pb-4" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
+            className={`min-h-0 min-w-0 ${contentSized ? "flex-auto" : "flex-1"} scroll-py-4 overflow-y-auto overscroll-contain ${footer ? task ? "pb-[min(1rem,16px)]" : "pb-4" : task ? "pb-[calc(min(2rem,32px)+env(safe-area-inset-bottom))]" : "pb-[calc(2rem+env(safe-area-inset-bottom))]"}`}
             data-testid={testIds?.body ?? "sheet-scroll-body"}
           >
             {children}
           </div>
           {footer && (
             <div
-              className="flex-none border-t pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"
+              className={`flex-none border-t ${task ? "pt-[min(0.75rem,12px)] pb-[calc(min(0.75rem,12px)+env(safe-area-inset-bottom))]" : "pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]"}`}
               style={{ borderColor: "var(--border)" }}
               data-testid={testIds?.footer ?? "sheet-footer"}
             >
@@ -191,7 +208,7 @@ function TitledSheetFrame({
 function TaskSheetFrame({ children }: { children: ReactNode }) {
   return (
     <div
-      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-1rem)] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[var(--sheet-gutter)] pb-[calc(1rem+env(safe-area-inset-bottom))] pt-4 sm:max-h-[min(720px,calc(100dvh-3rem))] sm:rounded-2xl sm:border-b"
+      className="max-h-[calc(var(--visual-viewport-height,100dvh)-env(safe-area-inset-top)-min(1rem,16px))] overflow-y-auto overscroll-contain rounded-t-2xl border border-b-0 px-[min(var(--sheet-gutter),20px)] pb-[calc(min(1rem,16px)+env(safe-area-inset-bottom))] pt-[min(1rem,16px)] sm:max-h-[min(720px,calc(100dvh-min(3rem,48px)))] sm:rounded-2xl sm:border-b sm:px-[min(var(--sheet-gutter),24px)]"
       style={{ background: "var(--surface)", borderColor: "var(--border)" }}
       data-testid="sheet-scroll-body"
     >
@@ -219,6 +236,7 @@ export default function Sheet({
   "aria-label": ariaLabel,
 }: Props) {
   const t = useMotionSafe();
+  const dragControls = useDragControls();
   const y = useMotionValue<number | string>(0);
   // Entrance/exit uses percentages; only pixel-valued dragging owns dimming.
   const backdropOpacity = useTransform(y, (value) =>
@@ -256,7 +274,7 @@ export default function Sheet({
           />
 
           <div
-            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end" : contentSized ? "items-start pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:items-center sm:p-6" : "items-end sm:items-center sm:p-6"}`}
+            className={`pointer-events-none fixed left-0 z-[151] flex overflow-x-clip justify-center ${quickSheet ? "items-end sm:items-center sm:p-6" : contentSized ? "items-start pt-[calc(env(safe-area-inset-top)+0.75rem)] sm:items-center sm:p-6" : variant === "task" ? "items-end sm:items-center sm:p-[min(1.5rem,24px)]" : "items-end sm:items-center sm:p-6"}`}
             data-testid="sheet-visual-viewport"
             style={{
               top: "var(--visual-viewport-offset-top, 0px)",
@@ -274,9 +292,9 @@ export default function Sheet({
               aria-modal="true"
               aria-label={ariaLabel ?? title}
               data-sheet-variant={variant}
-              className={`pointer-events-auto min-w-0 w-full max-w-full ${variant === "task" ? "sm:max-w-lg" : variant === "surface" ? "sm:max-w-xl" : ""}`}
+              className={`pointer-events-auto min-w-0 w-full max-w-full [overflow-wrap:anywhere] ${variant === "surface" ? "sm:max-w-xl" : "sm:max-w-lg"}`}
               style={quickSheet
-                ? { y, touchAction: scrollable ? "auto" : "none" }
+                ? { y, touchAction: "auto" }
                 : { touchAction: "auto" }}
               initial={quickSheet ? { y: "100%" } : { opacity: 0, y: 12 }}
               animate={quickSheet ? { y: 0 } : { opacity: 1, y: 0 }}
@@ -285,6 +303,8 @@ export default function Sheet({
                 : { opacity: 0, y: 8, transition: t.fast }}
               transition={quickSheet ? t.sheet : t.fast}
               drag={draggable ? "y" : false}
+              dragControls={dragControls}
+              dragListener={false}
               dragConstraints={draggable ? { top: 0 } : undefined}
               dragElastic={draggable ? { top: 0.05, bottom: 0.3 } : false}
               onDragEnd={draggable ? (_, info) => {
@@ -292,6 +312,7 @@ export default function Sheet({
               } : undefined}
             >
               <SheetCloseContext.Provider value={onClose}>
+              <SheetDragContext.Provider value={draggable ? dragControls : null}>
                 {title
                   ? (
                     <TitledSheetFrame
@@ -315,6 +336,7 @@ export default function Sheet({
                   : variant === "task"
                     ? <TaskSheetFrame>{children}</TaskSheetFrame>
                     : children}
+              </SheetDragContext.Provider>
               </SheetCloseContext.Provider>
             </motion.div>
           </div>

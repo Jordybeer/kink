@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import jsQR from "jsqr";
-import Sheet from "./Sheet";
+import Sheet, { SheetDragHandle } from "./Sheet";
 import { parseSharePaste } from "@/lib/parseSharePaste";
 import {
   addProfileQrBundlePart,
@@ -263,7 +263,9 @@ export default function QRScanner({ open, onResult, onClose }: Props) {
           borderRight: "1px solid var(--border)",
         }}
       >
-        <div className="w-10 h-1 rounded-full mx-auto mb-5" style={{ background: "var(--border)" }} />
+        <SheetDragHandle className="-mt-3 mb-2 flex h-7 items-center justify-center">
+          <div className="h-1 w-10 rounded-full" style={{ background: "var(--border)" }} />
+        </SheetDragHandle>
         <h2 className="text-lg font-bold text-center mb-2">
           {bundleProgress
             ? bundleProgress.profileComplete

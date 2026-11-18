@@ -347,3 +347,10 @@ dicht, de la met oude import bleef open tot de tegen-audit erop wees.
 **What went wrong:** De geconsolideerde identity-import controleerde na een Zustand-write alleen de profielen in geheugen. `createQuotaSafeStorage` vangt een quota- of opslagfout bewust af. Daardoor kon de anchor al lokaal opgeslagen zijn terwijl de nieuwe profielversie niet duurzaam was geschreven, en meldde de import toch succes.
 
 **Rule:** Een import die profielen en onafhankelijke trustmetadata samen bevestigt, moet na de profielwrite de echte persisted profielen exact teruglezen. Een geheugenvergelijking bewijst geen duurzame opslag. Controleer ook vóór de write dat de persisted profielen nog overeenkomen met het geheugen; een verouderde tab mag geen nieuwere opslag of een stale rollback terugschrijven. Bij mismatch na een werkelijk gestarte write: herstel de eerdere profielstaat en verwijder uitsluitend de anchors die deze operatie zelf heeft aangemaakt en die nog exact overeenkomen. Bewijs zowel een geslaagde write als de quota-safe foutweg met de echte persist-wrapper.
+
+
+## 2026-11-17 — Een zichtbare rand is nog geen bereikbare actie
+
+**What went wrong:** De korte onderteken-sheet slaagde voor `toBeInViewport()` terwijl de onderkant van Wis en Klaar door het frame werd afgesneden. Bij 200% tekst groeiden de vaste header, footer en marges samen voorbij de beschikbare hoogte. Een lage Scene-viewport liet bovendien de vaste werkbalk over de tijdknop vallen.
+
+**Rule:** Controleer bij vaste bediening de volledige knopgrenzen tegenover de viewport én alle clippende voorouders, plus een vrij aanklikbaar middelpunt. Alleen viewport-intersectie is onvoldoende. Begrens structurele ruimte zonder vergrote tekst te verkleinen; behoud één bruikbaar scrollgebied en laat vaste werkbalken bij onvoldoende verticale ruimte meescrollen.

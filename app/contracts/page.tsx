@@ -1,7 +1,7 @@
 "use client";
 
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo, useRef, useState, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -150,6 +150,7 @@ function ContractsContent() {
   const profiles = useStore((state) => state.profiles);
   const series = useContractStore((state) => state.series);
   const [tab, setTab] = useState<Exclude<ContractDisplayBucket, "draft">>("active");
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const [conceptsOpen, setConceptsOpen] = useState(false);
   const [inboxOpen, setInboxOpen] = useState(false);
   const contractsReady = useLegacyContractMigration();
@@ -171,6 +172,20 @@ function ContractsContent() {
     },
   ], [router]);
   useTopNavActions(navActions);
+
+  function handleTabKeyDown(event: KeyboardEvent<HTMLButtonElement>, index: number) {
+    let nextIndex: number;
+    switch (event.key) {
+      case "ArrowLeft": nextIndex = (index - 1 + TABS.length) % TABS.length; break;
+      case "ArrowRight": nextIndex = (index + 1) % TABS.length; break;
+      case "Home": nextIndex = 0; break;
+      case "End": nextIndex = TABS.length - 1; break;
+      default: return;
+    }
+    event.preventDefault();
+    setTab(TABS[nextIndex].id);
+    tabRefs.current[nextIndex]?.focus();
+  }
 
   if (!contractsReady) return <PageShell loading width="2xl" />;
 
@@ -243,18 +258,23 @@ function ContractsContent() {
         </div>
       )}
 
-      <div className="mt-5 grid grid-cols-3" role="tablist" aria-label="Contractstatus">
-        {TABS.map(({ id, label }) => {
+      <div className="mt-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,5rem),1fr))]" role="tablist" aria-label="Contractstatus">
+        {TABS.map(({ id, label }, index) => {
           const active = tab === id;
           const colour = id === "active" ? "var(--yes)" : id === "paused" ? "var(--maybe)" : "var(--text2)";
           return (
             <button
               key={id}
+              ref={(node) => { tabRefs.current[index] = node; }}
+              id={`contracts-tab-${id}`}
               type="button"
               role="tab"
               aria-selected={active}
+              aria-controls={`contracts-panel-${id}`}
+              tabIndex={active ? 0 : -1}
               onClick={() => setTab(id)}
-              className="ks-motion-choice focus-ring relative min-h-11 px-2 text-sm font-medium"
+              onKeyDown={(event) => handleTabKeyDown(event, index)}
+              className="ks-motion-choice focus-ring relative min-h-11 min-w-0 px-2 py-2 text-sm font-medium [overflow-wrap:anywhere]"
               style={{ color: active ? colour : "var(--text2)" }}
             >
               {label}{counts[id] > 0 ? ` ${counts[id]}` : ""}
@@ -264,8 +284,9 @@ function ContractsContent() {
         })}
       </div>
 
-      <div className="mt-4">
-        {visible.length === 0 ? (
+      {TABS.map(({ id }) => (
+      <div key={id} id={`contracts-panel-${id}`} role="tabpanel" aria-labelledby={`contracts-tab-${id}`} hidden={tab !== id} tabIndex={0} className="focus-ring mt-4">
+        {tab === id && (visible.length === 0 ? (
           <EmptyState
             icon={tab === "paused" ? Pause : tab === "archive" ? Archive : FileText}
             title={tab === "active" ? "Geen actieve contracten" : tab === "paused" ? "Geen gepauzeerde contracten" : "Het archief is leeg"}
@@ -280,8 +301,9 @@ function ContractsContent() {
           <div className="flex flex-col gap-3 lg:grid lg:grid-cols-2 lg:items-start">
             {visible.map((item) => <ContractCard key={item.id} series={item} profiles={profiles} />)}
           </div>
-        )}
+        ))}
       </div>
+      ))}
 
       <ContractInboxSheet open={inboxOpen} onClose={() => setInboxOpen(false)} />
     </PageShell>

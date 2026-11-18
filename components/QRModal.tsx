@@ -264,6 +264,7 @@ export default function QRModal({ profile, onClose }: Props) {
     <Sheet open={profile !== null} onClose={onClose} scrollable aria-label="Profiel delen">
       <SheetContent
         showHandle={false}
+        scrollable={false}
         className="flex flex-col overflow-hidden px-0 pb-0 pt-0"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - 0.75rem)" }}
         data-testid="profile-share-sheet"
@@ -275,11 +276,6 @@ export default function QRModal({ profile, onClose }: Props) {
         >
           <div className="min-w-0 flex-1">
             <h2 className="text-lg font-bold leading-tight">Deel profiel</h2>
-            {profile && (
-              <p className="mt-1 truncate text-sm" style={{ color: "var(--accent-text)" }}>
-                {profile.name}{proofConfirmed ? <span className="ml-1.5 text-sm" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
-              </p>
-            )}
           </div>
           <button
             type="button"
@@ -297,6 +293,11 @@ export default function QRModal({ profile, onClose }: Props) {
           data-testid="profile-share-scroll-body"
         >
           <div className="mx-auto w-full max-w-md">
+            {profile && (
+              <p className="mb-3 text-sm [overflow-wrap:anywhere]" style={{ color: "var(--accent-text)" }}>
+                {profile.name}{proofConfirmed ? <span className="ml-1.5 text-sm" style={{ color: "var(--yes)" }}>· bevestigd</span> : null}
+              </p>
+            )}
             {multi && currentFrame && (
               <p className="text-center text-sm font-semibold" style={{ color: "var(--text2)" }}>
                 {currentFrame.phase === "avatar" ? "Foto" : "Profiel"} QR {currentFrame.index} van {currentFrame.total}
@@ -305,8 +306,8 @@ export default function QRModal({ profile, onClose }: Props) {
 
             {qrTooLarge ? (
               <div
-                className="mx-auto my-3 flex aspect-square items-center justify-center rounded-xl px-5 text-center text-sm leading-5"
-                style={{ width: qrDisplaySize, height: qrDisplaySize, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                className="mx-auto my-3 flex items-center justify-center rounded-xl px-5 py-5 text-center text-sm leading-5"
+                style={{ width: "100%", minHeight: qrDisplaySize, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
                 role="status"
               >
                 Te veel gegevens voor een betrouwbare QR-reeks. De volledige link hieronder deelt alles zonder dataverlies.
@@ -329,9 +330,11 @@ export default function QRModal({ profile, onClose }: Props) {
               </div>
             ) : (
               <div
-                className="mx-auto my-3 flex aspect-square animate-pulse items-center justify-center rounded-xl px-5 text-center text-sm"
-                style={{ width: qrDisplaySize, height: qrDisplaySize, background: "#FFFFFF", color: "#4b5563", border: "1px solid var(--border)" }}
-                aria-label="QR-code laden…"
+                className={`mx-auto my-3 flex items-center justify-center rounded-xl px-5 py-5 text-center text-sm ${generationError ? "" : "animate-pulse motion-reduce:animate-none"}`}
+                style={{ width: "100%", minHeight: qrDisplaySize, background: "var(--surface2)", color: "var(--text2)", border: "1px solid var(--border)" }}
+                role={generationError ? "alert" : "status"}
+                aria-busy={!generationError}
+                aria-label={generationError ? undefined : "QR-code laden…"}
               >
                 {generationError ?? (multi ? "QR-reeks voorbereiden…" : "Volledig profiel inpakken…")}
               </div>

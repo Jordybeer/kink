@@ -313,11 +313,11 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pt-6">
+    <main className="mx-auto w-full max-w-3xl pt-4">
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
-        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-6">
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-4">
           <ProfileHero
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
@@ -328,7 +328,7 @@ export default function ProfilePage({ params }: Props) {
 
           {!shared && (
             <section
-              className="mt-6 border-t pt-4"
+              className="mt-4 border-t pt-3"
               style={{ borderColor: "var(--border)" }}
               aria-labelledby="profile-questionnaire-title"
             >
@@ -360,18 +360,6 @@ export default function ProfilePage({ params }: Props) {
                 <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </Link>
 
-              <button
-                ref={manageTriggerRef}
-                type="button"
-                onClick={() => { setEditor(null); setCatalogOpen(true); }}
-                aria-expanded="false"
-                aria-controls="profile-catalog-manager"
-                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
-                style={{ color: "var(--text2)" }}
-              >
-                Onderwerpen beheren
-                <ArrowRight size={13} aria-hidden="true" />
-              </button>
             </section>
           )}
         </div>
@@ -520,7 +508,7 @@ export default function ProfilePage({ params }: Props) {
           </h2>
 
           <div data-testid="profile-status-overview">
-            <div role="group" aria-label="Antwoordstatus" className="mb-5 grid grid-cols-[minmax(0,1fr)] gap-x-5 gap-y-1 min-[480px]:grid-cols-2">
+            <div role="group" aria-label="Antwoordstatus" className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-5 gap-y-1">
               {STATUS_ORDER.map((status) => {
                 const count = publicItems.filter((item) => item.status === status).length;
                 return <button key={status} id={`profile-filter-${status}`} type="button" onClick={() => selectStatus(status)}
@@ -530,7 +518,7 @@ export default function ProfilePage({ params }: Props) {
                   style={{ borderColor: activeStatus === status ? STATUS_VAR[status] : "transparent" }}>
                   <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
                   <span className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
-                  <span className="w-10 flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
+                  <span className="flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
                 </button>;
               })}
             </div>
