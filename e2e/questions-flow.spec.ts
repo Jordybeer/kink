@@ -67,6 +67,29 @@ test("questionnaire focus hands off to the dedicated questions route", async ({ 
   await expect(page.getByRole("group", { name: "Status kiezen" })).toBeVisible();
 });
 
+for (const [answer, nextTitle] of [
+  ["Heel graag", "Titles & forms of address"],
+  ["Harde grens", "Physical aftercare (cuddling, blankets)"],
+  ["Later", "Physical aftercare (cuddling, blankets)"],
+] as const) {
+  test(`a fresh Dynamic round branches after ${answer}`, async ({ page }) => {
+    const profile = { ...PROFILE_ALEX, entries: {}, customKinks: [] };
+    await seedAndGo(page, `/profile/${profile.id}/questions`, [profile]);
+    const title = page.getByTestId("question-title");
+    await expect(title).toHaveText("D/s dynamic");
+    await page.getByRole("button", { name: new RegExp(answer) }).click();
+    await expect(title).toHaveText(nextTitle);
+    await expect(page.getByRole("group", { name: "Status kiezen" }).getByRole("button", { pressed: true })).toHaveCount(0);
+
+    if (answer === "Heel graag") {
+      await page.getByRole("button", { name: /^Ja\b/ }).click();
+      await expect(title).toHaveText("Physical aftercare (cuddling, blankets)");
+      await page.getByRole("button", { name: /^Ja\b/ }).click();
+      await expect(title).toHaveText("Shared cleanup / shower");
+    }
+  });
+}
+
 test("questions route locks the document while sheets keep their own scroll", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);

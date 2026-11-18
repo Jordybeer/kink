@@ -270,6 +270,16 @@ export const QUESTIONNAIRE_RELATED_PAIRS = [
  * zonder expliciete edge is de propagation precies nul.
  */
 export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]>> = {
+  dominance_submission: ["titels_aanspreekvormen"],
+  aftercare_physical: ["aftercare_cleanup"],
+  aftercare_alone: ["aftercare_journaling"],
+  erotic_teasing: ["anticipation_suspense"],
+  punishment: ["strafregels_schrijven"],
+  service: ["diensttraining"],
+  lingerie: ["kniekousen_fetish"],
+  feet: ["voetgeur"],
+  oral_sex_give: ["deep_throat_give"],
+  oral_sex_receive: ["deep_throat_receive"],
   spanking_hand_give: ["spanking_implement_give", "flogging_give"],
   spanking_hand_receive: ["spanking_implement_receive", "flogging_receive"],
   rope_bondage_give: ["shibari_give"],
@@ -302,9 +312,19 @@ export const QUESTIONNAIRE_FOLLOW_UPS: Readonly<Record<string, readonly string[]
  * uitsluitend samen met een version bump en bijbehorende pre-launch cleanup.
  * Er is bewust geen fallback of automatische sibling-propagatie.
  */
-export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6;
+export const QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 7;
 
 export const QUESTIONNAIRE_CANONICAL_PROBE_TARGETS: Readonly<Record<string, string>> = {
+  dominance_submission: "titels_aanspreekvormen",
+  aftercare_physical: "aftercare_cleanup",
+  aftercare_alone: "aftercare_journaling",
+  erotic_teasing: "anticipation_suspense",
+  punishment: "strafregels_schrijven",
+  service: "diensttraining",
+  lingerie: "kniekousen_fetish",
+  feet: "voetgeur",
+  oral_sex_give: "deep_throat_give",
+  oral_sex_receive: "deep_throat_receive",
   spanking_hand_give: "spanking_implement_give",
   spanking_hand_receive: "spanking_implement_receive",
   rope_bondage_give: "shibari_give",

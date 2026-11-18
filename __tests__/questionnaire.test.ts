@@ -227,8 +227,18 @@ describe("adaptive questionnaire", () => {
   });
 
   it("pins canonical probes to real directional edges — changing this snapshot is a migration", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(6);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(7);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS).toEqual({
+      dominance_submission: "titels_aanspreekvormen",
+      aftercare_physical: "aftercare_cleanup",
+      aftercare_alone: "aftercare_journaling",
+      erotic_teasing: "anticipation_suspense",
+      punishment: "strafregels_schrijven",
+      service: "diensttraining",
+      lingerie: "kniekousen_fetish",
+      feet: "voetgeur",
+      oral_sex_give: "deep_throat_give",
+      oral_sex_receive: "deep_throat_receive",
       spanking_hand_give: "spanking_implement_give",
       spanking_hand_receive: "spanking_implement_receive",
       rope_bondage_give: "shibari_give",

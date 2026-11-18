@@ -1,4 +1,24 @@
-# Questionnaire metadata audit — canonical mapping @2
+# Questionnaire metadata audit
+
+## Nieuwe vervolgvragen in versie 7
+
+De twee openingsvragen van Dynamic hebben nu elk een concreet vervolg. Iedere
+kaart vraagt om een eigen antwoord. Bij een volgende stap in dezelfde tak moet
+ook de tussenliggende kaart expliciet positief zijn beantwoord.
+
+| Bron | Vervolgvraag | Wat wordt specifieker? |
+| --- | --- | --- |
+| `dominance_submission` | `titels_aanspreekvormen` | Een D/s-dynamiek vormgeven met afgesproken aanspreektitels |
+| `aftercare_physical` | `aftercare_cleanup` | Lichamelijke nazorg invullen met samen douchen of opruimen |
+| `aftercare_alone` | `aftercare_journaling` | Tijdens eigen verwerkingstijd schrijven of reflecteren |
+| `erotic_teasing` | `anticipation_suspense` | Bij plagen specifiek de pauze en het wachten verkennen |
+| `punishment` | `strafregels_schrijven` | Binnen een afgesproken correctie kiezen voor een schrijfopdracht |
+| `service` | `diensttraining` | Een dienst oefenen op de manier die partners samen afspreken |
+| `lingerie` | `kniekousen_fetish` | Binnen lingerie en kousen vragen naar kniekousen |
+| `feet` | `voetgeur` | Eén zintuiglijk aspect van voetfocus verkennen |
+| `oral_sex_give` / `oral_sex_receive` | `deep_throat_give` / `deep_throat_receive` | Een afzonderlijke techniek uitvragen in dezelfde richting |
+
+## Historische audit van versie 2
 
 > Scope: actieve catalogus van 291 vragen op de gestapelde catalogus-v2-branch.
 > Dit document beoordeelt uitsluitend volgorde en lokale vervolgvragen. Het

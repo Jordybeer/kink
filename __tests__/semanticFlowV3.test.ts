@@ -131,33 +131,33 @@ describe("questionnaire semantic flow v3", () => {
     expect(searchAllKinks("Whipping").map((kink) => kink.id)).toContain("whipping_receive");
   });
 
-  it("prefers a same-concept complement, then one canonical source probe, then a topic break", () => {
+  it("prefers a specific follow-up after a positive answer and keeps the other side independently eligible", () => {
     const siblingQueue = [
-      queueItem("pegging_receive"),
-      queueItem("anal_sex_give", {
+      queueItem("rope_bondage_receive"),
+      queueItem("shibari_give", {
         lane: "expansion",
         isProbe: true,
         reasons: [{
-          sourceKinkId: "pegging_give",
-          targetKinkId: "anal_sex_give",
+          sourceKinkId: "rope_bondage_give",
+          targetKinkId: "shibari_give",
           relationType: "followUp",
           status: "yes",
         }],
       }),
     ];
-    const sibling = selectConversationQuestion(siblingQueue, KINKS, {
+    const followUp = selectConversationQuestion(siblingQueue, KINKS, {
       phase: "preferContinuation",
-      lastKinkId: "pegging_give",
+      lastKinkId: "rope_bondage_give",
     });
-    expect(sibling?.kink.id).toBe("pegging_receive");
-    expect(isConversationContinuation(sibling, "pegging_give")).toBe(true);
+    expect(followUp?.kink.id).toBe("shibari_give");
+    expect(isConversationContinuation(followUp, "rope_bondage_give")).toBe(true);
 
     // Een sibling blijft concept-completion na een niet-positief antwoord, maar
     // een canonical probe krijgt in die fase bewust geen voorrang.
     expect(selectConversationQuestion(siblingQueue, KINKS, {
       phase: "preferComplement",
-      lastKinkId: "pegging_give",
-    })?.kink.id).toBe("pegging_receive");
+      lastKinkId: "rope_bondage_give",
+    })?.kink.id).toBe("rope_bondage_receive");
 
     const probe = queueItem("leather_cuffs_give", {
       lane: "expansion",
@@ -231,7 +231,7 @@ describe("questionnaire semantic flow v3", () => {
   });
 
   it("keeps private recording related but removes it as a canonical immediate publication step", () => {
-    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(6);
+    expect(QUESTIONNAIRE_CANONICAL_MAPPING_VERSION).toBe(7);
     expect(QUESTIONNAIRE_CANONICAL_PROBE_TARGETS.recording).toBeUndefined();
     expect(questionnaireRelatedIds("recording")).toContain("adult_content_creation");
   });

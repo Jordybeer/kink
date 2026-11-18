@@ -183,10 +183,10 @@ Iedere positieve source heeft hoogstens één pinned target, ooit.
 Een bestaande mapping wijzigen is een semantische datamigratie, geen metadata-
 opruiming. Nieuwe catalogusitems landen standaard zonder propagation.
 
-## Canonical allowlist @6
+## Canonical allowlist @7
 
-De formeel geaudite allowlist draagt versie 6 strak op de halsband:
-`QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 6`. Daarin zitten 24 expliciete
+De geaudite mapping gebruikt `QUESTIONNAIRE_CANONICAL_MAPPING_VERSION = 7`
+en bevat 34 expliciete
 source → target-edges. Directionele kanten blijven als afzonderlijke stabiele
 IDs vastgegespt; oude generieke edges en
 `recording -> adult_content_creation` krijgen geen runtime-propagation meer.
@@ -196,6 +196,16 @@ De edge-voor-edge onderbouwing en expliciet verworpen associaties staan in
 De pinned set is:
 
 ```text
+dominance_submission            -> titels_aanspreekvormen
+aftercare_physical              -> aftercare_cleanup
+aftercare_alone                 -> aftercare_journaling
+erotic_teasing                  -> anticipation_suspense
+punishment                      -> strafregels_schrijven
+service                         -> diensttraining
+lingerie                        -> kniekousen_fetish
+feet                            -> voetgeur
+oral_sex_give                   -> deep_throat_give
+oral_sex_receive                -> deep_throat_receive
 spanking_hand_give              -> spanking_implement_give
 spanking_hand_receive           -> spanking_implement_receive
 rope_bondage_give               -> shibari_give
@@ -248,7 +258,10 @@ interests, coverage, discovery en geldige probes uit eerdere antwoorden.
 
 - maximaal twee vragen uit hetzelfde broad cluster na elkaar wanneer een geldig
   alternatief bestaat;
-- geen directe topical echo wanneer een alternatief bestaat;
+- na `yes` of `willing` krijgt de specifieke vervolgvraag van de zojuist
+  beantwoorde kaart voorrang op de andere kant van dezelfde handeling;
+- na deze vervolgvraag, een harde grens of Later krijgt een ander onderwerp
+  voorrang als er een alternatief beschikbaar is;
 - na een positieve probe minstens één geldige non-probe vóór de volgende probe,
   tenzij geen non-probe beschikbaar is;
 - één lane mag een andere lane niet verhongeren;
