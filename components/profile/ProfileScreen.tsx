@@ -10,6 +10,7 @@ import {
   FileArrowDown,
   FileText,
   Lock,
+  MagnifyingGlass,
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -103,7 +104,11 @@ export default function ProfilePage({ params }: Props) {
   }, [id]);
 
   useEffect(() => {
-    if (catalogOpen || !restoreCatalogFocus.current) return;
+    if (catalogOpen) {
+      document.getElementById("profile-catalog-title")?.focus();
+      return;
+    }
+    if (!restoreCatalogFocus.current) return;
     restoreCatalogFocus.current = false;
     manageTriggerRef.current?.focus();
   }, [catalogOpen]);
@@ -359,21 +364,20 @@ export default function ProfilePage({ params }: Props) {
                 </div>
                 <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </Link>
-
             </section>
           )}
         </div>
       )}
 
       {catalogOpen && !shared ? (
-        <section id="profile-catalog-manager" className="pb-5" aria-label="Onderwerpen beheren">
+        <section id="profile-catalog-manager" className="pb-5" aria-labelledby="profile-catalog-title">
           <div
             data-testid="profile-catalog-manager-header"
             className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
             style={{ borderColor: "var(--border)" }}
           >
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-semibold">Onderwerpen beheren</h2>
+              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-base font-semibold outline-none">Catalogus</h2>
               <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
               </p>
@@ -498,14 +502,29 @@ export default function ProfilePage({ params }: Props) {
         </section>
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
-          <h2
-            id="profile-interests-title"
-            tabIndex={-1}
-            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-2xl italic leading-tight"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-          >
-            Interesses &amp; grenzen
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2
+              id="profile-interests-title"
+              tabIndex={-1}
+              className="min-w-0 scroll-mt-[var(--nav-h)] text-2xl italic leading-tight outline-none"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+            >
+              Interesses &amp; grenzen
+            </h2>
+            {!shared && (
+              <button
+                ref={manageTriggerRef}
+                type="button"
+                aria-label="Catalogus doorzoeken"
+                title="Catalogus doorzoeken"
+                onClick={() => { setEditor(null); setCatalogOpen(true); }}
+                className="focus-ring ks-motion-choice grid h-11 w-11 flex-none place-items-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <MagnifyingGlass size={20} aria-hidden="true" />
+              </button>
+            )}
+          </div>
 
           <div data-testid="profile-status-overview">
             <div role="group" aria-label="Antwoordstatus" className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-5 gap-y-1">

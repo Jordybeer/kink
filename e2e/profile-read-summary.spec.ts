@@ -103,6 +103,6 @@ test("shared and imported profiles disclose no private data and cannot edit answ
     await expect(page.getByText("secret tag", { exact: true })).toHaveCount(0);
     await expect(page.locator('button[aria-label$=", bewerken"]')).toHaveCount(0);
     await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Catalogus doorzoeken", exact: true })).toHaveCount(0);
   }
 });

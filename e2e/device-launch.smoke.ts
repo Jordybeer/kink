@@ -59,7 +59,7 @@ async function expectRouteReady(page: Page, route: CriticalRoute) {
     case "profile":
       await expect(page.getByRole("heading", { name: "Alex", exact: true }).first()).toBeVisible();
       await expect(page.getByTestId("profile-summary")).toBeVisible();
-      await expect(page.getByRole("button", { name: /Onderwerpen beheren/i })).toBeVisible();
+      await expect(page.getByRole("button", { name: "Catalogus doorzoeken", exact: true })).toBeVisible();
       await expect(page.getByRole("link", { name: /Verder invullen|Verder ontdekken|Start met vragen/i }).first()).toBeVisible();
       break;
     case "questions": {

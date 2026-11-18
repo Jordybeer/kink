@@ -319,14 +319,14 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("Impact Play categorie is zichtbaar wanneer onderwerpen bewust worden beheerd", async ({ page }) => {
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     const impactCategory = page.locator('button[aria-controls="category-impact-content"]');
     await expect(impactCategory).toBeVisible();
     await expect(impactCategory).toContainText("Impact Play");
   });
 
   test("gesloten categorieën zijn inert tot ze geopend worden", async ({ page }) => {
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     const content = page.locator("#category-impact-content");
 
     await expect(content).toHaveAttribute("aria-hidden", "true");
@@ -338,11 +338,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(content.locator('button[aria-label*=", bewerken"]').first()).toBeVisible();
   });
 
-  test("onderwerpen beheren is een expliciete cataloguseditor zonder permanente filterchrome", async ({ page }) => {
+  test("de zoekknop opent een expliciete cataloguseditor zonder permanente filterchrome", async ({ page }) => {
     await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
     await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
 
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
 
     await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
     await expect(page.getByRole("button", { name: "Gereed", exact: true })).toBeVisible();
@@ -353,11 +353,11 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
 
     await page.getByRole("button", { name: "Gereed", exact: true }).click();
     await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
-    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Catalogus doorzoeken", exact: true })).toBeVisible();
   });
 
   test("categoriefilter blijft zichtbaar en wijzigbaar tijdens zoeken", async ({ page }) => {
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     await page.getByRole("button", { name: /Alle categorieën/ }).click();
 
     const categoryDialog = page.getByRole("dialog", { name: "Categorie kiezen" });
@@ -380,7 +380,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
   });
 
   test("onderwerpdetails zijn optioneel en bereikbaar zonder statuswijziging", async ({ page }) => {
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
     await search.fill("spanking");
 
@@ -401,7 +401,7 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     const emptyAlex = { ...PROFILE_ALEX, entries: {} };
     await seedAndGo(page, "/profile/pw-alex-001", [emptyAlex]);
 
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
     await search.fill("spanking");
 
@@ -490,7 +490,7 @@ test.describe("Gedeeld profiel", () => {
   });
 
   test("catalogusbeheer is niet aanwezig", async ({ page }) => {
-    await expect(page.getByRole("button", { name: /Onderwerpen beheren/ })).toHaveCount(0);
+    await expect(page.getByRole("button", { name: "Catalogus doorzoeken", exact: true })).toHaveCount(0);
   });
 
   test("gedeeld profiel kan niet opnieuw gedeeld worden", async ({ page }) => {

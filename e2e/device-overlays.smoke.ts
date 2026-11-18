@@ -160,7 +160,7 @@ test("lange overlays blijven bruikbaar bij browserhoogte en dynamische toolbar",
   await editDialog.getByRole("button", { name: "Profiel bewerken sluiten" }).click();
   await expect(editTrigger).toBeFocused();
 
-  const catalogTrigger = page.getByRole("button", { name: /Onderwerpen beheren/i });
+  const catalogTrigger = page.getByRole("button", { name: "Catalogus doorzoeken", exact: true });
   await catalogTrigger.click();
   const catalogManager = page.locator("#profile-catalog-manager");
   await expect(catalogManager).toBeVisible();

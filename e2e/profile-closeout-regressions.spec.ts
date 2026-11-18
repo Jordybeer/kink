@@ -49,13 +49,13 @@ const PROFILE_WITH_MIXED_STATUSES: Profile = {
   ),
 };
 
-test("profile keeps the read-view quiet and exposes search/filter only through Onderwerpen beheren", async ({ page }) => {
+test("profile keeps the read-view quiet and opens search and filters from the catalogue search button", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE.id}`, [PROFILE]);
 
   await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toHaveCount(0);
-  const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+  const manage = page.getByRole("button", { name: "Catalogus doorzoeken", exact: true });
   await expect(manage).toBeVisible();
   const manageBox = await manage.boundingBox();
   expect(manageBox).not.toBeNull();
@@ -107,7 +107,7 @@ test("empty profile keeps the full catalog available behind the explicit manager
   await seedAndGo(page, `/profile/${EMPTY_PROFILE.id}`, [EMPTY_PROFILE]);
 
   await expect(page.getByTestId("profile-catalog-controls")).toHaveCount(0);
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
   const search = page.getByPlaceholder("Zoek in de volledige catalogus…");
   await expect(search).toBeVisible();
@@ -158,7 +158,7 @@ test("BDSMTest stays readable in read-view and yields to focused catalog managem
   await resultsDialog.getByRole("button", { name: "Sluit" }).click();
   await expect(resultsDialog).toBeHidden();
 
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
   await expect(profileSummary).toHaveCount(0);
   await expect(summary).toHaveCount(0);
   await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
@@ -172,7 +172,7 @@ test("profile catalog manager keeps status text readable, wrapping and free of p
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PROFILE_WITH_MIXED_STATUSES.id}`, [PROFILE_WITH_MIXED_STATUSES]);
 
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
   await page.locator('button[aria-controls="category-impact-content"]').click();
 
   const labels = page.getByTestId("kink-status-label");

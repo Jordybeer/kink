@@ -151,7 +151,7 @@ test.describe("Page cohesion scenes", () => {
 test.describe("Page cohesion profile", () => {
   test("query- en canonieke profielroute delen dezelfde rustige read-view", async ({ page }) => {
     const summary = () => page.getByTestId("profile-summary");
-    const manage = () => page.getByRole("button", { name: /Onderwerpen beheren/ });
+    const manage = () => page.getByRole("button", { name: "Catalogus doorzoeken", exact: true });
     const legacyTabs = () => page.getByRole("tablist", { name: "Profielweergave" });
 
     await seedAndGo(page, "/profile?id=pw-alex-001", [PROFILE_ALEX, PROFILE_SAM]);

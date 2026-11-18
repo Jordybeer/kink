@@ -182,8 +182,9 @@ Privacy overrides pinning immediately: remove all public presentation and focus 
 stable control. Private answers stay in a separate owner-only disclosure, with
 neutral concealed rows; status, tags, curiosity and comments require explicit
 individual reveal before editing. Shared/imported profiles have no answer-editing
-controls and expose no private counts or context. Category-first discovery remains
-available through Onderwerpen beheren.
+controls and expose no private counts or context. Owners open catalogue search
+from the magnifier beside Interesses & grenzen. The questionnaire row contains
+its single guided action.
 
 The bounded active editor and Details reuse DisclosureBody: 220ms grid, 190ms
 opacity, immediate inert/aria-hidden and live Reduced Motion. Keep only the selected

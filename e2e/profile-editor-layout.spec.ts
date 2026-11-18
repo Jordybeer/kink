@@ -115,7 +115,7 @@ test("private reveal gates editing, conceal hides context and privacy removes pu
 
 test("catalogue categories, search and custom topics share the same inline editor", async ({ page }) => {
   await seedAndGo(page, `/profile?id=${PROFILE_ALEX.id}`, [{ ...PROFILE_ALEX, entries: {} }]);
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
   await page.locator('button[aria-controls="category-impact-content"]').click();
   await page.locator('#category-impact-content button[aria-label$=", bewerken"]').first().click();
   await expect(page.getByRole("group", { name: "Status kiezen" })).toHaveCount(1);
@@ -166,7 +166,7 @@ for (const theme of ["light", "dark"] as const) {
     await page.evaluate(() => { document.documentElement.style.fontSize = ""; });
     await page.setViewportSize({ width: 390, height: 844 });
     await editor.getByRole("button", { name: "Klaar", exact: true }).click();
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     const catalog = page.locator("#profile-catalog-manager");
     await expect(catalog.getByRole("heading", { name: kinkCategoryLabel(topic.category), exact: true })).toBeVisible();
     await expect(catalog.getByRole("heading", { name: "Eigen onderwerpen", exact: true })).toBeVisible();
