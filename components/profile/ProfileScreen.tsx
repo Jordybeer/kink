@@ -360,18 +360,6 @@ export default function ProfilePage({ params }: Props) {
                 <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </Link>
 
-              <button
-                ref={manageTriggerRef}
-                type="button"
-                onClick={() => { setEditor(null); setCatalogOpen(true); }}
-                aria-expanded="false"
-                aria-controls="profile-catalog-manager"
-                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
-                style={{ color: "var(--text2)" }}
-              >
-                Onderwerpen beheren
-                <ArrowRight size={13} aria-hidden="true" />
-              </button>
             </section>
           )}
         </div>
