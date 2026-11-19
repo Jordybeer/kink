@@ -94,7 +94,28 @@ test("privéantwoorden behouden het compacte overzicht en veilig inline bewerken
   const privateContent = page.locator("#profile-read-private-content");
   await expect(privateContent).toBeVisible();
   await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
-  await privateContent.getByRole("button", { name: /Privéantwoord voor .* tonen/ }).first().click();
+  const row = privateContent.locator('[data-kink-id="spanking_hand_give"]');
+  const reveal = row.getByRole("button", { name: /Privéantwoord voor .* tonen/ });
+  const conceal = row.getByRole("button", { name: /Privéantwoord voor .* opnieuw verbergen/ });
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  await reveal.evaluate((button) => {
+    button.addEventListener("animationstart", () => button.setAttribute("data-test-revealed", "yes"), { once: true });
+  });
+  await reveal.focus();
+  await reveal.press("Enter");
+  await expect(conceal).toBeFocused();
+  await expect(conceal).toHaveAttribute("data-test-revealed", "yes");
+  await conceal.press("Enter");
+  await expect(reveal).toBeFocused();
+  await expect(row.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await reveal.press("Enter");
+  expect(await conceal.evaluate((button) => button.getAnimations({ subtree: true }).length)).toBe(0);
+  await page.emulateMedia({ reducedMotion: "no-preference" });
+  expect.soft(await conceal.evaluate(async (button) => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => requestAnimationFrame(() => resolve())));
+    return button.getAnimations({ subtree: true }).length;
+  })).toBe(0);
   await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toBeVisible();
   await privateContent.getByRole("button", { name: /Spanking.* bewerken/ }).first().click();
   await expect(privateContent.getByTestId("profile-inline-editor")).toBeVisible();
@@ -105,4 +126,9 @@ test("privéantwoorden behouden het compacte overzicht en veilig inline bewerken
   await privateToggle.click();
   await expect(privateContent.getByText("ALLEEN-VOOR-MIJ-LEZEN")).toHaveCount(0);
   await expect(privateContent.getByRole("button", { name: /Privéantwoord voor .* tonen/ }).first()).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 844 });
+  const topicName = row.getByText("Spanking (hand) — giving", { exact: true });
+  const [rowBox, titleBox, concealedBox] = await Promise.all([row.boundingBox(), topicName.boundingBox(), reveal.boundingBox()]);
+  expect(concealedBox!.y).toBeLessThan(titleBox!.y + titleBox!.height);
+  expect(concealedBox!.x + concealedBox!.width).toBeCloseTo(rowBox!.x + rowBox!.width, 0);
 });
