@@ -178,7 +178,7 @@ export default function AppLock({ storedHash, biometricCredentialId, onUnlock }:
                 opacity: bioLoading ? 0.6 : 1,
               }}
             >
-              {bioLoading ? <SpinnerGap size={20} className="animate-spin" aria-hidden="true" /> : <Fingerprint size={20} aria-hidden="true" />}
+              {bioLoading ? <SpinnerGap size={20} className="animate-spin motion-reduce:animate-none" aria-hidden="true" /> : <Fingerprint size={20} aria-hidden="true" />}
               {bioLoading ? "Controleren…" : "Face ID / vingerafdruk"}
             </motion.button>
             {bioError && (

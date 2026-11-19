@@ -121,11 +121,12 @@ test.describe("Alle lokale data verwijderen", () => {
     await more.click();
     await page.getByRole("button", { name: /Alle data verwijderen/ }).click();
     await page.getByLabel("Typ wis alles om te bevestigen").fill("wis alles");
-    await page.getByRole("button", { name: "Vernietig voor altijd" }).click();
-
-    // The product intentionally reloads after a successful wipe. Waiting on
-    // the new onboarding dialog synchronizes with that future navigation rather
-    // than accidentally observing the already-loaded pre-destroy document.
+    // Resetting the live store can show onboarding before async cleanup ends.
+    // Observe the actual reload before inspecting the new document's stores.
+    await Promise.all([
+      page.waitForEvent("framenavigated", (frame) => frame === page.mainFrame()),
+      page.getByRole("button", { name: "Vernietig voor altijd" }).click(),
+    ]);
     await expect(page.getByRole("dialog", { name: "Welkom bij KinkSync" })).toBeVisible();
 
     const remaining = await page.evaluate(async () => {

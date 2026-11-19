@@ -81,7 +81,7 @@ const LANE_RANK: Record<QuestionnaireLane, number> = {
   deepDive: 5,
 };
 
-function positiveStatus(status: KinkEntry["status"]): PositiveQuestionnaireStatus | null {
+export function positiveQuestionnaireStatus(status: KinkEntry["status"]): PositiveQuestionnaireStatus | null {
   return status === "yes" || status === "willing" ? status : null;
 }
 
@@ -105,7 +105,7 @@ function directSignals(
   }>();
 
   for (const [sourceKinkId, entry] of Object.entries(entries)) {
-    const status = positiveStatus(entry.status);
+    const status = positiveQuestionnaireStatus(entry.status);
     if (!catalogIds.has(sourceKinkId)) continue;
     // Alleen herhaalde harde grenzen mogen een expliciete vervolgvraag wat later
     // laten verleiden. Nooit achteruit over `related`, nooit door een heel topic.
@@ -160,7 +160,7 @@ export function derivePendingExpansionProbes(
   const reasonsByTarget = new Map<string, ExpansionReason[]>();
 
   for (const [sourceKinkId, entry] of Object.entries(entries)) {
-    const status = positiveStatus(entry.status);
+    const status = positiveQuestionnaireStatus(entry.status);
     if (!status || !catalogIndex.has(sourceKinkId)) continue;
     const targetKinkId = questionnaireCanonicalProbeTarget(sourceKinkId);
     if (!targetKinkId || !catalogIndex.has(targetKinkId)) continue;
@@ -390,8 +390,8 @@ export function isConversationContinuation(
 /**
  * De kaartdanser bewaakt alleen het gesprek. Hij maakt nooit eligibility of
  * antwoorden aan: een complement/probe moet al in de queue staan om direct te
- * mogen volgen. Dynamic kiest breadth-first: een inhoudelijk nabije kaart wordt
- * pas direct getoond als er geen geloofwaardig ander onderwerp beschikbaar is.
+ * mogen volgen. Na een positief antwoord komt de expliciete vervolgvraag eerst.
+ * Na een vervolg krijgt een ander onderwerp weer ruimte.
  */
 export function selectConversationQuestion(
   queue: readonly QuestionnaireQueueItem[],
@@ -411,28 +411,10 @@ export function selectConversationQuestion(
   if (progressionReady.length > 0) candidates = progressionReady;
 
   if (context.phase) {
-    if (context.phase === "topicBreakRequired" && context.lastKinkId) {
-      const last = catalog.find((kink) => kink.id === context.lastKinkId);
-      if (last) {
-        const differentTopic = candidates.find((item) =>
-          !isConversationContinuation(item, context.lastKinkId)
-          && !sharesTopic(last, item.kink),
-        );
-        if (differentTopic) return differentTopic;
-      }
-      return candidates[0] ?? null;
-    }
-
     if (
       (context.phase === "preferComplement" || context.phase === "preferContinuation")
       && context.lastKinkId
     ) {
-      const siblingId = complementarySiblingId(context.lastKinkId);
-      const sibling = siblingId
-        ? candidates.find((item) => item.kink.id === siblingId)
-        : undefined;
-      if (sibling) return sibling;
-
       if (context.phase === "preferContinuation") {
         const canonicalProbe = candidates.find((item) =>
           item.isProbe && item.reasons.some((reason) =>
@@ -442,16 +424,27 @@ export function selectConversationQuestion(
         );
         if (canonicalProbe) return canonicalProbe;
       }
+
+      const siblingId = complementarySiblingId(context.lastKinkId);
+      const sibling = siblingId
+        ? candidates.find((item) => item.kink.id === siblingId)
+        : undefined;
+      if (sibling) return sibling;
     }
 
     if (context.lastKinkId) {
       const last = catalog.find((kink) => kink.id === context.lastKinkId);
       if (last) {
-        const differentTopic = candidates.find((item) =>
-          !isConversationContinuation(item, context.lastKinkId)
-          && !sharesTopic(last, item.kink),
-        );
-        if (differentTopic) return differentTopic;
+        const followUpId = questionnaireCanonicalProbeTarget(last.id);
+        const differentTopic = (item: QuestionnaireQueueItem) =>
+          item.kink.id !== followUpId
+          && !isConversationContinuation(item, last.id)
+          && !sharesTopic(last, item.kink);
+        if (context.phase === "topicBreakRequired") {
+          const broadQuestion = candidates.find((item) => !item.isProbe && differentTopic(item));
+          if (broadQuestion) return broadQuestion;
+        }
+        return candidates.find(differentTopic) ?? candidates[0];
       }
     }
 

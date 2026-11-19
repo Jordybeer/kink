@@ -6,14 +6,17 @@ test("catalogusbeheer vervangt de profielhero en herstelt context en focus na Ge
 
   const summary = page.getByTestId("profile-summary");
   const nav = page.getByLabel("Hoofdnavigatie");
-  const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+  const manage = page.getByRole("region", { name: "Profieloverzicht" })
+    .getByRole("button", { name: "Catalogus doorzoeken", exact: true });
   await expect(summary).toBeVisible();
+  await expect(summary.getByText("Onderwerpen beheren", { exact: true })).toHaveCount(0);
   await expect(manage).toBeVisible();
   await expect(nav.getByRole("button", { name: "Profiel bewerken" })).toBeVisible();
   await expect(nav.getByRole("button", { name: "Meer acties" })).toBeVisible();
 
   await manage.click();
   await expect(summary).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Catalogus", exact: true })).toBeFocused();
   await expect(page.getByTestId("profile-catalog-manager-header")).toBeVisible();
   await expect(page.getByPlaceholder("Zoek in de volledige catalogus…")).toBeVisible();
   await expect(nav.getByRole("button", { name: "Profiel bewerken" })).toHaveCount(0);

@@ -5,7 +5,7 @@ import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
-import { isConversationContinuation, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
+import { isConversationContinuation, positiveQuestionnaireStatus, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet from "./Sheet";
 import EditorialHeading from "./ui/EditorialHeading";
@@ -40,7 +40,7 @@ interface Props {
 
 export default function TriageDeck({ kinks, queueItems, entries, focusCategory, progressLabel, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
-  const [holding, setHolding] = useState<string | null>(null);
+  const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean } | null>(null);
   const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const [safetyKinkId, setSafetyKinkId] = useState<string | null>(null);
@@ -70,7 +70,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
     queue = deferredFocus.length ? deferredFocus : unanswered;
   }
   const currentItem = selectConversationQuestion(queue, KINKS, { phase: conversationPhase, lastKinkId: lastAnsweredId });
-  const held = holding ? kinks.find((kink) => kink.id === holding) : null;
+  const held = holding ? kinks.find((kink) => kink.id === holding.id) : null;
   const current = held ?? currentItem?.kink ?? null;
 
   function clearHoldTimer() {
@@ -80,7 +80,9 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
   }
 
   function handleSelect(kink: Kink, status: KinkStatus) {
-    const answeredWasContinuation = isConversationContinuation(currentItem, lastAnsweredId);
+    const answeredWasContinuation = holding?.id === kink.id
+      ? holding.wasContinuation
+      : isConversationContinuation(currentItem, lastAnsweredId);
     clearHoldTimer();
     if (status == null) {
       setHolding(null);
@@ -88,10 +90,11 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       setConversationPhase("normal");
       return;
     }
-    setHolding(kink.id);
+    setHolding({ id: kink.id, wasContinuation: answeredWasContinuation });
     onStatusChange(kink.id, status);
     setLastAnsweredId(kink.id);
-    setConversationPhase(answeredWasContinuation ? "topicBreakRequired" : status === "yes" || status === "willing" ? "preferContinuation" : "preferComplement");
+    if (answeredWasContinuation || status === "hard_no") setConversationPhase("topicBreakRequired");
+    else setConversationPhase(positiveQuestionnaireStatus(status) ? "preferContinuation" : "preferComplement");
     holdTimer.current = setTimeout(() => { holdTimer.current = null; setHolding(null); }, CARD_FEEDBACK_MS);
   }
 

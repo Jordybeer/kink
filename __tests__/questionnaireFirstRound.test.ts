@@ -112,6 +112,22 @@ describe("broad Dynamic first round", () => {
     expect(firstRound.visibleKinks.map((kink) => kink.id)).not.toContain("rituelen_protocols");
   });
 
+  it("unlocks the next step of a saved branch only after each question was answered positively", () => {
+    const current = profile("dominant", { being_watched: entry("yes") });
+    const probeIds = () => getDynamicFirstRound(current, getQuestionnaireRuntime(current))
+      .queue.filter((item) => item.isProbe).map((item) => item.kink.id);
+
+    expect(probeIds()).not.toContain("public_play");
+    current.entries.exhibitionism = entry("willing");
+    expect(probeIds()).toContain("public_play");
+    expect(current.entries.public_play).toBeUndefined();
+    current.entries.being_watched = entry("hard_no");
+    expect(probeIds()).not.toContain("public_play");
+    current.entries.being_watched = entry("yes");
+    current.entries.public_play = entry("maybe");
+    expect(probeIds()).not.toContain("public_play");
+  });
+
   it("keeps every queued card in the first-round visible set", () => {
     const current = profile("dominant", { handcuffs_give: entry("willing") });
     const firstRound = getDynamicFirstRound(current, getQuestionnaireRuntime(current));

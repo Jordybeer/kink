@@ -1,6 +1,7 @@
 import { KINKS } from "@/lib/kinks";
-import { rankQuestionnaireQueueItems, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
-import { QUESTIONNAIRE_CORE_ANCHOR_IDS, QUESTIONNAIRE_COVERAGE_ANCHOR_IDS } from "@/lib/questionnaireMetadata";
+import { positiveQuestionnaireStatus, rankQuestionnaireQueueItems, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
+import { isQuestionnaireKinkEligibleForPerspective } from "@/lib/questionnaireEligibility";
+import { QUESTIONNAIRE_CORE_ANCHOR_IDS, QUESTIONNAIRE_COVERAGE_ANCHOR_IDS, questionnaireCanonicalProbeTarget } from "@/lib/questionnaireMetadata";
 import type { Kink, Profile, ProfilePerspective, QuestionnaireInterest } from "@/types";
 import {
   buildQuestionnaireCoveragePlan,
@@ -57,12 +58,22 @@ export function getDynamicFirstRound(
     complete: answered === total,
   };
 
-  // Historic positives elsewhere in a profile must not make a fresh first round
-  // balloon. Only explicit answers in this round (or chosen-interest anchors) may
-  // invite one of the engine's existing local follow-ups here.
-  const pendingProbes = runtime.pendingProbes.filter((probe) =>
-    probe.reasons.some((reason) => anchorIds.has(reason.sourceKinkId)),
-  );
+  // A follow-up can open its own next question after it receives a positive
+  // answer. Start at this round's anchors so unrelated profile history stays out.
+  const positiveSources = new Set<string>();
+  for (const anchorId of anchorIds) {
+    let sourceId: string | undefined = anchorId;
+    while (sourceId && !positiveSources.has(sourceId)
+      && isQuestionnaireKinkEligibleForPerspective(sourceId, perspective)
+      && positiveQuestionnaireStatus(profile.entries[sourceId]?.status ?? null)) {
+      positiveSources.add(sourceId);
+      sourceId = questionnaireCanonicalProbeTarget(sourceId);
+    }
+  }
+  const pendingProbes = runtime.pendingProbes.flatMap((probe) => {
+    const reasons = probe.reasons.filter((reason) => positiveSources.has(reason.sourceKinkId));
+    return reasons.length ? [{ ...probe, reasons }] : [];
+  });
   const probeByTarget = new Map(pendingProbes.map((probe) => [probe.targetKinkId, probe]));
   const eligibleIds = new Set<string>();
 

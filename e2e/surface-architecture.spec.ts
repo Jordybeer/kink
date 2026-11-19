@@ -129,7 +129,7 @@ test("Settings uses a stable utility surface on mobile and a contained panel fro
 test("kink editing stays inline and keeps optional details in one disclosure", async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 900 });
   await seedAndGo(page, "/profile/pw-alex-001", [{ ...PROFILE_ALEX, entries: {} }]);
-  await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+  await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
   await page.getByPlaceholder("Zoek in de volledige catalogus…").fill("spanking");
   const result = page.locator('button[aria-label*=", nog niet beoordeeld"][aria-label*=", bewerken"]').first();
   await result.click();

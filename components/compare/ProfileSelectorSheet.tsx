@@ -133,6 +133,7 @@ export default function ProfileSelectorSheet({
   return (
     <Sheet open={open} onClose={closeAndReset} scrollable aria-label={`Kies profiel ${slot}`}>
       <SheetContent
+        scrollable={false}
         className="flex flex-col overflow-hidden px-0 pb-0 pt-3"
         style={{ maxHeight: "calc(var(--visual-viewport-height, 100dvh) - env(safe-area-inset-top))" }}
       >

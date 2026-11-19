@@ -10,6 +10,7 @@ import {
   FileArrowDown,
   FileText,
   Lock,
+  MagnifyingGlass,
   UserMinus,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -103,7 +104,11 @@ export default function ProfilePage({ params }: Props) {
   }, [id]);
 
   useEffect(() => {
-    if (catalogOpen || !restoreCatalogFocus.current) return;
+    if (catalogOpen) {
+      document.getElementById("profile-catalog-title")?.focus();
+      return;
+    }
+    if (!restoreCatalogFocus.current) return;
     restoreCatalogFocus.current = false;
     manageTriggerRef.current?.focus();
   }, [catalogOpen]);
@@ -313,11 +318,11 @@ export default function ProfilePage({ params }: Props) {
   }
 
   return (
-    <main className="mx-auto w-full max-w-3xl pt-6">
+    <main className="mx-auto w-full max-w-3xl pt-4">
       <h1 className="sr-only">{currentProfile.name}</h1>
 
       {!catalogOpen && (
-        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-6">
+        <div data-testid="profile-summary" className="mx-[var(--page-gutter)] mb-4">
           <ProfileHero
             profile={currentProfile}
             onShare={shared ? undefined : () => setShareOpen(true)}
@@ -328,7 +333,7 @@ export default function ProfilePage({ params }: Props) {
 
           {!shared && (
             <section
-              className="mt-6 border-t pt-4"
+              className="mt-4 border-t pt-3"
               style={{ borderColor: "var(--border)" }}
               aria-labelledby="profile-questionnaire-title"
             >
@@ -359,33 +364,20 @@ export default function ProfilePage({ params }: Props) {
                 </div>
                 <ArrowRight size={16} weight="regular" aria-hidden="true" style={{ color: "var(--text2)" }} />
               </Link>
-
-              <button
-                ref={manageTriggerRef}
-                type="button"
-                onClick={() => { setEditor(null); setCatalogOpen(true); }}
-                aria-expanded="false"
-                aria-controls="profile-catalog-manager"
-                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1.5 text-sm font-medium"
-                style={{ color: "var(--text2)" }}
-              >
-                Onderwerpen beheren
-                <ArrowRight size={13} aria-hidden="true" />
-              </button>
             </section>
           )}
         </div>
       )}
 
       {catalogOpen && !shared ? (
-        <section id="profile-catalog-manager" className="pb-5" aria-label="Onderwerpen beheren">
+        <section id="profile-catalog-manager" className="pb-5" aria-labelledby="profile-catalog-title">
           <div
             data-testid="profile-catalog-manager-header"
             className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
             style={{ borderColor: "var(--border)" }}
           >
             <div className="min-w-0 flex-1">
-              <h2 className="text-base font-semibold">Onderwerpen beheren</h2>
+              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-base font-semibold outline-none">Catalogus</h2>
               <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
               </p>
@@ -510,17 +502,32 @@ export default function ProfilePage({ params }: Props) {
         </section>
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
-          <h2
-            id="profile-interests-title"
-            tabIndex={-1}
-            className="outline-none scroll-mt-[var(--nav-h)] mb-4 text-2xl italic leading-tight"
-            style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
-          >
-            Interesses &amp; grenzen
-          </h2>
+          <div className="mb-4 flex items-center justify-between gap-3">
+            <h2
+              id="profile-interests-title"
+              tabIndex={-1}
+              className="min-w-0 scroll-mt-[var(--nav-h)] text-2xl italic leading-tight outline-none"
+              style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500 }}
+            >
+              Interesses &amp; grenzen
+            </h2>
+            {!shared && (
+              <button
+                ref={manageTriggerRef}
+                type="button"
+                aria-label="Catalogus doorzoeken"
+                title="Catalogus doorzoeken"
+                onClick={() => { setEditor(null); setCatalogOpen(true); }}
+                className="focus-ring ks-motion-choice grid h-11 w-11 flex-none place-items-center rounded-full"
+                style={{ color: "var(--text2)" }}
+              >
+                <MagnifyingGlass size={20} aria-hidden="true" />
+              </button>
+            )}
+          </div>
 
           <div data-testid="profile-status-overview">
-            <div role="group" aria-label="Antwoordstatus" className="mb-5 grid grid-cols-[minmax(0,1fr)] gap-x-5 gap-y-1 min-[480px]:grid-cols-2">
+            <div role="group" aria-label="Antwoordstatus" className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-5 gap-y-1">
               {STATUS_ORDER.map((status) => {
                 const count = publicItems.filter((item) => item.status === status).length;
                 return <button key={status} id={`profile-filter-${status}`} type="button" onClick={() => selectStatus(status)}
@@ -530,7 +537,7 @@ export default function ProfilePage({ params }: Props) {
                   style={{ borderColor: activeStatus === status ? STATUS_VAR[status] : "transparent" }}>
                   <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
                   <span className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
-                  <span className="w-10 flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
+                  <span className="flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
                 </button>;
               })}
             </div>

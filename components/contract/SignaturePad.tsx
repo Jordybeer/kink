@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { X } from "@phosphor-icons/react";
+import Sheet from "@/components/Sheet";
 import { canvasHasInk } from "@/lib/canvasUtils";
 
 // The signing ritual: pad, modal and the drawing hook — moved whole from
@@ -132,7 +132,7 @@ export default function SignaturePad({
   }
 
   return (
-    <div className="flex flex-col items-center gap-2 flex-1 min-w-[140px]">
+    <div className="flex w-full min-w-0 flex-col items-center gap-2 [overflow-wrap:anywhere]">
       <div className="text-sm font-semibold" style={{ color: colour }}>
         {label}
       </div>
@@ -172,69 +172,47 @@ export default function SignaturePad({
         Teken hier met vinger of muis
       </div>
 
-      {modalOpen && (
-        <div
-          style={{
-            position: "fixed", inset: 0, zIndex: 200,
-            background: "var(--scrim-strong)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: "1rem",
-            paddingBottom: "calc(1rem + env(safe-area-inset-bottom))",
-          }}
-          onClick={closeModal}
-        >
-          <div
-            style={{
-              background: "var(--surface)",
-              borderRadius: "1rem",
-              padding: "1.5rem",
-              width: "100%",
-              maxWidth: "480px",
-              border: `2px solid ${colour}`,
-            }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-sm font-semibold" style={{ color: colour }}>
-                {label}
-              </span>
-              <button
-                onClick={closeModal}
-                className="ks-motion-choice focus-ring p-1 rounded-full"
-                style={{ color: "var(--text2)" }}
-                aria-label="Sluiten"
-              >
-                <X aria-hidden="true" size={18} />
-              </button>
-            </div>
-            <DrawableCanvas
-              canvasRef={modalCanvasRef}
-              colour={colour}
-              label={label}
-              sourceRef={canvasRef}
-            />
-            <p className="text-sm text-center mt-2" style={{ color: "var(--text2)" }}>
-              Teken hier met vinger of muis
-            </p>
-            <div className="flex items-center justify-between mt-4">
-              <button
-                onClick={clear}
-                className="ks-motion-choice focus-ring min-h-11 text-sm px-3 py-1.5 rounded-full border"
-                style={{ color: "var(--text2)", borderColor: "var(--border)" }}
-              >
-                Wis
-              </button>
-              <button
-                onClick={closeModal}
-                className="ks-motion-choice focus-ring min-h-11 text-sm px-4 py-1.5 rounded-full font-semibold"
-                style={{ background: colour, color: "var(--on-accent)" }}
-              >
-                Klaar
-              </button>
-            </div>
+      <Sheet
+        open={modalOpen}
+        onClose={closeModal}
+        title="Handtekening"
+        aria-label={`Handtekening zetten voor ${label}`}
+        variant="task"
+        scrollable
+        footer={
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <button
+              type="button"
+              onClick={clear}
+              className="ks-motion-choice focus-ring min-h-11 px-3 py-1.5 text-sm rounded-full border"
+              style={{ color: "var(--text2)", borderColor: "var(--border)" }}
+            >
+              Wis
+            </button>
+            <button
+              type="button"
+              onClick={closeModal}
+              className="ks-motion-choice focus-ring min-h-11 px-4 py-1.5 rounded-full text-sm font-semibold"
+              style={{ background: colour, color: "var(--on-accent)" }}
+            >
+              Klaar
+            </button>
           </div>
-        </div>
-      )}
+        }
+      >
+        <p className="mb-3 text-sm font-semibold [overflow-wrap:anywhere]" style={{ color: colour }}>
+          {label}
+        </p>
+        <DrawableCanvas
+          canvasRef={modalCanvasRef}
+          colour={colour}
+          label={label}
+          sourceRef={canvasRef}
+        />
+        <p className="mt-2 text-center text-sm" style={{ color: "var(--text2)" }}>
+          Teken hier met vinger of muis
+        </p>
+      </Sheet>
     </div>
   );
 }

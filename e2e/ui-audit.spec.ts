@@ -94,7 +94,7 @@ test.describe("UI audit", () => {
 
     await expect(page.getByText("Playwright", { exact: true }).first()).toBeVisible();
     await expect(page.getByTestId("profile-summary")).toBeVisible();
-    const manage = page.getByRole("button", { name: /Onderwerpen beheren/ });
+    const manage = page.getByRole("button", { name: "Catalogus doorzoeken", exact: true });
     await expect(manage).toBeVisible();
     const manageBox = await manage.boundingBox();
     expect(manageBox).not.toBeNull();
@@ -120,7 +120,7 @@ test.describe("UI audit", () => {
     await expect(overview.getByTestId("profile-read-status-maybe")).toHaveAccessibleName(/Misschien, 1 antwoord/);
     await expect(overview.getByTestId("profile-read-status-no")).toHaveAccessibleName(/Voor hen, 1 antwoord/);
 
-    await page.getByRole("button", { name: /Onderwerpen beheren/ }).click();
+    await page.getByRole("button", { name: "Catalogus doorzoeken", exact: true }).click();
     await expect(page.getByTestId("profile-catalog-controls")).toBeVisible();
     await expect(overview).toHaveCount(0);
 

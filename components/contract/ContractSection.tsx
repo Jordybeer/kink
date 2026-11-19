@@ -1,9 +1,10 @@
 "use client";
 
-import RelationThread from "@/components/ui/RelationThread";
+import StatusGlyph from "@/components/StatusGlyph";
+import { PROFILE_COLOUR_A, PROFILE_COLOUR_B } from "@/lib/compare";
 
 import { useEffect, useState } from "react";
-import { STATUS_LABEL as STATUS_NL } from "@/lib/statusLabels";
+import { STATUS_LABEL as STATUS_NL, STATUS_VAR } from "@/lib/statusLabels";
 import { isKinkDetail } from "@/lib/contractPdf";
 import type { ContractItem, KinkDetailItem } from "@/lib/contractPdf";
 
@@ -37,10 +38,10 @@ export default function ContractSection({
   onNoteChange,
 }: Props) {
   const [openNotes, setOpenNotes] = useState<Set<string>>(new Set());
-  const cA = colourA ?? "var(--accent)";
-  const cB = colourB ?? "var(--accent2)";
-  const nA = nameA?.split(" ")[0] ?? "A";
-  const nB = nameB?.split(" ")[0] ?? "B";
+  const cA = colourA ?? PROFILE_COLOUR_A;
+  const cB = colourB ?? PROFILE_COLOUR_B;
+  const nA = nameA ?? "A";
+  const nB = nameB ?? "B";
 
   useEffect(() => {
     setOpenNotes(new Set());
@@ -57,48 +58,39 @@ export default function ContractSection({
   }
 
   return (
-    <div className="mb-5">
+    <div className="mb-8 min-w-0 [overflow-wrap:anywhere]">
       <h3 className="mb-2 text-sm" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontStyle: "italic", fontWeight: 400, color: colour }}>
         {title}
       </h3>
       {isKinkDetail(items[0]) ? (
-        <div className="space-y-2">
+        <div className="min-w-0">
           {(items as KinkDetailItem[]).map((item, i) => {
             const identity = getItemKey?.(item) ?? item.name;
             const editorOpen = openNotes.has(noteKey(identity)) || Boolean(item.commentA || item.commentB);
             return (
-              <div key={getItemKey ? identity : `${item.name}-${i}`} className="rounded-xl p-2.5 text-sm" style={{
-                background: `color-mix(in srgb, ${colour} 8%, transparent)`,
-                border: `1px solid color-mix(in srgb, ${colour} 20%, transparent)`,
-              }}>
+              <div key={getItemKey ? identity : `${item.name}-${i}`} data-contract-topic className="min-w-0 border-b py-4 text-sm" style={{ borderColor: "var(--border)" }}>
                 <div className="mb-1.5 font-medium" style={{ color: "var(--text)" }}>{item.name}</div>
                 {item.sourceKind === "custom" && (
                   <p className="mb-1.5 text-xs" style={{ color: "var(--text2)" }}>
                     Eigen onderwerp van {item.sourceAId && item.sourceBId ? `${nA} en ${nB}` : item.sourceAId ? nA : nB}
                   </p>
                 )}
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    {item.statusA
-                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cA, borderColor: `color-mix(in srgb, ${cA} 40%, transparent)`, background: `color-mix(in srgb, ${cA} 10%, transparent)` }}>{nA}: {STATUS_NL[item.statusA]}</span>
-                      : <span style={{ color: "var(--text2)", fontSize: "14px" }}>{nA}: geen antwoord</span>
-                    }
-                  </div>
-                  <RelationThread className="ks-relation-thread--quiet flex-1" />
-                  <div className="flex flex-col items-end gap-0.5">
-                    {item.statusB
-                      ? <span className="whitespace-nowrap rounded-full border px-1.5 py-0.5 text-sm" style={{ color: cB, borderColor: `color-mix(in srgb, ${cB} 40%, transparent)`, background: `color-mix(in srgb, ${cB} 10%, transparent)` }}>{STATUS_NL[item.statusB]}: {nB}</span>
-                      : <span style={{ color: "var(--text2)", fontSize: "14px" }}>geen antwoord: {nB}</span>
-                    }
-                  </div>
-                </div>
-
-                {(item.desireA != null || item.desireB != null) && (
-                  <div className="mt-1.5 space-y-0.5" style={{ color: "var(--text2)" }}>
-                    {item.desireA != null && <div className="text-xs"><span className="font-medium" style={{ color: cA }}>{nA} verlangen:</span> {item.desireA}/5</div>}
-                    {item.desireB != null && <div className="text-xs"><span className="font-medium" style={{ color: cB }}>{nB} verlangen:</span> {item.desireB}/5</div>}
-                  </div>
-                )}
+                <dl className="mt-2 grid min-w-0 gap-3 sm:grid-cols-2">
+                  {[
+                    { name: nA, colour: cA, status: item.statusA, desire: item.desireA },
+                    { name: nB, colour: cB, status: item.statusB, desire: item.desireB },
+                  ].map((answer, side) => (
+                    <div key={side} data-contract-answer className="min-w-0">
+                      <dt className="font-medium" style={{ color: answer.colour }}>{answer.name}</dt>
+                      <dd className="mt-0.5">
+                        {answer.status
+                          ? <span style={{ color: STATUS_VAR[answer.status] }}><StatusGlyph status={answer.status} size={14} /> {STATUS_NL[answer.status]}</span>
+                          : <span style={{ color: "var(--text2)" }}>geen antwoord</span>}
+                        {answer.desire != null && <span className="mt-0.5 block text-xs" style={{ color: "var(--text2)" }}>Verlangen: {answer.desire}/5</span>}
+                      </dd>
+                    </div>
+                  ))}
+                </dl>
 
                 {editableNotes && !editorOpen && (
                   <button
@@ -155,13 +147,9 @@ export default function ContractSection({
           })}
         </div>
       ) : (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="min-w-0">
           {(items as (string | { text: string; tag: string })[]).map((item, i) => (
-            <span key={i} className="rounded-full px-2.5 py-1 text-sm" style={{
-              background: `color-mix(in srgb, ${colour} 12%, transparent)`,
-              color: colour,
-              border: `1px solid color-mix(in srgb, ${colour} 30%, transparent)`,
-            }}>
+            <span key={i} className="block border-b py-3 text-sm" style={{ borderColor: "var(--border)", color: "var(--text)" }}>
               {typeof item === "string" ? item : (
                 <>{item.text} <span style={{ opacity: 0.65 }}>{item.tag}</span></>
               )}

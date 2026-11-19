@@ -182,8 +182,9 @@ Privacy overrides pinning immediately: remove all public presentation and focus 
 stable control. Private answers stay in a separate owner-only disclosure, with
 neutral concealed rows; status, tags, curiosity and comments require explicit
 individual reveal before editing. Shared/imported profiles have no answer-editing
-controls and expose no private counts or context. Category-first discovery remains
-available through Onderwerpen beheren.
+controls and expose no private counts or context. Owners open catalogue search
+from the magnifier beside Interesses & grenzen. The questionnaire row contains
+its single guided action.
 
 The bounded active editor and Details reuse DisclosureBody: 220ms grid, 190ms
 opacity, immediate inert/aria-hidden and live Reduced Motion. Keep only the selected
@@ -219,6 +220,19 @@ Do not invent a generic `Privacy & boundaries` section unless real editable sett
 Do not use a tab-semantic segmented control for a choice that is not actually tab navigation. Use controls whose accessibility semantics match the decision.
 
 ## Settings and compact disclosures
+
+Quick sheets retain their mobile placement and share a centered, bounded desktop
+width. Every long dialog has one vertical scroll owner: SheetContent supplies it
+unless the consumer already owns a fixed header and scroll body. Only the shared
+drag handle starts dismissal; dragging or scrolling content must not dismiss it.
+Keep action headings short and place unrestricted identity text in the scroll
+body. Signature and time entry reuse the task Sheet's focus and viewport contract;
+time changes still require explicit confirmation.
+
+Bound task-dialog structural spacing independently of text enlargement. In short
+landscape viewports, the complete header and footer actions must fit while the
+single scroll body stays usable. Scene's editor toolbar joins normal document
+flow when a short landscape viewport cannot support fixed controls.
 
 Settings keeps the warm aubergine/rose utility surface: a fixed header and close,
 one scroll body, full-height mobile geometry and a contained desktop panel. Titled
@@ -268,6 +282,23 @@ visible. Scene position projection remains separate; large Profile/catalogue/
 Compare lists, ContractSection and the contract preamble retain their established
 behavior. No page choreography, height measurement or animation-completion side
 effects belong to this pattern.
+
+## Compare and contract reading
+
+Public unpaired hard limits stay named in an always-visible Compare safety
+section, independent of result, category and discussed filters. Name the owner
+and say that the other person has no visible answer; never imply that a private
+answer exists. These rows do not enter paired comparison counts and do not repeat
+inside the generic unpaired disclosure.
+
+Contract uses the same A/B identity colours as Compare. Full aliases identify
+the people; status text and StatusGlyph retain their separate semantic colours.
+Topic rows are flat, with quiet dividers and stacked name/answer groups on phones,
+expanding to two columns where space allows. Long aliases, topic names, ownership
+and notes wrap without clipping, nowrap pills or a forced horizontal thread.
+The editor uses whitespace and dividers for safewords, optional real names and
+signatures rather than nested cards. Preamble disclosure, full directional labels,
+notes/PDF meaning and the signing lifecycle remain unchanged.
 
 ## Motion
 
