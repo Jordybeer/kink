@@ -44,9 +44,9 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
     onToggle();
   }
   return (
-    <div data-testid="profile-topic-row" data-kink-id={kink.id} className="min-w-0">
+    <div data-testid="profile-topic-row" data-kink-id={kink.id} className={compactPrivate ? "@container min-w-0" : "min-w-0"}>
       {compactPrivate ? (
-        <div className="flex min-h-14 min-w-0 flex-wrap items-start gap-x-3 gap-y-1 py-3">
+        <div className="grid min-h-14 min-w-0 items-start gap-x-3 gap-y-1 py-3 @min-[15rem]:grid-cols-[minmax(0,1fr)_min(42%,9rem)]">
           {visible && editable ? (
             <button
               type="button"
@@ -55,12 +55,12 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
               aria-label={`${kink.name}, ${entry.status ? STATUS_LABEL[entry.status] : "nog niet beoordeeld"}, bewerken`}
               aria-expanded={selected && open}
               aria-controls={id}
-              className="ks-motion-choice focus-ring min-h-11 min-w-0 max-w-full flex-[1_1_8rem] rounded-lg text-left"
+              className="ks-motion-choice focus-ring min-h-11 min-w-0 rounded-lg text-left"
             >
               {privateLabel}
             </button>
           ) : (
-            <div className="min-w-0 max-w-full flex-[1_1_8rem] text-left">{privateLabel}</div>
+            <div className="min-w-0 text-left">{privateLabel}</div>
           )}
           <PrivateResponseStatus
             status={entry.status}

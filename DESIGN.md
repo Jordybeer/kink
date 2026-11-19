@@ -151,7 +151,8 @@ in its supporting sentence: `Vergelijk overeenkomsten, bespreekpunten en grenzen
 
 Owner-approved direction (2026-10-24): the person and their answers stay on one
 Profile document. All five flat status controls show public counts and filter the
-list directly below them. `interests` query values restore that local selection;
+list directly below them. Four interest statuses form a compact reflowing grid,
+with Harde grens on a full-width final row. `interests` query values restore that local selection;
 reload and history retain the hero. Default to the first nonempty interest status,
 and preserve an explicitly selected empty status with an honest empty state.
 The dedicated status browser and three-item preview are superseded.
@@ -182,9 +183,11 @@ Privacy overrides pinning immediately: remove all public presentation and focus 
 stable control. Private answers stay in a separate owner-only disclosure, with
 neutral concealed rows; status, tags, curiosity and comments require explicit
 individual reveal before editing. Shared/imported profiles have no answer-editing
-controls and expose no private counts or context. Owners open catalogue search
-from the magnifier beside Interesses & grenzen. The questionnaire row contains
-its single guided action.
+controls and expose no private counts or context. Owners open the full catalogue
+with one labelled Catalogus doorzoeken action beside Interesses & grenzen. The
+questionnaire row contains its single guided action. Compact private reveal keeps
+one focusable button and only animates the newly visible label. Hiding removes the
+answer immediately, and Reduced Motion skips the reveal effect.
 
 The bounded active editor and Details reuse DisclosureBody: 220ms grid, 190ms
 opacity, immediate inert/aria-hidden and live Reduced Motion. Keep only the selected

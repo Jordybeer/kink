@@ -12,6 +12,7 @@ import {
   Lock,
   MagnifyingGlass,
   UserMinus,
+  X,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
@@ -85,7 +86,10 @@ export default function ProfilePage({ params }: Props) {
   const [privateReadOpen, setPrivateReadOpen] = useState(false);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
+  const catalogSearchRef = useRef<HTMLInputElement | null>(null);
+  const catalogCategoryTriggerRef = useRef<HTMLButtonElement | null>(null);
   const restoreCatalogFocus = useRef(false);
+  const profileScrollTop = useRef(0);
   const motionSafe = useMotionSafe();
   const interestsParam = searchParams.get("interests");
   useEffect(() => {
@@ -101,6 +105,7 @@ export default function ProfilePage({ params }: Props) {
     setSearch("");
     editQueryConsumed.current = false;
     restoreCatalogFocus.current = false;
+    profileScrollTop.current = 0;
   }, [id]);
 
   useEffect(() => {
@@ -110,7 +115,8 @@ export default function ProfilePage({ params }: Props) {
     }
     if (!restoreCatalogFocus.current) return;
     restoreCatalogFocus.current = false;
-    manageTriggerRef.current?.focus();
+    manageTriggerRef.current?.focus({ preventScroll: true });
+    window.scrollTo({ top: profileScrollTop.current, behavior: "instant" });
   }, [catalogOpen]);
 
   useEffect(() => {
@@ -288,8 +294,26 @@ export default function ProfilePage({ params }: Props) {
     setCustomInput("");
   }
 
+  function openCatalogManager() {
+    profileScrollTop.current = window.scrollY;
+    setEditor(null);
+    setRevealedPrivateResponses(new Set());
+    setCatalogOpen(true);
+  }
+
+  function changeCatalogSearch(value: string) {
+    setEditor(null);
+    setSearch(value);
+  }
+
+  function selectCatalogCategory(category: KinkCategoryId | null) {
+    setEditor(null);
+    setCatalogCategoryFilter(category);
+  }
+
   function closeCatalogManager() {
     setEditor(null);
+    setRevealedPrivateResponses(new Set());
     restoreCatalogFocus.current = true;
     setCatalogOpen(false);
     setCategoriesOpen(false);
@@ -373,11 +397,11 @@ export default function ProfilePage({ params }: Props) {
         <section id="profile-catalog-manager" className="pb-5" aria-labelledby="profile-catalog-title">
           <div
             data-testid="profile-catalog-manager-header"
-            className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
+            className="mb-3 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 border-b px-[var(--page-gutter)] pb-3"
             style={{ borderColor: "var(--border)" }}
           >
-            <div className="min-w-0 flex-1">
-              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-base font-semibold outline-none">Catalogus</h2>
+            <div className="min-w-0 shrink">
+              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-2xl leading-tight outline-none" style={{ fontFamily: "var(--font-display, Georgia, serif)" }}>Catalogus</h2>
               <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
               </p>
@@ -393,28 +417,45 @@ export default function ProfilePage({ params }: Props) {
           </div>
 
           <div className="mb-3 px-[var(--page-gutter)]" data-testid="profile-catalog-controls">
-            <input
-              id="profile-catalog-search"
-              value={search}
-              onChange={(event) => { setEditor(null); setSearch(event.target.value); }}
-              aria-label="Volledige catalogus doorzoeken"
-              placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
-              className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-            />
+            <div className="flex min-w-0 items-center rounded-xl border border-[var(--border)] bg-[var(--surface)]">
+              <MagnifyingGlass size={18} className="ml-3 flex-none text-[var(--text2)]" aria-hidden="true" />
+              <input
+                ref={catalogSearchRef}
+                id="profile-catalog-search"
+                value={search}
+                onChange={(event) => changeCatalogSearch(event.target.value)}
+                aria-label="Volledige catalogus doorzoeken"
+                inputMode="search"
+                placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
+                className="focus-ring min-h-11 min-w-0 flex-1 rounded-lg bg-transparent px-2.5 py-2.5 text-base text-[var(--text)] placeholder:text-[var(--text2)]"
+              />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => { catalogSearchRef.current?.focus(); changeCatalogSearch(""); }}
+                  aria-label="Zoekopdracht wissen"
+                  className="focus-ring ks-motion-choice grid size-11 shrink-0 place-items-center rounded-lg text-[var(--text2)]"
+                >
+                  <X size={16} aria-hidden="true" />
+                </button>
+              )}
+            </div>
 
             <button
+              ref={catalogCategoryTriggerRef}
               type="button"
               onClick={() => setCategoriesOpen(true)}
               aria-haspopup="dialog"
               aria-expanded={categoriesOpen}
               aria-label={`Categorie, ${catalogCategoryFilterLabel}`}
-              className="ks-motion-choice focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
+              className="ks-motion-choice focus-ring mt-1 flex min-h-11 w-full flex-wrap items-center gap-x-2 gap-y-0.5 border-b py-2 text-left text-sm"
               style={{ borderColor: "var(--border)", color: "var(--text)" }}
             >
               <span className="flex-none" style={{ color: "var(--text2)" }}>Categorie</span>
-              <span className="ml-auto min-w-0 truncate font-semibold">{catalogCategoryFilterLabel}</span>
-              <CaretDown size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
+              <span className="ml-auto flex min-w-0 items-center gap-2 font-semibold [overflow-wrap:anywhere]">
+                {catalogCategoryFilterLabel}
+                <CaretDown size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
+              </span>
             </button>
           </div>
 
@@ -493,16 +534,26 @@ export default function ProfilePage({ params }: Props) {
                 ))}
               </div>
               {searchResults.length === 0 && (
-                <p className="py-8 text-center text-sm" style={{ color: "var(--text2)" }}>
-                  Geen onderwerpen gevonden.
-                </p>
+                <div className="py-6 text-sm text-[var(--text2)]" role="status">
+                  <p>Geen onderwerpen gevonden.</p>
+                  {catalogCategoryFilter && <p className="mt-1">Je zoekt alleen in {catalogCategoryFilterLabel}.</p>}
+                </div>
+              )}
+              {searchResults.length === 0 && catalogCategoryFilter && (
+                <button type="button" onClick={() => {
+                  catalogCategoryTriggerRef.current?.focus({ preventScroll: true });
+                  selectCatalogCategory(null);
+                }}
+                  className="focus-ring ks-motion-choice min-h-11 rounded-lg text-left text-sm font-semibold text-[var(--accent-text)]">
+                  Zoek in alle categorieën
+                </button>
               )}
             </div>
           )}
         </section>
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-x-4 gap-y-0.5">
             <h2
               id="profile-interests-title"
               tabIndex={-1}
@@ -515,29 +566,30 @@ export default function ProfilePage({ params }: Props) {
               <button
                 ref={manageTriggerRef}
                 type="button"
-                aria-label="Catalogus doorzoeken"
-                title="Catalogus doorzoeken"
-                onClick={() => { setEditor(null); setCatalogOpen(true); }}
-                className="focus-ring ks-motion-choice grid h-11 w-11 flex-none place-items-center rounded-full"
-                style={{ color: "var(--text2)" }}
+                onClick={openCatalogManager}
+                className="focus-ring ks-motion-choice inline-flex min-h-11 max-w-full items-center gap-2 rounded-lg py-2 text-left text-sm font-semibold text-[var(--accent-text)] [overflow-wrap:anywhere]"
               >
-                <MagnifyingGlass size={20} aria-hidden="true" />
+                <MagnifyingGlass size={16} className="shrink-0" aria-hidden="true" />
+                <span className="min-w-0">Catalogus doorzoeken</span>
               </button>
             )}
           </div>
 
           <div data-testid="profile-status-overview">
-            <div role="group" aria-label="Antwoordstatus" className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-5 gap-y-1">
+            <div role="group" aria-label="Antwoordstatus" className="mb-5 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-3 border-t border-[var(--border)]">
               {STATUS_ORDER.map((status) => {
                 const count = publicItems.filter((item) => item.status === status).length;
+                const boundary = status === "hard_no";
+                const active = activeStatus === status;
                 return <button key={status} id={`profile-filter-${status}`} type="button" onClick={() => selectStatus(status)}
-                  data-testid={`profile-read-status-${status}`} aria-pressed={activeStatus === status}
+                  data-testid={`profile-read-status-${status}`} aria-pressed={active}
                   aria-label={`${STATUS_LABEL[status]}, ${count} ${count === 1 ? "antwoord" : "antwoorden"}`}
-                  className="focus-ring ks-motion-choice flex min-h-11 min-w-0 items-center gap-2 border-b-2 py-2 text-left text-sm"
-                  style={{ borderColor: activeStatus === status ? STATUS_VAR[status] : "transparent" }}>
-                  <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
-                  <span className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
-                  <span className="flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
+                  className={`focus-ring ks-motion-state flex min-h-11 min-w-0 items-center gap-2 border-b border-[var(--border)] px-2 py-2 text-left text-sm ${boundary ? "col-span-full" : ""}`}
+                  style={{ background: active ? `color-mix(in srgb, ${STATUS_VAR[status]} 10%, transparent)` : "transparent" }}>
+                  <span className="size-1.5 shrink-0 rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
+                  <span className={`min-w-0 flex-1 [overflow-wrap:anywhere] ${active ? "font-bold underline decoration-1 underline-offset-4" : "font-medium"}`}
+                    style={{ color: boundary ? "var(--hard-no-text)" : "var(--text)" }}>{STATUS_LABEL[status]}</span>
+                  <span className="shrink-0 text-right tabular-nums text-[var(--text2)]">{count}</span>
                 </button>;
               })}
             </div>
@@ -684,7 +736,7 @@ export default function ProfilePage({ params }: Props) {
         categories={categoryFilterOptions}
         totalRated={catalogRated}
         totalCount={KINKS.length}
-        onSelect={(category) => { setEditor(null); setCatalogCategoryFilter(category); }}
+        onSelect={selectCatalogCategory}
       />
       <ProfileEditSheet open={editing && !shared} profile={currentProfile} onClose={() => setEditing(false)} />
       <QRModal profile={shareOpen && !shared ? currentProfile : null} onClose={() => setShareOpen(false)} />

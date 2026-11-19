@@ -6,6 +6,22 @@ import { PROFILE_ALEX, seedAndGo } from "./fixtures";
 const topic = KINKS.find((kink) => kink.description && kink.safetyNote)!;
 const yesContent = "#profile-read-status-yes-content";
 
+test("mobile status controls pair interests and give the hard boundary a full row", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await seedAndGo(page, `/profile/${PROFILE_ALEX.id}`, [PROFILE_ALEX]);
+  const filters = page.getByRole("group", { name: "Antwoordstatus" });
+  await expect(filters).toBeVisible();
+  const [yes, willing, maybe, no, boundary] = await Promise.all(
+    ["yes", "willing", "maybe", "no", "hard_no"].map((id) =>
+      filters.getByTestId(`profile-read-status-${id}`).boundingBox()),
+  );
+  expect(yes!.y).toBeCloseTo(willing!.y, 0);
+  expect(maybe!.y).toBeCloseTo(no!.y, 0);
+  expect(boundary!.y).toBeGreaterThan(maybe!.y);
+  expect(boundary!.x).toBeCloseTo(yes!.x, 0);
+  expect(boundary!.x + boundary!.width).toBeCloseTo(willing!.x + willing!.width, 0);
+});
+
 test("status filters preserve the hero, boundaries, empty selections, deep links and browser history", async ({ page }) => {
   await seedAndGo(page, `/profile/${PROFILE_ALEX.id}?interests=willing`, [PROFILE_ALEX]);
   const hero = page.getByTestId("profile-summary");
