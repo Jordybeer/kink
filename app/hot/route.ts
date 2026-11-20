@@ -1,6 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { HOT_DOCUMENT } from "./studio";
+import { PROFILE_CONCEPT } from "./profile-concept";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -11,7 +12,8 @@ export async function GET(request: Request) {
   if (deployment === "production" || (process.env.NODE_ENV !== "development" && deployment !== "preview")) {
     return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
   }
-  const asset = new URL(request.url).searchParams.get("asset");
+  const searchParams = new URL(request.url).searchParams;
+  const asset = searchParams.get("asset");
   if (asset === "gsap" || asset === "morph") {
     const source = asset === "gsap"
       ? await readFile(join(process.cwd(), "node_modules/gsap/dist/gsap.min.js"), "utf8")
@@ -38,7 +40,7 @@ export async function GET(request: Request) {
       },
     });
   }
-  return new Response(HOT_DOCUMENT, {
+  return new Response(searchParams.get("concept") === "profiel" ? PROFILE_CONCEPT : HOT_DOCUMENT, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",

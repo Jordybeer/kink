@@ -28,6 +28,7 @@ button:focus-visible { outline: 2px solid var(--lilac); outline-offset: 4px; }
 .brand { font: italic 1.3rem var(--serif); }
 .tag, .muted { color: var(--muted); }
 .tag { font-size: .8rem; }
+.mast .tag a { margin-inline-start: .72rem; color: var(--lilac); text-underline-offset: .22em; }
 .intro { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: end; gap: .65rem 2.5rem; margin: 2.45rem 0 1.9rem; }
 h1 { font: italic 500 clamp(3.6rem, 11vw, 6rem)/.88 var(--serif); letter-spacing: -.04em; margin: 0; color: var(--rose); }
 .intro p { max-width: 30ch; margin: 0; font: 1.2rem/1.55 var(--serif); }
@@ -105,7 +106,7 @@ ${STUDY_STYLE}
 </head>
 <body>
 <main class="frame">
-  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP</span></header>
+  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP <a href="/hot?concept=profiel">Profielconcept</a></span></header>
   <div class="intro"><h1>Hot.</h1><p>Een plek om te voelen welke beweging iets toevoegt.</p></div>
   <p class="motion-note" id="system-motion" hidden>Je apparaat staat op verminderde beweging. De demo’s slaan de animaties dan over.</p>
   <nav class="tabs" aria-label="Animatiestudies" role="tablist">
