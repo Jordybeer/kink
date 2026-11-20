@@ -106,7 +106,7 @@ ${STUDY_STYLE}
 </head>
 <body>
 <main class="frame">
-  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP <a href="/hot?concept=profiel">Profielconcept</a></span></header>
+  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP <a href="/hot?concept=home">Home naar profiel</a></span></header>
   <div class="intro"><h1>Hot.</h1><p>Een plek om te voelen welke beweging iets toevoegt.</p></div>
   <p class="motion-note" id="system-motion" hidden>Je apparaat staat op verminderde beweging. De demo’s slaan de animaties dan over.</p>
   <nav class="tabs" aria-label="Animatiestudies" role="tablist">

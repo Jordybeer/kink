@@ -1,5 +1,8 @@
-export const PROFILE_CONCEPT = `<!doctype html>
-<html lang="nl" data-theme="dark">
+import { CONCEPT_BASE_CSS, CONCEPT_THEME_SCRIPT, PROFILE_PORTRAIT, conceptHeader, type HotTheme } from "./concept-shared";
+
+export function profileConcept(theme: HotTheme) {
+  return `<!doctype html>
+<html lang="nl" data-theme="${theme}" data-hot-view="profile">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -7,36 +10,15 @@ export const PROFILE_CONCEPT = `<!doctype html>
 <title>Alex · KinkSync profielconcept</title>
 <link rel="stylesheet" href="/hot?asset=profile-theme">
 <style>
-:root {
-  --panel:var(--surface); --ink:var(--text); --muted:var(--text2); --stroke:var(--border);
-  --rose:var(--accent-text); --lilac:var(--accent2-text); --selected:var(--surface2);
-  --ok:var(--willing); --for:var(--no); --hard:var(--hard-no-text);
-  --serif: "Iowan Old Style","Palatino Linotype",Georgia,serif;
-}
-:root[data-theme="dark"] {color-scheme:dark}
-:root[data-theme="light"] {color-scheme:light}
-* { box-sizing:border-box; }
-body { margin:0; background:var(--bg); color:var(--ink); font:1rem/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
-button,input { font:inherit; color:inherit; }
-button { cursor:pointer; }
-a { color:var(--lilac); text-decoration-thickness:1px; text-underline-offset:.24em; }
-:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
-[hidden] { display:none !important; }
+${CONCEPT_BASE_CSS}
+:root { --ok:var(--willing); --for:var(--no); --hard:var(--hard-no-text); }
 .sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-::selection { background:var(--selected); color:var(--rose); }
-.shell { max-width:69rem; margin-inline:auto; padding:0 clamp(1rem,5vw,3rem) 3.3rem; }
-.top { min-height:4.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.15rem 1rem; border-bottom:1px solid var(--stroke); }
-.brand { color:var(--ink); text-decoration:none; font:italic 500 1.6rem/1 var(--serif); }
-.top-actions { display:flex; align-items:center; gap:.7rem 1.15rem; flex-wrap:wrap; font-size:.87rem; }
-.top-actions a, .text-button { min-height:44px; display:inline-flex; align-items:center; }
-.text-button { padding:.25rem 0; background:none; border:0; color:var(--lilac); gap:.38rem; }
-.text-button:hover { text-decoration:underline; text-underline-offset:.25em; }
-.hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,19rem); align-items:center; gap:2rem; margin:1.75rem 0 2.75rem; padding:clamp(1.35rem,4vw,2.65rem); border:1px solid var(--stroke); border-radius:1rem; background:var(--profile-hero-glow),var(--panel); color:var(--ink); }
+.hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,19rem); align-items:center; gap:2rem; margin:1.75rem 0 2.75rem; padding:clamp(1.35rem,4vw,2.65rem); border:1px solid transparent; color:var(--ink); }
+.hero .identity-surface { inset:-1px; border:1px solid var(--stroke); border-radius:1rem; background:var(--profile-hero-glow),var(--panel); }
 .identity { min-width:0; }
 .owner { color:var(--muted); font-size:.86rem; margin:0 0 .45rem; }
 h1 { font:italic 400 clamp(3.6rem,10vw,6rem)/.88 var(--serif); letter-spacing:-.035em; margin:0 0 .66rem; overflow-wrap:anywhere; }
 .identity p:not(.owner) { margin:.45rem 0 0; color:var(--muted); max-width:34ch; overflow-wrap:anywhere; }
-.portrait { width:100%; height:auto; display:block; border-radius:.66rem; border:1px solid var(--identity-border); }
 .body-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,14rem); gap:3.2rem; align-items:start; }
 h2 { font:400 clamp(1.9rem,5vw,3rem)/1.04 var(--serif); letter-spacing:-.026em; text-wrap:balance; margin:0; }
 h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
@@ -94,7 +76,6 @@ h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
 .sidebar { border-left:1px solid var(--stroke); padding:.25rem 0 .15rem 1.25rem; }
 .sidebar p { color:var(--muted); margin:.5rem 0 0; font-size:.93rem; }
 .sidebar .text-button { margin-top:.35rem; }
-footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05rem; padding-top:.9rem; font-size:.85rem; }
 @media(max-width:48rem) {
   .hero { grid-template-columns:minmax(0,1fr) minmax(0,8rem); gap:.85rem; padding:1.23rem; margin:1.13rem 0 1.85rem; }
   .body-grid { grid-template-columns:minmax(0,1fr); gap:1.65rem; }
@@ -111,30 +92,12 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
 </head>
 <body>
 <div class="shell">
-<header class="top">
-  <a class="brand" href="/hot">KinkSync</a>
-  <div class="top-actions"><a href="/hot">Alle studies</a><button class="text-button" id="theme" type="button" aria-pressed="false">Papieren thema</button></div>
-</header>
+${conceptHeader(theme, true)}
 <main>
-  <section class="hero" aria-labelledby="name">
-    <div class="identity"><p class="owner">Mijn profiel</p><h1 id="name">Alex</h1><p>Ik neem graag de tijd om eerst bij elkaar af te stemmen.</p></div>
-    <svg class="portrait" viewBox="0 0 322 260" aria-hidden="true" focusable="false">
-  <defs>
-    <radialGradient id="field" cx="55%" cy="45%" r="64%"><stop stop-color="var(--surface3)"/><stop offset="1" stop-color="var(--surface)"/></radialGradient>
-    <linearGradient id="foil" x1="0%" x2="100%" y1="0%" y2="100%"><stop stop-color="var(--accent-text)"/><stop offset=".46" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent2-text)"/></linearGradient>
-    <radialGradient id="orb"><stop stop-color="var(--accent)" stop-opacity=".25"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></radialGradient>
-  </defs>
-  <rect width="322" height="260" fill="url(#field)"/>
-  <ellipse cx="165" cy="126" rx="133" ry="125" fill="url(#orb)"/>
-  <g fill="none" stroke="url(#foil)" stroke-width=".75" opacity=".65">
-    <circle cx="161" cy="130" r="95"/><circle cx="161" cy="130" r="102"/>
-    <ellipse cx="161" cy="130" rx="125" ry="54" transform="rotate(-33 161 130)"/>
-    <ellipse cx="161" cy="130" rx="112" ry="42" transform="rotate(41 161 130)" opacity=".64"/>
-    <path d="M161 18v15m0 194v15M48 130h15m196 0h15" opacity=".8"/>
-  </g>
-  <circle cx="243" cy="83" r="2.7" fill="var(--accent-text)"/><circle cx="76" cy="179" r="2" fill="var(--accent2-text)"/>
-  <text x="157" y="175" text-anchor="middle" fill="var(--text)" font-family="Palatino Linotype, Georgia, serif" font-size="136" font-style="italic">A</text>
-</svg>
+  <section class="hero identity-route" aria-labelledby="name">
+    <span class="identity-surface" data-share="surface" aria-hidden="true"></span>
+    <div class="identity"><p class="owner">Mijn profiel</p><h1 class="identity-name" data-share="name" id="name">Alex</h1><p>Ik neem graag de tijd om eerst bij elkaar af te stemmen.</p></div>
+    ${PROFILE_PORTRAIT}
   </section>
   <div class="body-grid">
     <section aria-labelledby="interests">
@@ -222,6 +185,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
 <script>
 (() => {
   'use strict';
+${CONCEPT_THEME_SCRIPT}
   const get = (id) => document.getElementById(id);
   const preference = matchMedia('(prefers-reduced-motion: reduce)');
   const canAnimate = typeof Element.prototype.animate === 'function';
@@ -239,12 +203,9 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
       { duration: 145, easing: easeOut },
     );
   }
-  const theme = get('theme');
-  theme.addEventListener('click', () => {
+  get('theme').addEventListener('click', () => {
     settle();
-    const paper = document.documentElement.dataset.theme !== 'light';
-    document.documentElement.dataset.theme = paper ? 'light' : 'dark';
-    theme.setAttribute('aria-pressed', String(paper));
+    toggleConceptTheme();
   });
 
   const scope = get('answer-search');
@@ -422,3 +383,4 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
 </script>
 </body>
 </html>`;
+}

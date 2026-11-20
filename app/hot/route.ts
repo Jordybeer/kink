@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { HOT_DOCUMENT } from "./studio";
-import { PROFILE_CONCEPT } from "./profile-concept";
+import { homeConcept } from "./home-concept";
+import { profileConcept } from "./profile-concept";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
@@ -50,7 +51,10 @@ export async function GET(request: Request) {
       },
     });
   }
-  return new Response(searchParams.get("concept") === "profiel" ? PROFILE_CONCEPT : HOT_DOCUMENT, {
+  const theme = searchParams.get("thema") === "licht" ? "light" : "dark";
+  const concept = searchParams.get("concept");
+  const html = concept === "home" ? homeConcept(theme) : concept === "profiel" ? profileConcept(theme) : HOT_DOCUMENT;
+  return new Response(html, {
     headers: {
       "Content-Type": "text/html; charset=utf-8",
       "Cache-Control": "no-store",
