@@ -1,0 +1,243 @@
+export const HOT_DOCUMENT = `<!doctype html>
+<html lang="nl" data-tone="night" data-speed="normal" data-reduce="false">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Hot · KinkSync</title>
+<style>
+:root {
+  color-scheme: dark; --bg: #100c15; --surface: #1a1320; --ink: #f4eaf0; --muted: #c1afbf; --line: #463549;
+  --rose: #efa4ad; --lilac: #c5b0e7; --limit: #ffb0ac; --paper: #382630; --paper2: #2d233b;
+  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif; --ease: cubic-bezier(.16, 1, .3, 1);
+  --beat: 300ms; --align: 490ms; --focus: 235ms;
+}
+:root[data-tone="paper"] {
+  color-scheme: light; --bg: #f8efeb; --surface: #fff8f4; --ink: #30212c; --muted: #655360; --line: #d7c1cd;
+  --rose: #8b304c; --lilac: #654387; --limit: #911f31; --paper: #f6e1e5; --paper2: #eee3f3;
+}
+:root[data-speed="slow"] { --beat: 900ms; --align: 1470ms; --focus: 705ms; }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; }
+button:focus-visible { outline: 2px solid var(--lilac); outline-offset: 4px; }
+[hidden] { display: none !important; }
+::selection { background: var(--paper2); color: var(--ink); }
+.frame { max-width: 67rem; margin-inline: auto; padding: 1.7rem clamp(1rem, 5vw, 3.5rem) 3rem; }
+.mast { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .5rem 1rem; border-bottom: 1px solid var(--line); padding-block-end: .8rem; }
+.brand { font: italic 1.3rem var(--serif); }
+.tag, .muted { color: var(--muted); }
+.tag { font-size: .8rem; }
+.intro { display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1fr); align-items: end; gap: .65rem 2.5rem; margin: 2.85rem 0 2.15rem; }
+h1 { font: italic 500 clamp(4.5rem, 11vw, 8rem)/.8 var(--serif); letter-spacing: -.04em; margin: 0; color: var(--rose); }
+.intro p { max-width: 30ch; margin: 0; font: 1.2rem/1.55 var(--serif); }
+.tabs { display: flex; flex-wrap: wrap; gap: .05rem clamp(.65rem, 3vw, 1.8rem); border-bottom: 1px solid var(--line); margin-bottom: 1.1rem; }
+.tabs button { min-height: 44px; background: none; border: 0; border-bottom: 2px solid transparent; padding: .5rem .15rem; color: var(--muted); }
+.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--rose); font-weight: 650; }
+.workspace { display: grid; grid-template-columns: minmax(0, 1fr) minmax(13rem, .39fr); align-items: start; gap: 1.2rem 2rem; }
+.stage { min-width: 0; padding: clamp(1.12rem, 4vw, 2.4rem); border-radius: 1rem; background: var(--surface); border: 1px solid var(--line); }
+h2 { margin: 0; font: 400 clamp(1.85rem, 5vw, 3.1rem)/1.05 var(--serif); letter-spacing: -.028em; text-wrap: balance; }
+h3 { line-height: 1.2; margin: 0 0 .28rem; font-size: 1rem; }
+.stage p { margin: .8rem 0; max-width: 38ch; }
+.actions { display: flex; flex-wrap: wrap; gap: .5rem; padding-top: .95rem; margin-top: 1.15rem; border-top: 1px solid var(--line); }
+.action, .option, .breadcrumb { min-height: 44px; border: 1px solid var(--line); background: none; border-radius: .55rem; padding: .52rem .78rem; overflow-wrap: anywhere; }
+.action.primary { background: var(--rose); border-color: var(--rose); color: var(--bg); font-weight: 680; }
+.action:hover:not(:disabled), .option:hover { border-color: var(--rose); }
+.action:active:not(:disabled), .option:active { transform: translateY(1px); }
+.action:disabled { opacity: .7; cursor: default; }
+.breadcrumb { color: var(--lilac); border-color: transparent; padding-inline: .15rem; margin-bottom: .55rem; }
+.breadcrumb:hover { text-decoration: underline; text-underline-offset: .28rem; }
+.question { min-height: 8.4rem; }
+.arriving .question { animation: unfold var(--beat) var(--ease) both; }
+.arriving .breadcrumb { animation: trace var(--beat) var(--ease) both; }
+@keyframes unfold { from { opacity: .6; transform: translateY(-9px); clip-path: inset(0 0 18% 0); } to { opacity: 1; transform: translateY(0); clip-path: inset(0); } }
+@keyframes trace { from { opacity: .7; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+.papers { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; margin: 1.1rem 0 .9rem; }
+.paper { min-width: 0; border-radius: .55rem; display: block; background: var(--paper); color: var(--rose); padding: .65rem .8rem; font: italic 1.35rem var(--serif); border-bottom: 1px solid currentColor; }
+.paper + .paper { background: var(--paper2); color: var(--lilac); }
+.aligning .paper:first-child { animation: paper-in var(--align) var(--ease) both; --x: -9px; --tilt: -2deg; }
+.aligning .paper:last-child { animation: paper-in var(--align) var(--ease) both; --x: 9px; --tilt: 2deg; }
+@keyframes paper-in { from { transform: translate(var(--x), 5px) rotate(var(--tilt)); } to { transform: none; } }
+.facts { list-style: none; padding: 0; margin: 0; }
+.facts li { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); padding: .49rem 0; gap: .35rem .85rem; border-top: 1px solid var(--line); }
+.facts li span { color: var(--muted); overflow-wrap: anywhere; }
+.facts li.limit strong { color: var(--limit); }
+.private-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: start; gap: .6rem; margin-top: 1.25rem; padding-top: .85rem; border-top: 1px solid var(--line); }
+.private-status { min-height: 2rem; color: var(--lilac); text-align: end; overflow-wrap: anywhere; }
+.private-status svg { vertical-align: -.13em; margin-right: .3em; }
+.focusing { animation: focus-in var(--focus) var(--ease) both; }
+@keyframes focus-in { from { opacity: .45; filter: blur(4px); } to { opacity: 1; filter: none; } }
+.settings { min-width: 0; padding: .32rem 0 .25rem 1rem; border-left: 1px solid var(--line); }
+.settings > p { margin: .55rem 0 1rem; font-size: .92rem; max-width: 33ch; }
+.control-line { margin: 0; padding: .65rem 0; border: 0; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: .35rem; }
+.control-line strong { flex: 0 0 100%; font-size: .87rem; }
+.option { font-size: .87rem; text-align: left; }
+.option[aria-pressed="true"] { border-color: var(--lilac); background: var(--paper2); font-weight: 650; }
+footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85rem; font-size: .85rem; color: var(--muted); }
+:root[data-reduce="true"] *, :root[data-reduce="true"] *::before, :root[data-reduce="true"] *::after { animation: none !important; transition: none !important; }
+:root[data-reduce="true"] button:active { transform: none; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  button:active { transform: none !important; }
+}
+@media (max-width: 44rem) {
+  .workspace { grid-template-columns: minmax(0, 1fr); }
+  .intro { grid-template-columns: minmax(0, 1fr); gap: 1rem; margin: 2.25rem 0 1.65rem; }
+  .settings { padding: .75rem 0 0; border-left: 0; }
+}
+@media (max-width: 25rem) {
+  .facts li { grid-template-columns: minmax(0, 1fr); }
+}
+</style>
+</head>
+<body>
+<main class="frame">
+  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · prototype</span></header>
+  <div class="intro"><h1>Hot.</h1><p>Een plek om te voelen welke beweging iets toevoegt.</p></div>
+  <nav class="tabs" aria-label="Animatiestudies" role="tablist">
+    <button type="button" role="tab" id="tab-questions" aria-controls="questions" aria-selected="true">Vragenlijst</button>
+    <button type="button" role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Vergelijken</button>
+    <button type="button" role="tab" id="tab-private" aria-controls="private" aria-selected="false" tabindex="-1">Privé</button>
+  </nav>
+  <div class="workspace">
+    <section class="stage" id="questions" role="tabpanel" aria-labelledby="tab-questions" tabindex="0">
+      <button type="button" id="trail" class="breadcrumb" hidden></button>
+      <div class="question" aria-live="polite" aria-atomic="true">
+        <h2 id="question-title">Samen een ritueel kiezen?</h2>
+        <p id="question-copy" class="muted">Een vertrouwd begin of einde kan een moment meer eigen maken. Wil je dit verder verkennen?</p>
+      </div>
+      <div class="actions">
+        <button type="button" class="action primary" id="deeper">Ga dieper</button>
+        <button type="button" class="action" id="change-topic">Ander onderwerp</button>
+        <button type="button" class="action" id="reset-question">Opnieuw</button>
+      </div>
+    </section>
+    <section class="stage" id="compare" role="tabpanel" aria-labelledby="tab-compare" tabindex="0" hidden>
+      <h2>Twee perspectieven.</h2>
+      <div class="papers"><span class="paper">Alex</span><span class="paper">Sam</span></div>
+      <ul class="facts">
+        <li><strong>Gedeelde interesse</strong><span>Tijd nemen voor nazorg</span></li>
+        <li><strong>Te bespreken</strong><span>Hoeveel voorbereiding fijn voelt</span></li>
+        <li class="limit"><strong>Harde grens van Sam</strong><span>Opnames maken</span></li>
+      </ul>
+      <div class="actions"><button type="button" class="action primary" id="replay-alignment">Speel uitlijning af</button></div>
+    </section>
+    <section class="stage" id="private" role="tabpanel" aria-labelledby="tab-private" tabindex="0" hidden>
+      <h2>Alleen als jij kijkt.</h2>
+      <p class="muted">Het antwoord blijft verborgen tot je het zelf toont.</p>
+      <div class="private-row"><strong>Rustig samenzijn</strong><span class="private-status" id="private-status" aria-live="polite" aria-atomic="true">Verborgen</span></div>
+      <div class="actions"><button type="button" class="action primary" id="toggle-private" aria-pressed="false">Toon voorbeeldantwoord</button></div>
+    </section>
+    <aside class="settings" aria-label="Instellingen voor het prototype">
+      <h3>Op je eigen tempo</h3>
+      <p class="muted">Probeer een snelle tweede tik en wissel daarna van thema.</p>
+      <div class="control-line" role="group" aria-label="Snelheid">
+        <strong aria-hidden="true">Snelheid</strong><button class="option" type="button" data-setting="speed" data-value="normal" aria-pressed="true">Normaal</button><button class="option" type="button" data-setting="speed" data-value="slow" aria-pressed="false">Traag</button>
+      </div>
+      <div class="control-line" role="group" aria-label="Thema">
+        <strong aria-hidden="true">Thema</strong><button class="option" type="button" data-setting="tone" data-value="night" aria-pressed="true">Nacht</button><button class="option" type="button" data-setting="tone" data-value="paper" aria-pressed="false">Papier</button>
+      </div>
+      <div class="control-line"><button class="option" type="button" id="reduce" aria-pressed="false">Verminder beweging</button></div>
+      <p class="muted" id="system-motion" hidden>Je apparaat staat op verminderde beweging.</p>
+    </aside>
+  </div>
+  <footer>Fictieve voorbeelden. Geen profielgegevens, opslag of deelacties.</footer>
+</main>
+<script>
+(() => {
+  'use strict';
+  const root = document.documentElement;
+  const get = (id) => document.getElementById(id);
+  const tabs = [...document.querySelectorAll('[role=tab]')];
+  const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  const classNames = ['arriving', 'aligning', 'focusing'];
+  const clearMotion = () => classNames.forEach((name) => document.querySelectorAll('.' + name).forEach((el) => el.classList.remove(name)));
+  const reduced = () => motion.matches || root.dataset.reduce === 'true';
+  const play = (el, name) => {
+    el.classList.remove(name);
+    if (reduced()) return;
+    void el.offsetWidth;
+    el.classList.add(name);
+  };
+  const onSystemMotion = () => {
+    get('system-motion').hidden = !motion.matches;
+    if (reduced()) clearMotion();
+  };
+  motion.addEventListener('change', onSystemMotion);
+  onSystemMotion();
+  function selectTab(index, focus) {
+    clearMotion();
+    tabs.forEach((tab, i) => {
+      const selected = i === index;
+      tab.setAttribute('aria-selected', String(selected));
+      tab.tabIndex = selected ? 0 : -1;
+      get(tab.getAttribute('aria-controls')).hidden = !selected;
+    });
+    if (focus) tabs[index].focus();
+  }
+  tabs.forEach((tab, i) => {
+    tab.addEventListener('click', () => selectTab(i, false));
+    tab.addEventListener('keydown', (event) => {
+      const next = { ArrowLeft: (i + tabs.length - 1) % tabs.length, ArrowRight: (i + 1) % tabs.length, Home: 0, End: tabs.length - 1 }[event.key];
+      if (next === undefined) return;
+      event.preventDefault();
+      selectTab(next, true);
+    });
+  });
+  document.querySelectorAll('[data-setting]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const kind = button.dataset.setting;
+      root.dataset[kind] = button.dataset.value;
+      document.querySelectorAll('[data-setting=' + kind + ']').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
+    });
+  });
+  get('reduce').addEventListener('click', () => {
+    const enabled = root.dataset.reduce !== 'true';
+    root.dataset.reduce = String(enabled);
+    get('reduce').setAttribute('aria-pressed', String(enabled));
+    if (enabled) clearMotion();
+  });
+  const examples = [
+    { title: 'Samen een ritueel kiezen?', copy: 'Een vertrouwd begin of einde kan een moment meer eigen maken. Wil je dit verder verkennen?', trail: 'Rituelen', next: 'Een vast beginritueel?', detail: 'Bijvoorbeeld eerst samen afstemmen over wat ieder die dag nodig heeft.' },
+    { title: 'Bepalen we het tempo samen?', copy: 'Misschien helpt het om te benoemen wie het initiatief neemt en hoe je samen pauzeert.', trail: 'Tempo', next: 'Een afgesproken pauzemoment?', detail: 'Je kunt op voorhand kiezen hoe je even stilvalt om bij elkaar in te checken.' },
+  ];
+  let topic = 0;
+  let deep = false;
+  function renderQuestion(animate) {
+    const example = examples[topic];
+    const questions = get('questions');
+    const trail = get('trail');
+    questions.classList.remove('arriving');
+    if (!deep && document.activeElement === trail) get('deeper').focus();
+    trail.hidden = !deep;
+    trail.textContent = 'Terug naar ' + example.trail;
+    get('question-title').textContent = deep ? example.next : example.title;
+    get('question-copy').textContent = deep ? example.detail : example.copy;
+    const deeper = get('deeper');
+    deeper.textContent = deep ? 'Speel overgang opnieuw af' : 'Ga dieper';
+    if (animate) play(questions, 'arriving');
+  }
+  get('deeper').addEventListener('click', () => { deep = true; renderQuestion(true); });
+  get('change-topic').addEventListener('click', () => { topic = 1 - topic; deep = false; renderQuestion(false); });
+  get('reset-question').addEventListener('click', () => { topic = 0; deep = false; renderQuestion(false); });
+  get('trail').addEventListener('click', () => { deep = false; renderQuestion(false); });
+  get('replay-alignment').addEventListener('click', () => play(get('compare'), 'aligning'));
+  let revealed = false;
+  const status = get('private-status');
+  const privateButton = get('toggle-private');
+  privateButton.addEventListener('click', () => {
+    revealed = !revealed;
+    status.classList.remove('focusing');
+    status.textContent = revealed ? 'Heel graag' : 'Verborgen';
+    privateButton.textContent = revealed ? 'Verberg voorbeeldantwoord' : 'Toon voorbeeldantwoord';
+    privateButton.setAttribute('aria-pressed', String(revealed));
+    if (revealed) play(status, 'focusing');
+  });
+  for (const [id, name] of [['questions','arriving'], ['compare','aligning'], ['private-status','focusing']]) {
+    const el = get(id);
+    el.addEventListener('animationend', () => el.classList.remove(name));
+  }
+})();
+</script>
+</body>
+</html>`;
