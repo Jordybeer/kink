@@ -1,22 +1,17 @@
 import { STUDY_MARKUP, STUDY_STYLE } from "./gsap-study";
+import { HOT_LAYOUT_CSS } from "./hot-layout";
 
 export const HOT_DOCUMENT = `<!doctype html>
-<html lang="nl" data-tone="night" data-speed="normal" data-reduce="false">
+<html lang="nl" data-theme="dark" data-tone="night" data-speed="normal" data-reduce="false">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Hot · KinkSync</title>
+<link rel="stylesheet" href="/hot?asset=profile-theme">
 <style>
-:root {
-  color-scheme: dark; --bg: #100c15; --surface: #1a1320; --ink: #f4eaf0; --muted: #c1afbf; --line: #463549;
-  --rose: #efa4ad; --lilac: #c5b0e7; --limit: #ffb0ac; --paper: #382630; --paper2: #2d233b;
-  --serif: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
-}
-:root[data-tone="paper"] {
-  color-scheme: light; --bg: #f8efeb; --surface: #fff8f4; --ink: #30212c; --muted: #655360; --line: #d7c1cd;
-  --rose: #8b304c; --lilac: #654387; --limit: #911f31; --paper: #f6e1e5; --paper2: #eee3f3;
-}
+:root {color-scheme:dark; --ink:var(--text); --muted:var(--text2); --line:var(--border); --rose:var(--accent-text); --lilac:var(--accent2-text); --limit:var(--hard-no-text); --paper:var(--surface2); --paper2:var(--surface3); --serif:"Iowan Old Style","Palatino Linotype",Georgia,serif;}
+:root[data-tone="paper"] {color-scheme:light;}
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--ink); font: 1rem/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
 button { font: inherit; color: inherit; cursor: pointer; }
@@ -102,22 +97,28 @@ footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85
   .facts li { grid-template-columns: minmax(0, 1fr); }
 }
 ${STUDY_STYLE}
+${HOT_LAYOUT_CSS}
 </style>
 </head>
 <body>
 <main class="frame">
-  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP <a href="/hot?concept=home">Home naar profiel</a></span></header>
-  <div class="intro"><h1>Hot.</h1><p>Een plek om te voelen welke beweging iets toevoegt.</p></div>
+  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Hot. Proefruimte voor interacties.</span></header>
+  <div class="intro"><div><h1>Hot.</h1><p class="intro-lead">Beweging die je ergens brengt.</p></div><p class="intro-note">We onderzoeken wat continuïteit, vertrouwen en heldere keuzes voelbaar maakt. Niet wat het hardst beweegt.</p></div>
+  <a class="feature" href="/hot?concept=home" aria-label="Open het Home naar Profiel concept">
+    <span class="feature-copy"><span class="feature-title">Van een naam naar een mens.</span><span class="feature-description">Open Alex vanuit Home. Zijn naam en portret reizen mee naar het profiel. Antwoorden en grenzen blijven rustig staan.</span><span class="feature-cta">Probeer Home naar Profiel <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M4 12h15m-6-6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></span>
+    <span class="feature-art" aria-hidden="true"><span class="feature-origin"><span>Alex</span><i>A</i></span><svg class="feature-curve" viewBox="0 0 280 125" fill="none"><path d="M13 98C96 98 105 27 173 27H264" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="m257 21 7 6-7 6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="13" cy="98" r="3" fill="var(--accent-text)" stroke="none"/></svg><span class="feature-destination"><span>Alex</span><i>A</i></span></span>
+  </a>
+  <div class="lab-intro"><h2>Andere bewegingen</h2><p>Speel, vertraag, wissel van onderwerp en probeer snel opnieuw.</p></div>
   <p class="motion-note" id="system-motion" hidden>Je apparaat staat op verminderde beweging. De demo’s slaan de animaties dan over.</p>
   <nav class="tabs" aria-label="Animatiestudies" role="tablist">
-    <button type="button" role="tab" id="tab-study" aria-controls="study" aria-selected="true">GSAP-studie</button>
-    <button type="button" role="tab" id="tab-questions" aria-controls="questions" aria-selected="false" tabindex="-1">Vragenlijst</button>
+    <button type="button" role="tab" id="tab-questions" aria-controls="questions" aria-selected="true">Vragenlijst</button>
     <button type="button" role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Vergelijken</button>
     <button type="button" role="tab" id="tab-private" aria-controls="private" aria-selected="false" tabindex="-1">Privé</button>
+    <button type="button" role="tab" id="tab-study" aria-controls="study" aria-selected="false" tabindex="-1">MorphSVG</button>
   </nav>
   <div class="workspace">
-    ${STUDY_MARKUP}
-    <section class="stage" id="questions" role="tabpanel" aria-labelledby="tab-questions" tabindex="0" hidden>
+    ${STUDY_MARKUP.replace('class="stage study"', 'class="stage study" hidden')}
+    <section class="stage" id="questions" role="tabpanel" aria-labelledby="tab-questions" tabindex="0">
       <div class="pathline" id="question-path" data-deep="false" role="group" aria-label="Vraagpad">
         <button type="button" id="trail" class="path-topic" aria-disabled="true" aria-current="step" tabindex="-1">Rituelen</button>
         <svg viewBox="0 0 100 16" preserveAspectRatio="none" aria-hidden="true"><path class="path-rail" d="M3 12 C36 12 54 4 97 4"></path><path class="path-ink" id="path-ink" pathLength="1" d="M3 12 C36 12 54 4 97 4"></path></svg>
@@ -163,7 +164,7 @@ ${STUDY_STYLE}
       <div class="control-line"><button class="option" type="button" id="reduce" aria-pressed="false">Verminder beweging</button></div>
     </aside>
   </div>
-  <footer>Fictieve voorbeelden. Geen profielgegevens, opslag of deelacties.</footer>
+  <footer>Hot is een afgeschermde ontwerpstudio. Alle voorbeelden zijn fictief, zonder opslag of deelacties.</footer>
 </main>
 <script src="/hot?asset=motion"></script>
 <script src="/hot?asset=gsap"></script>
@@ -177,11 +178,13 @@ ${STUDY_STYLE}
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const easeOut = [.16, 1, .3, 1];
   let playing = null;
+  let tabMotion = null;
   let studyTimeline = null;
   let studyOpen = false;
   const reduced = () => motion.matches || root.dataset.reduce === 'true';
   const canAnimate = () => !reduced() && typeof window.Motion?.animate === 'function';
   function clearMotion() {
+    tabMotion?.cancel(); tabMotion = null;
     if (studyTimeline) {
       studyTimeline.kill();
       studyTimeline = null;
@@ -233,6 +236,9 @@ ${STUDY_STYLE}
     });
     if (focus) tabs[index].focus();
     if (!unchanged && tabs[index].id === 'tab-compare') alignPapers();
+    else if (!unchanged && !reduced() && typeof Element.prototype.animate === 'function') {
+      tabMotion = get(tabs[index].getAttribute('aria-controls')).animate([{opacity:.72},{opacity:1}],{duration:165,easing:'cubic-bezier(.16,1,.3,1)'});
+    }
   }
   tabs.forEach((tab, i) => {
     tab.addEventListener('click', () => selectTab(i, false));
@@ -248,6 +254,7 @@ ${STUDY_STYLE}
       const kind = button.dataset.setting;
       if (root.dataset[kind] !== button.dataset.value) clearMotion();
       root.dataset[kind] = button.dataset.value;
+      if (kind === 'tone') root.dataset.theme = button.dataset.value === 'paper' ? 'light' : 'dark';
       document.querySelectorAll('[data-setting=' + kind + ']').forEach((choice) => choice.setAttribute('aria-pressed', String(choice === button)));
     });
   });

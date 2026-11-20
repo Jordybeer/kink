@@ -12,7 +12,6 @@ export function homeConcept(theme: HotTheme) {
 <style>
 ${CONCEPT_BASE_CSS}
 .study { max-width:40rem; padding-top:clamp(2rem,9vw,6.2rem); }
-.eyebrow { color:var(--lilac); margin:0 0 .5rem; font-size:.86rem; }
 h1 { font:400 clamp(2.4rem,7.7vw,4.35rem)/1.04 var(--serif); letter-spacing:-.038em; margin:0 0 .58rem; overflow-wrap:anywhere; }
 .intro { margin:0 0 clamp(1.4rem,5vw,3rem); color:var(--muted); max-width:42ch; }
 .person { display:grid; grid-template-columns:minmax(0,1fr) 3.5rem auto; align-items:center; gap:.8rem; padding:.82rem .48rem .82rem .72rem; min-height:5.65rem; color:var(--ink); text-decoration:none; }
@@ -29,7 +28,6 @@ h1 { font:400 clamp(2.4rem,7.7vw,4.35rem)/1.04 var(--serif); letter-spacing:-.03
 <body><div class="shell">
 ${conceptHeader(theme)}
 <main class="study">
-  <p class="eyebrow">Jouw ruimte</p>
   <h1>Mijn profielen</h1>
   <p class="intro">Een plek voor je interesses, je grenzen en wat je erbij wilt vertellen.</p>
   <a class="person identity-route" href="${conceptHref("profiel", theme)}" data-concept-link aria-label="Open profiel van Alex">

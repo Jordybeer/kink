@@ -14,7 +14,7 @@ export const STUDY_STYLE = `
 export const STUDY_MARKUP = `<section class="stage study" id="study" role="tabpanel" aria-labelledby="tab-study" tabindex="0">
       <div class="study-head">
         <h2>Een laag dieper.</h2>
-        <a href="https://kink-9mje1kafp-jordybeers-projects.vercel.app/hot" target="_blank" rel="noopener">Bekijk Motion v3</a>
+        <a href="/hot?concept=home">Open Home naar Profiel</a>
       </div>
       <figure class="study-figure">
         <svg viewBox="0 0 432 272" aria-hidden="true" focusable="false">

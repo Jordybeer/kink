@@ -39,27 +39,20 @@ a { color:var(--lilac); text-decoration-thickness:1px; text-underline-offset:.24
 .portrait { width:100%; height:auto; display:block; border-radius:.66rem; border:1px solid var(--identity-border); }
 footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05rem; padding-top:.9rem; font-size:.85rem; }
 
-/* The document stays live. Never capture the profile body or its private note. */
-:root { view-transition-name:none; }
-@media (prefers-reduced-motion:no-preference) {
-  @view-transition { navigation:auto; }
-  [data-share="surface"] { view-transition-name:profile-surface; }
-  [data-share="name"] { view-transition-name:profile-name; }
-  [data-share="avatar"] { view-transition-name:profile-avatar; }
-  ::view-transition { pointer-events:none; }
-  ::view-transition-group(profile-surface),
-  ::view-transition-group(profile-name),
-  ::view-transition-group(profile-avatar) { animation-duration:340ms; animation-timing-function:cubic-bezier(.24,.76,.34,1); }
-  ::view-transition-group(profile-name), ::view-transition-group(profile-avatar) { z-index:1; }
-  /* Resample the larger portrait and name, including when travelling back. */
-  :root[data-hot-view="profile"]::view-transition-old(profile-name),
-  :root[data-hot-view="profile"]::view-transition-old(profile-avatar),
-  :root[data-hot-view="home"]::view-transition-new(profile-name),
-  :root[data-hot-view="home"]::view-transition-new(profile-avatar) { animation:none; opacity:0; }
-  :root[data-hot-view="profile"]::view-transition-new(profile-name),
-  :root[data-hot-view="profile"]::view-transition-new(profile-avatar),
-  :root[data-hot-view="home"]::view-transition-old(profile-name),
-  :root[data-hot-view="home"]::view-transition-old(profile-avatar) { animation:none; opacity:1; }
+/* Identity alone participates in navigation snapshots. Never private profile content. */
+:root {view-transition-name:none}
+@media(prefers-reduced-motion:no-preference) {
+ @view-transition {navigation:auto}
+ [data-share="surface"] {view-transition-name:profile-surface}
+ [data-share="name"] {view-transition-name:profile-name}
+ [data-share="avatar"] {view-transition-name:profile-avatar}
+ ::view-transition {pointer-events:none}
+ ::view-transition-group(profile-surface),::view-transition-group(profile-name),::view-transition-group(profile-avatar) {animation-duration:460ms;animation-timing-function:cubic-bezier(.16,1,.3,1)}
+ ::view-transition-group(profile-name),::view-transition-group(profile-avatar) {z-index:2}
+ ::view-transition-old(profile-name),::view-transition-old(profile-avatar),::view-transition-old(profile-surface) {animation:190ms cubic-bezier(.16,1,.3,1) both hot-fade-out}
+ ::view-transition-new(profile-name),::view-transition-new(profile-avatar),::view-transition-new(profile-surface) {animation:260ms 55ms cubic-bezier(.16,1,.3,1) both hot-fade-in}
+ @keyframes hot-fade-out {to {opacity:0}}
+ @keyframes hot-fade-in {from {opacity:0}}
 }
 `;
 
