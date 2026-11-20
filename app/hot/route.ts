@@ -14,6 +14,16 @@ export async function GET(request: Request) {
   }
   const searchParams = new URL(request.url).searchParams;
   const asset = searchParams.get("asset");
+  if (asset === "profile-theme") {
+    const source = await readFile(join(process.cwd(), "app/design-role-tokens.css"), "utf8");
+    return new Response(source, {
+      headers: {
+        "Content-Type": "text/css; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+      },
+    });
+  }
   if (asset === "gsap" || asset === "morph") {
     const source = asset === "gsap"
       ? await readFile(join(process.cwd(), "node_modules/gsap/dist/gsap.min.js"), "utf8")

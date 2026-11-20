@@ -1,30 +1,26 @@
 export const PROFILE_CONCEPT = `<!doctype html>
-<html lang="nl" data-theme="night">
+<html lang="nl" data-theme="dark">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Alex · KinkSync profielconcept</title>
+<link rel="stylesheet" href="/hot?asset=profile-theme">
 <style>
 :root {
-  color-scheme:dark;
-  --bg:#15111b; --panel:#211926; --ink:#f6eaf1; --muted:#c1afc0; --stroke:#493b4d;
-  --rose:#efafb9; --rose-ink:#221423; --lilac:#c9b3e6; --selected:#2d2132;
-  --yes:#f2acb4; --ok:#b6d1b5; --maybe:#e1c695; --for:#c9b3e6; --hard:#f0b2ac;
+  --panel:var(--surface); --ink:var(--text); --muted:var(--text2); --stroke:var(--border);
+  --rose:var(--accent-text); --lilac:var(--accent2-text); --selected:var(--surface2);
+  --ok:var(--willing); --for:var(--no); --hard:var(--hard-no-text);
   --serif: "Iowan Old Style","Palatino Linotype",Georgia,serif;
 }
-:root[data-theme="paper"] {
-  color-scheme:light;
-  --bg:#f8f1ed; --panel:#fff9f5; --ink:#302234; --muted:#655465; --stroke:#d7c7d0;
-  --rose:#8f3753; --rose-ink:#fff9f5; --lilac:#694d82; --selected:#efe1eb;
-  --yes:#8c354e; --ok:#376344; --maybe:#77550f; --for:#654986; --hard:#923b3b;
-}
+:root[data-theme="dark"] {color-scheme:dark}
+:root[data-theme="light"] {color-scheme:light}
 * { box-sizing:border-box; }
 body { margin:0; background:var(--bg); color:var(--ink); font:1rem/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
 button,input { font:inherit; color:inherit; }
 button { cursor:pointer; }
 a { color:var(--lilac); text-decoration-thickness:1px; text-underline-offset:.24em; }
-:focus-visible { outline:2px solid var(--lilac); outline-offset:3px; }
+:focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
 [hidden] { display:none !important; }
 ::selection { background:var(--selected); color:var(--rose); }
 .shell { max-width:69rem; margin-inline:auto; padding:0 clamp(1rem,5vw,3rem) 3.3rem; }
@@ -34,28 +30,29 @@ a { color:var(--lilac); text-decoration-thickness:1px; text-underline-offset:.24
 .top-actions a, .text-button { min-height:44px; display:inline-flex; align-items:center; }
 .text-button { padding:.25rem 0; background:none; border:0; color:var(--lilac); gap:.38rem; }
 .text-button:hover { text-decoration:underline; text-underline-offset:.25em; }
-.hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,19rem); align-items:center; gap:2rem; margin:1.75rem 0 2.75rem; padding:clamp(1.35rem,4vw,2.65rem); border:1px solid #604956; border-radius:1rem; background:radial-gradient(ellipse at 85% 45%,#46293f,#211826 75%); color:#fff1ed; }
+.hero { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,19rem); align-items:center; gap:2rem; margin:1.75rem 0 2.75rem; padding:clamp(1.35rem,4vw,2.65rem); border:1px solid var(--stroke); border-radius:1rem; background:var(--profile-hero-glow),var(--panel); color:var(--ink); }
 .identity { min-width:0; }
-.owner { color:#dbc1ce; font-size:.86rem; margin:0 0 .45rem; }
+.owner { color:var(--muted); font-size:.86rem; margin:0 0 .45rem; }
 h1 { font:italic 400 clamp(3.6rem,10vw,6rem)/.88 var(--serif); letter-spacing:-.035em; margin:0 0 .66rem; overflow-wrap:anywhere; }
-.identity p:not(.owner) { margin:.45rem 0 0; color:#e2cbd5; max-width:34ch; overflow-wrap:anywhere; }
-.portrait { width:100%; height:auto; display:block; border-radius:.66rem; border:1px solid #735668; }
+.identity p:not(.owner) { margin:.45rem 0 0; color:var(--muted); max-width:34ch; overflow-wrap:anywhere; }
+.portrait { width:100%; height:auto; display:block; border-radius:.66rem; border:1px solid var(--identity-border); }
 .body-grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,14rem); gap:3.2rem; align-items:start; }
 h2 { font:400 clamp(1.9rem,5vw,3rem)/1.04 var(--serif); letter-spacing:-.026em; text-wrap:balance; margin:0; }
 h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
 .answer-top { display:flex; justify-content:space-between; align-items:center; gap:.16rem 1rem; flex-wrap:wrap; margin-bottom:.9rem; }
 .answer-top .text-button { align-self:center; }
 .searchfield { min-height:50px; display:flex; align-items:center; gap:.6rem; border:1px solid var(--stroke); border-radius:.61rem; background:var(--panel); padding:0 .78rem; color:var(--muted); }
-.searchfield:focus-within { outline:2px solid var(--lilac); outline-offset:2px; }
+.searchfield:focus-within { outline:2px solid var(--focus); outline-offset:2px; }
 .searchfield input { width:100%; min-width:0; min-height:48px; border:0; outline:0; background:none; color:var(--ink); }
 .searchfield input::placeholder { color:var(--muted); }
 .searchfield > svg { flex:none; }
 .searchfield input::-webkit-search-cancel-button { -webkit-appearance:none; }
 .clear { background:none; border:0; color:var(--lilac); min-width:44px; min-height:44px; font-size:.85rem; }
-.filters { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:.65rem 0 0; column-gap:1rem; }
+.filters { position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:.65rem 0 0; column-gap:1rem; }
+.filter-ink { position:absolute; top:0; left:0; height:2px; width:0; border-radius:2px; background:var(--rose); pointer-events:none; }
 .filter { display:flex; align-items:center; justify-content:space-between; text-align:start; gap:.2rem .4rem; min-height:46px; padding:.48rem .28rem; border:0; border-bottom:1px solid var(--stroke); background:none; overflow-wrap:anywhere; }
 .filter small { color:var(--muted); font-size:.84rem; font-variant-numeric:tabular-nums; }
-.filter[aria-pressed="true"] { font-weight:650; color:var(--rose); box-shadow:inset 0 -1px 0 var(--rose); border-bottom-color:var(--rose); }
+.filter[aria-pressed="true"] { font-weight:650; color:var(--rose); }
 .filter:focus-visible { outline-offset:-3px; }
 .list { margin:1.05rem 0 0; }
 .answer { border-bottom:1px solid var(--stroke); }
@@ -82,7 +79,13 @@ h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
 .private-trigger[aria-expanded="true"] .chevron { transform:rotate(90deg); }
 .private-body { padding:.4rem 0 0; }
 .private-body p { margin:.36rem 0; color:var(--muted); }
-.private-body .revealed-note { color:var(--ink); max-width:46ch; }
+.note-frame { position:relative; overflow:hidden; isolation:isolate; display:grid; align-items:center; min-height:6rem; margin:.4rem 0 0; padding:.85rem .75rem; border:1px solid var(--identity-border); border-radius:.64rem; background:var(--panel); perspective:500px; }
+.private-body .revealed-note { color:var(--ink); margin:0; max-width:46ch; }
+.veil, .seal { display:none; pointer-events:none; }
+.note-frame[data-veil] .veil { display:block; position:absolute; inset-block:0; width:50.3%; background:linear-gradient(125deg,var(--surface3),var(--surface2) 64%,var(--surface)); border:1px solid var(--identity-border); backface-visibility:hidden; }
+.veil-left { left:0; transform-origin:left center; }
+.veil-right { right:0; transform-origin:right center; }
+.note-frame[data-veil] .seal { display:grid; position:absolute; inset:0; margin:auto; place-items:center; width:2.3rem; height:2.3rem; border:1px solid var(--accent); border-radius:50%; color:var(--on-accent-fill); background:var(--accent-fill); box-shadow:0 0 0 .24rem color-mix(in srgb,var(--accent) 18%,transparent); }
 .catalogue { margin:0 0 1.35rem; padding-top:.85rem; }
 .cat-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.4rem 1rem; }
 .catalogue ul { margin:0; padding:0; list-style:none; }
@@ -116,9 +119,9 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
     <div class="identity"><p class="owner">Mijn profiel</p><h1 id="name">Alex</h1><p>Ik neem graag de tijd om eerst bij elkaar af te stemmen.</p></div>
     <svg class="portrait" viewBox="0 0 322 260" aria-hidden="true" focusable="false">
   <defs>
-    <radialGradient id="field" cx="55%" cy="45%" r="64%"><stop stop-color="#75445d"/><stop offset="1" stop-color="#211627"/></radialGradient>
-    <linearGradient id="foil" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#fde0cd"/><stop offset=".46" stop-color="#d49aab"/><stop offset="1" stop-color="#8b789d"/></linearGradient>
-    <radialGradient id="orb"><stop stop-color="#f4bfcb" stop-opacity=".35"/><stop offset="1" stop-color="#f4bfcb" stop-opacity="0"/></radialGradient>
+    <radialGradient id="field" cx="55%" cy="45%" r="64%"><stop stop-color="var(--surface3)"/><stop offset="1" stop-color="var(--surface)"/></radialGradient>
+    <linearGradient id="foil" x1="0%" x2="100%" y1="0%" y2="100%"><stop stop-color="var(--accent-text)"/><stop offset=".46" stop-color="var(--accent)"/><stop offset="1" stop-color="var(--accent2-text)"/></linearGradient>
+    <radialGradient id="orb"><stop stop-color="var(--accent)" stop-opacity=".25"/><stop offset="1" stop-color="var(--accent)" stop-opacity="0"/></radialGradient>
   </defs>
   <rect width="322" height="260" fill="url(#field)"/>
   <ellipse cx="165" cy="126" rx="133" ry="125" fill="url(#orb)"/>
@@ -128,8 +131,8 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
     <ellipse cx="161" cy="130" rx="112" ry="42" transform="rotate(41 161 130)" opacity=".64"/>
     <path d="M161 18v15m0 194v15M48 130h15m196 0h15" opacity=".8"/>
   </g>
-  <circle cx="243" cy="83" r="2.7" fill="#f4c7c9"/><circle cx="76" cy="179" r="2" fill="#db9fad"/>
-  <text x="157" y="175" text-anchor="middle" fill="#f8dfd3" font-family="Palatino Linotype, Georgia, serif" font-size="136" font-style="italic">A</text>
+  <circle cx="243" cy="83" r="2.7" fill="var(--accent-text)"/><circle cx="76" cy="179" r="2" fill="var(--accent2-text)"/>
+  <text x="157" y="175" text-anchor="middle" fill="var(--text)" font-family="Palatino Linotype, Georgia, serif" font-size="136" font-style="italic">A</text>
 </svg>
   </section>
   <div class="body-grid">
@@ -144,7 +147,8 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
       </section>
       <div id="answers">
         <div class="searchfield"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="10.8" cy="10.8" r="6.2" stroke="currentColor" stroke-width="1.6"/><path d="m15.3 15.3 4.2 4.2" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg><input type="search" id="answer-search" aria-label="Zoeken in mijn antwoorden" placeholder="Zoeken in mijn antwoorden"><button class="clear" id="clear-search" type="button" hidden>Wis</button></div>
-        <div class="filters" role="group" aria-label="Filter antwoorden op status">
+        <div class="filters" id="filters" role="group" aria-label="Filter antwoorden op status">
+          <span class="filter-ink" id="filter-ink" aria-hidden="true"></span>
           <button type="button" class="filter" data-filter="all" aria-pressed="true">Alles <small>5</small></button>
           <button type="button" class="filter" data-filter="yes" aria-pressed="false">Heel graag <small>2</small></button>
           <button type="button" class="filter" data-filter="ok" aria-pressed="false">Ja <small>1</small></button>
@@ -204,8 +208,8 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
         <h3><button type="button" class="private-trigger" id="private-trigger" aria-expanded="false" aria-controls="private-body"><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M8 10V7a4 4 0 1 1 8 0v3m-9 0h10a2 2 0 0 1 2 2v7H5v-7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><span>Privé</span><span class="chevron"><svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="m9 6 6 6-6 6" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></span></button></h3>
         <div id="private-body" class="private-body" hidden>
           <p>Persoonlijke notities blijven afgeschermd tot je ze toont.</p>
-          <p class="revealed-note" id="private-note" hidden></p>
           <button class="text-button" id="private-reveal" type="button" aria-controls="private-note" aria-expanded="false">Toon voorbeeldnotitie</button>
+          <div class="note-frame" id="private-note" hidden><p class="revealed-note" id="private-copy"></p><div class="veil veil-left" aria-hidden="true"></div><div class="veil veil-right" aria-hidden="true"></div><span class="seal" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M8 10V7a4 4 0 1 1 8 0v3m-9 0h10a2 2 0 0 1 2 2v7H5v-7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span></div>
         </div>
       </section>
     </aside>
@@ -233,12 +237,11 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
     motionElement = element;
     engine.fromTo(element, { opacity: .56, y: distance }, { opacity: 1, y: 0, ease: 'power3.out', duration: .26, onComplete: settle });
   }
-  preference.addEventListener('change', settle);
   const theme = get('theme');
   theme.addEventListener('click', () => {
     settle();
-    const paper = document.documentElement.dataset.theme !== 'paper';
-    document.documentElement.dataset.theme = paper ? 'paper' : 'night';
+    const paper = document.documentElement.dataset.theme !== 'light';
+    document.documentElement.dataset.theme = paper ? 'light' : 'dark';
     theme.setAttribute('aria-pressed', String(paper));
   });
 
@@ -248,7 +251,30 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   const list = get('answer-list');
   const answers = [...document.querySelectorAll('[data-answer]')];
   const filters = [...document.querySelectorAll('[data-filter]')];
+  const filterInk = get('filter-ink');
   let currentFilter = 'all';
+  let inkTarget = '';
+  function alignInk(animate, force) {
+    const button = filters.find(item => item.dataset.filter === currentFilter);
+    if (!button.offsetWidth) return;
+    const x = button.offsetLeft;
+    const y = button.offsetTop + button.offsetHeight - 2;
+    const width = button.offsetWidth;
+    const target = x + ':' + y + ':' + width;
+    if (!force && target === inkTarget) return;
+    inkTarget = target;
+    if (!engine) {
+      filterInk.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
+      filterInk.style.width = width + 'px';
+      return;
+    }
+    engine.killTweensOf(filterInk);
+    if (animate && !preference.matches) engine.to(filterInk, { x, y, width, duration: .28, ease: 'power3.out' });
+    else engine.set(filterInk, { x, y, width });
+  }
+  alignInk(false);
+  if (window.ResizeObserver) new ResizeObserver(() => alignInk(false)).observe(get('filters'));
+  else addEventListener('resize', () => alignInk(false));
   const normalize = (value) => value.trim().toLocaleLowerCase('nl-BE');
   function closeRow(row) {
     const trigger = row.querySelector('.answer-trigger');
@@ -274,6 +300,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
     filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
     answers.forEach(closeRow);
     filterAnswers();
+    alignInk(true);
     if (currentFilter === 'hard') get('boundaries').focus();
   }
   answers.forEach(row => {
@@ -305,7 +332,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
     get('answers').hidden = open;
     catalogueTrigger.setAttribute('aria-expanded', String(open));
     if (open) catalogueSearch.focus();
-    else catalogueTrigger.focus();
+    else { catalogueTrigger.focus(); alignInk(false); }
   }
   catalogueTrigger.addEventListener('click', () => openCatalogue(get('catalogue').hidden));
   get('catalogue-close').addEventListener('click', () => openCatalogue(false));
@@ -325,10 +352,33 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   const privateBody = get('private-body');
   const privateButton = get('private-reveal');
   const note = get('private-note');
+  const copy = get('private-copy');
+  const left = note.querySelector('.veil-left');
+  const right = note.querySelector('.veil-right');
+  const seal = note.querySelector('.seal');
+  let opening = null;
+  function settleNote() {
+    opening?.kill();
+    opening = null;
+    note.removeAttribute('data-veil');
+    for (const part of [left, right, seal, copy]) part.removeAttribute('style');
+  }
+  function unseal() {
+    if (!engine || preference.matches) return;
+    note.dataset.veil = 'true';
+    opening = engine.timeline({ onComplete: settleNote });
+    opening
+      .set(copy, { clipPath: 'inset(0 49% 0 49%)', y: 6 }, 0)
+      .to(seal, { scale: 1.15, duration: .1, ease: 'power2.out' }, 0)
+      .to(seal, { scale: .48, opacity: 0, duration: .16, ease: 'power2.in' }, .1)
+      .to(left, { rotationY: -73, xPercent: -82, duration: .57, ease: 'power3.inOut' }, .12)
+      .to(right, { rotationY: 73, xPercent: 82, duration: .57, ease: 'power3.inOut' }, .12)
+      .to(copy, { clipPath: 'inset(0 0% 0 0%)', y: 0, duration: .44, ease: 'power2.inOut' }, .18);
+  }
   function hideNote() {
-    if (motionElement === note) settle();
     note.hidden = true;
-    note.textContent = '';
+    copy.textContent = '';
+    settleNote();
     privateButton.textContent = 'Toon voorbeeldnotitie';
     privateButton.setAttribute('aria-expanded', 'false');
   }
@@ -340,12 +390,13 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   });
   privateButton.addEventListener('click', () => {
     if (!note.hidden) { hideNote(); return; }
-    note.textContent = 'Als ik stil word, helpt een rustige check-in meer dan een nieuwe vraag.';
+    copy.textContent = 'Als ik stil word, helpt een rustige check-in meer dan een nieuwe vraag.';
     note.hidden = false;
     privateButton.textContent = 'Verberg voorbeeldnotitie';
     privateButton.setAttribute('aria-expanded', 'true');
-    reveal(note, 4);
+    unseal();
   });
+  preference.addEventListener('change', () => { settle(); settleNote(); alignInk(false, true); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) { settle(); hideNote(); } });
 })();
 </script>
