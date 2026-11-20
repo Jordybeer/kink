@@ -22,6 +22,7 @@ button { cursor:pointer; }
 a { color:var(--lilac); text-decoration-thickness:1px; text-underline-offset:.24em; }
 :focus-visible { outline:2px solid var(--focus); outline-offset:3px; }
 [hidden] { display:none !important; }
+.sr-only { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 ::selection { background:var(--selected); color:var(--rose); }
 .shell { max-width:69rem; margin-inline:auto; padding:0 clamp(1rem,5vw,3rem) 3.3rem; }
 .top { min-height:4.5rem; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:.15rem 1rem; border-bottom:1px solid var(--stroke); }
@@ -49,10 +50,10 @@ h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
 .searchfield input::-webkit-search-cancel-button { -webkit-appearance:none; }
 .clear { background:none; border:0; color:var(--lilac); min-width:44px; min-height:44px; font-size:.85rem; }
 .filters { position:relative; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); margin:.65rem 0 0; column-gap:1rem; }
-.filter-ink { position:absolute; top:0; left:0; height:2px; width:0; border-radius:2px; background:var(--rose); pointer-events:none; }
-.filter { display:flex; align-items:center; justify-content:space-between; text-align:start; gap:.2rem .4rem; min-height:46px; padding:.48rem .28rem; border:0; border-bottom:1px solid var(--stroke); background:none; overflow-wrap:anywhere; }
+.filter-ink { position:absolute; top:0; left:0; height:2px; width:100px; transform:scaleX(0); transform-origin:left center; border-radius:2px; background:var(--rose); pointer-events:none; }
+.filter { display:flex; align-items:center; justify-content:space-between; text-align:start; gap:.2rem .4rem; min-height:46px; padding:.48rem .28rem; border:0; border-bottom:1px solid var(--stroke); font-weight:600; background:none; overflow-wrap:anywhere; }
 .filter small { color:var(--muted); font-size:.84rem; font-variant-numeric:tabular-nums; }
-.filter[aria-pressed="true"] { font-weight:650; color:var(--rose); }
+.filter[aria-pressed="true"] { color:var(--rose); }
 .filter:focus-visible { outline-offset:-3px; }
 .list { margin:1.05rem 0 0; }
 .answer { border-bottom:1px solid var(--stroke); }
@@ -79,12 +80,12 @@ h3 { font:400 1.43rem/1.13 var(--serif); margin:0; }
 .private-trigger[aria-expanded="true"] .chevron { transform:rotate(90deg); }
 .private-body { padding:.4rem 0 0; }
 .private-body p { margin:.36rem 0; color:var(--muted); }
-.note-frame { position:relative; overflow:hidden; isolation:isolate; display:grid; align-items:center; min-height:6rem; margin:.4rem 0 0; padding:.85rem .75rem; border:1px solid var(--identity-border); border-radius:.64rem; background:var(--panel); perspective:500px; }
+.note-frame { position:relative; overflow:hidden; isolation:isolate; display:grid; align-items:center; min-height:6rem; margin:.4rem 0 0; padding:.85rem .75rem; border:1px solid var(--identity-border); border-radius:.64rem; background:var(--panel); }
 .private-body .revealed-note { color:var(--ink); margin:0; max-width:46ch; }
 .veil, .seal { display:none; pointer-events:none; }
-.note-frame[data-veil] .veil { display:block; position:absolute; inset-block:0; width:50.3%; background:linear-gradient(125deg,var(--surface3),var(--surface2) 64%,var(--surface)); border:1px solid var(--identity-border); backface-visibility:hidden; }
-.veil-left { left:0; transform-origin:left center; }
-.veil-right { right:0; transform-origin:right center; }
+.note-frame[data-veil] .veil { display:block; position:absolute; inset-block:0; width:50.3%; background:linear-gradient(125deg,var(--surface3),var(--surface2) 64%,var(--surface)); border:1px solid var(--identity-border); }
+.veil-left { left:0; }
+.veil-right { right:0; }
 .note-frame[data-veil] .seal { display:grid; position:absolute; inset:0; margin:auto; place-items:center; width:2.3rem; height:2.3rem; border:1px solid var(--accent); border-radius:50%; color:var(--on-accent-fill); background:var(--accent-fill); box-shadow:0 0 0 .24rem color-mix(in srgb,var(--accent) 18%,transparent); }
 .catalogue { margin:0 0 1.35rem; padding-top:.85rem; }
 .cat-head { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.4rem 1rem; }
@@ -156,6 +157,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
           <button type="button" class="filter" data-filter="for" aria-pressed="false">Voor hen <small>1</small></button>
           <button type="button" class="filter" data-filter="hard" aria-pressed="false">Harde grens <small>1</small></button>
         </div>
+        <div id="filter-status" class="sr-only" role="status"></div>
         <div id="answer-list" class="list"><article class="answer" data-answer="yes" data-search="Tijd nemen voor elkaar Intimiteit">
   <button class="answer-trigger" type="button" aria-expanded="false" aria-controls="vertragen">
     <span class="answer-title"><span>Tijd nemen voor elkaar</span><small>Intimiteit</small></span>
@@ -217,25 +219,25 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
 </main>
 <footer>Profielconcept · fictieve gegevens · niets wordt opgeslagen.</footer>
 </div>
-<script src="/hot?asset=gsap"></script>
 <script>
 (() => {
   'use strict';
   const get = (id) => document.getElementById(id);
   const preference = matchMedia('(prefers-reduced-motion: reduce)');
-  const engine = window.gsap;
-  let motionElement = null;
+  const canAnimate = typeof Element.prototype.animate === 'function';
+  const easeOut = 'cubic-bezier(.2,.8,.2,1)';
+  let rowMotion = null;
   function settle() {
-    if (!motionElement) return;
-    engine?.killTweensOf(motionElement);
-    motionElement.removeAttribute('style');
-    motionElement = null;
+    rowMotion?.cancel();
+    rowMotion = null;
   }
-  function reveal(element, distance) {
+  function reveal(element) {
     settle();
-    if (!engine || preference.matches) return;
-    motionElement = element;
-    engine.fromTo(element, { opacity: .56, y: distance }, { opacity: 1, y: 0, ease: 'power3.out', duration: .26, onComplete: settle });
+    if (!canAnimate || preference.matches) return;
+    rowMotion = element.animate(
+      [{ opacity: .64, transform: 'translateY(-4px)' }, { opacity: 1, transform: 'translateY(0)' }],
+      { duration: 145, easing: easeOut },
+    );
   }
   const theme = get('theme');
   theme.addEventListener('click', () => {
@@ -252,25 +254,30 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   const answers = [...document.querySelectorAll('[data-answer]')];
   const filters = [...document.querySelectorAll('[data-filter]')];
   const filterInk = get('filter-ink');
+  const filterStatus = get('filter-status');
   let currentFilter = 'all';
-  let inkTarget = '';
+  let inkTarget = null;
+  let inkMotion = null;
   function alignInk(animate, force) {
     const button = filters.find(item => item.dataset.filter === currentFilter);
     if (!button.offsetWidth) return;
     const x = button.offsetLeft;
     const y = button.offsetTop + button.offsetHeight - 2;
     const width = button.offsetWidth;
-    const target = x + ':' + y + ':' + width;
-    if (!force && target === inkTarget) return;
-    inkTarget = target;
-    if (!engine) {
-      filterInk.style.transform = 'translate(' + x + 'px, ' + y + 'px)';
-      filterInk.style.width = width + 'px';
-      return;
-    }
-    engine.killTweensOf(filterInk);
-    if (animate && !preference.matches) engine.to(filterInk, { x, y, width, duration: .28, ease: 'power3.out' });
-    else engine.set(filterInk, { x, y, width });
+    const transform = 'translate(' + x + 'px, ' + y + 'px) scaleX(' + width / 100 + ')';
+    if (!force && transform === inkTarget?.transform) return;
+    const play = animate && canAnimate && !preference.matches && inkTarget !== null;
+    const sameRow = play && Math.abs(y - inkTarget.y) < 2;
+    const from = sameRow
+      ? (inkMotion?.playState === 'running' ? getComputedStyle(filterInk).transform : inkTarget.transform)
+      : transform;
+    inkMotion?.cancel();
+    inkTarget = { transform, y };
+    filterInk.style.transform = transform;
+    inkMotion = play ? filterInk.animate(
+      sameRow ? [{ transform: from }, { transform }] : [{ opacity: .32 }, { opacity: 1 }],
+      { duration: sameRow ? 185 : 135, easing: easeOut },
+    ) : null;
   }
   alignInk(false);
   if (window.ResizeObserver) new ResizeObserver(() => alignInk(false)).observe(get('filters'));
@@ -294,14 +301,17 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
       else count++;
     }
     empty.hidden = currentFilter === 'hard' || count > 0;
+    return count;
   }
   function chooseFilter(button) {
+    if (currentFilter === button.dataset.filter) return;
     currentFilter = button.dataset.filter;
     filters.forEach(item => item.setAttribute('aria-pressed', String(item === button)));
     answers.forEach(closeRow);
-    filterAnswers();
+    const count = filterAnswers();
     alignInk(true);
-    if (currentFilter === 'hard') get('boundaries').focus();
+    filterStatus.textContent = currentFilter === 'hard' ? 'Eén harde grens: opnames maken.'
+      : count ? count + (count === 1 ? ' antwoord gevonden.' : ' antwoorden gevonden.') : '';
   }
   answers.forEach(row => {
     const trigger = row.querySelector('.answer-trigger');
@@ -313,7 +323,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
       trigger.setAttribute('aria-expanded', 'true');
       const body = get(trigger.getAttribute('aria-controls'));
       body.hidden = false;
-      reveal(body.firstElementChild, -5);
+      reveal(body.firstElementChild);
     });
   });
   filters.forEach(item => item.addEventListener('click', () => chooseFilter(item)));
@@ -356,24 +366,33 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   const left = note.querySelector('.veil-left');
   const right = note.querySelector('.veil-right');
   const seal = note.querySelector('.seal');
-  let opening = null;
+  let opening = [];
   function settleNote() {
-    opening?.kill();
-    opening = null;
+    for (const anim of opening) anim.cancel();
+    opening = [];
     note.removeAttribute('data-veil');
-    for (const part of [left, right, seal, copy]) part.removeAttribute('style');
   }
   function unseal() {
-    if (!engine || preference.matches) return;
+    if (!canAnimate || preference.matches) return;
     note.dataset.veil = 'true';
-    opening = engine.timeline({ onComplete: settleNote });
-    opening
-      .set(copy, { clipPath: 'inset(0 49% 0 49%)', y: 6 }, 0)
-      .to(seal, { scale: 1.15, duration: .1, ease: 'power2.out' }, 0)
-      .to(seal, { scale: .48, opacity: 0, duration: .16, ease: 'power2.in' }, .1)
-      .to(left, { rotationY: -73, xPercent: -82, duration: .57, ease: 'power3.inOut' }, .12)
-      .to(right, { rotationY: 73, xPercent: 82, duration: .57, ease: 'power3.inOut' }, .12)
-      .to(copy, { clipPath: 'inset(0 0% 0 0%)', y: 0, duration: .44, ease: 'power2.inOut' }, .18);
+    const slide = (part, direction) => part.animate(
+      [
+        { transform: 'translateX(0) rotate(0deg)' },
+        { transform: 'translateX(' + direction * 108 + '%) rotate(' + direction * 4 + 'deg)' },
+      ],
+      { duration: 345, delay: 40, fill: 'both', easing: 'cubic-bezier(.32,.05,.2,1)' },
+    );
+    const lead = slide(left, -1);
+    opening = [
+      lead,
+      slide(right, 1),
+      seal.animate(
+        [{ transform: 'scale(1)', opacity: 1, easing: easeOut }, { transform: 'scale(1.08)', opacity: 1, offset: .25 }, { transform: 'scale(.72)', opacity: 0 }],
+        { duration: 170, fill: 'both' },
+      ),
+      copy.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 180, delay: 80, fill: 'both', easing: easeOut }),
+    ];
+    lead.onfinish = () => { if (opening[0] === lead) settleNote(); };
   }
   function hideNote() {
     note.hidden = true;
@@ -398,6 +417,7 @@ footer { color:var(--muted); border-top:1px solid var(--stroke); margin-top:2.05
   });
   preference.addEventListener('change', () => { settle(); settleNote(); alignInk(false, true); });
   document.addEventListener('visibilitychange', () => { if (document.hidden) { settle(); hideNote(); } });
+  addEventListener('pagehide', hideNote);
 })();
 </script>
 </body>
