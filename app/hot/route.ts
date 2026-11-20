@@ -11,7 +11,20 @@ export async function GET(request: Request) {
   if (deployment === "production" || (process.env.NODE_ENV !== "development" && deployment !== "preview")) {
     return new Response(null, { status: 404, headers: { "Cache-Control": "no-store" } });
   }
-  if (new URL(request.url).searchParams.get("asset") === "motion") {
+  const asset = new URL(request.url).searchParams.get("asset");
+  if (asset === "gsap" || asset === "morph") {
+    const source = asset === "gsap"
+      ? await readFile(join(process.cwd(), "node_modules/gsap/dist/gsap.min.js"), "utf8")
+      : await readFile(join(process.cwd(), "node_modules/gsap/dist/MorphSVGPlugin.min.js"), "utf8");
+    return new Response(source, {
+      headers: {
+        "Content-Type": "application/javascript; charset=utf-8",
+        "Cache-Control": "no-store",
+        "X-Robots-Tag": "noindex, nofollow",
+      },
+    });
+  }
+  if (asset === "motion") {
     // Same-origin browser bundle from the Motion for React version already in the lockfile.
     const [source, license] = await Promise.all([
       readFile(join(process.cwd(), "node_modules/framer-motion/dist/dom.js"), "utf8"),

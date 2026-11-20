@@ -1,3 +1,5 @@
+import { STUDY_MARKUP, STUDY_STYLE } from "./gsap-study";
+
 export const HOT_DOCUMENT = `<!doctype html>
 <html lang="nl" data-tone="night" data-speed="normal" data-reduce="false">
 <head>
@@ -98,20 +100,23 @@ footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85
 @media (max-width: 25rem) {
   .facts li { grid-template-columns: minmax(0, 1fr); }
 }
+${STUDY_STYLE}
 </style>
 </head>
 <body>
 <main class="frame">
-  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · versie 03</span></header>
+  <header class="mast"><span class="brand">KinkSync</span><span class="tag">Motionlab · GSAP</span></header>
   <div class="intro"><h1>Hot.</h1><p>Een plek om te voelen welke beweging iets toevoegt.</p></div>
   <p class="motion-note" id="system-motion" hidden>Je apparaat staat op verminderde beweging. De demo’s slaan de animaties dan over.</p>
   <nav class="tabs" aria-label="Animatiestudies" role="tablist">
-    <button type="button" role="tab" id="tab-questions" aria-controls="questions" aria-selected="true">Vragenlijst</button>
+    <button type="button" role="tab" id="tab-study" aria-controls="study" aria-selected="true">GSAP-studie</button>
+    <button type="button" role="tab" id="tab-questions" aria-controls="questions" aria-selected="false" tabindex="-1">Vragenlijst</button>
     <button type="button" role="tab" id="tab-compare" aria-controls="compare" aria-selected="false" tabindex="-1">Vergelijken</button>
     <button type="button" role="tab" id="tab-private" aria-controls="private" aria-selected="false" tabindex="-1">Privé</button>
   </nav>
   <div class="workspace">
-    <section class="stage" id="questions" role="tabpanel" aria-labelledby="tab-questions" tabindex="0">
+    ${STUDY_MARKUP}
+    <section class="stage" id="questions" role="tabpanel" aria-labelledby="tab-questions" tabindex="0" hidden>
       <div class="pathline" id="question-path" data-deep="false" role="group" aria-label="Vraagpad">
         <button type="button" id="trail" class="path-topic" aria-disabled="true" aria-current="step" tabindex="-1">Rituelen</button>
         <svg viewBox="0 0 100 16" preserveAspectRatio="none" aria-hidden="true"><path class="path-rail" d="M3 12 C36 12 54 4 97 4"></path><path class="path-ink" id="path-ink" pathLength="1" d="M3 12 C36 12 54 4 97 4"></path></svg>
@@ -160,6 +165,8 @@ footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85
   <footer>Fictieve voorbeelden. Geen profielgegevens, opslag of deelacties.</footer>
 </main>
 <script src="/hot?asset=motion"></script>
+<script src="/hot?asset=gsap"></script>
+<script src="/hot?asset=morph"></script>
 <script>
 (() => {
   'use strict';
@@ -169,9 +176,16 @@ footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85
   const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
   const easeOut = [.16, 1, .3, 1];
   let playing = null;
+  let studyTimeline = null;
+  let studyOpen = false;
   const reduced = () => motion.matches || root.dataset.reduce === 'true';
   const canAnimate = () => !reduced() && typeof window.Motion?.animate === 'function';
   function clearMotion() {
+    if (studyTimeline) {
+      studyTimeline.kill();
+      studyTimeline = null;
+      paintStudy(studyOpen);
+    }
     if (!playing) return;
     const current = playing;
     playing = null;
@@ -329,6 +343,64 @@ footer { border-top: 1px solid var(--line); margin-top: 1.5rem; padding-top: .85
       [document.querySelector('.private-iris'), {transform: ['scaleX(1)', 'scaleX(.02)'], opacity: [.85, 0]}, 0, .37],
       [status, {opacity: [.25, 1], filter: ['blur(3px)', 'blur(0px)']}, .03, .34],
     ]);
+  });
+
+  const studyOutline = get('study-outline');
+  const studyTarget = get('study-target');
+  const studyClosedD = studyOutline.getAttribute('d');
+  const studyOpenD = studyTarget.getAttribute('d');
+  const closedLeaf = 'translate(0 0) rotate(0 216 136)';
+  const leftLeaf = 'translate(-39 7) rotate(-9 216 136)';
+  const rightLeaf = 'translate(39 -7) rotate(9 216 136)';
+  const engine = window.gsap;
+  const morph = window.MorphSVGPlugin;
+  if (engine && morph) engine.registerPlugin(morph);
+
+  function paintStudy(open) {
+    get('study-leaf-a').setAttribute('transform', open ? leftLeaf : closedLeaf);
+    get('study-leaf-b').setAttribute('transform', open ? rightLeaf : closedLeaf);
+    studyOutline.setAttribute('d', open ? studyOpenD : studyClosedD);
+    studyOutline.setAttribute('fill-opacity', open ? '.82' : '.035');
+    studyOutline.setAttribute('stroke-width', open ? '.8' : '1.55');
+    get('study-halo').setAttribute('rx', open ? '124' : '74');
+    get('study-halo').setAttribute('opacity', open ? '.22' : '.09');
+    get('study-endpoints').setAttribute('opacity', open ? '1' : '0');
+  }
+  function describeStudy(open) {
+    get('study-question').textContent = open ? 'Een vast beginritueel?' : 'Samen een ritueel kiezen?';
+    get('study-copy').textContent = open
+      ? 'Bijvoorbeeld eerst samen afstemmen over wat ieder die dag nodig heeft.'
+      : 'Begin breed. Kies zelf of je bij dit onderwerp verder wilt.';
+  }
+  get('study-play').addEventListener('click', () => {
+    clearMotion();
+    studyOpen = true;
+    describeStudy(true);
+    if (!engine || !morph || reduced()) { paintStudy(true); return; }
+
+    paintStudy(false);
+    const run = engine.timeline({
+      paused: true,
+      defaults: {ease: 'power3.inOut'},
+      onComplete: () => {
+        if (studyTimeline !== run) return;
+        studyTimeline = null;
+        paintStudy(true);
+      },
+    });
+    studyTimeline = run;
+    run.to(get('study-leaf-a'), {attr: {transform: leftLeaf}, duration: .76}, 0)
+      .to(get('study-leaf-b'), {attr: {transform: rightLeaf}, duration: .76}, 0)
+      .to(studyOutline, {morphSVG: {shape: studyTarget, shapeIndex: 0}, attr: {'fill-opacity': .82, 'stroke-width': .8}, duration: .76}, .13)
+      .to(get('study-halo'), {attr: {rx: 124, opacity: .22}, duration: .86}, .05)
+      .to(get('study-endpoints'), {attr: {opacity: 1}, duration: .22, ease: 'power2.out'}, .79);
+    run.timeScale(root.dataset.speed === 'slow' ? .4 : 1).play();
+  });
+  get('study-reset').addEventListener('click', () => {
+    clearMotion();
+    studyOpen = false;
+    paintStudy(false);
+    describeStudy(false);
   });
   document.addEventListener('visibilitychange', () => { if (document.hidden) clearMotion(); });
 })();
