@@ -1,0 +1,3 @@
+[mcp_servers.motion]
+url = "https://mcp.motion.dev"
+enabled_tools = ["search-motion-docs"]
