@@ -1,0 +1,67 @@
+.study {
+  --field-duration: 570ms;
+  --field-ease: cubic-bezier(.28,.02,.18,1);
+}
+
+.header {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  margin: 0 calc(-1 * var(--page-gutter)) 1.25rem;
+  padding: clamp(2rem, 9vh, 5rem) var(--page-gutter) 1.5rem;
+  background: var(--surface);
+}
+
+.field {
+  position: absolute;
+  z-index: -1;
+  inset: 0 -10% 0 -50%;
+  background-color: var(--cue-tone);
+  transform: translateX(var(--cue-position));
+  mask-image: radial-gradient(ellipse at 52% 24%, rgb(0 0 0 / .34), transparent 72%);
+  transition: transform var(--field-duration) var(--field-ease),
+    background-color var(--field-duration) var(--field-ease);
+}
+
+.meta, .duration { color: var(--text2); font-size: .875rem; }
+.title, .section { font-family: var(--font-display, Georgia, serif); font-weight: 500; }
+.title { font-size: clamp(2.5rem, 9vw, 4rem); line-height: 1.05; margin: .4rem 0 1.7rem; }
+.section { font-size: 1.5rem; line-height: 1.25; }
+.setlist { padding: 0; margin-top: .6rem; list-style: none; }
+.track {
+  display: grid;
+  grid-template-columns: 1.75rem minmax(0,1fr) auto;
+  text-align: start;
+  gap: .75rem;
+  align-items: center;
+  width: 100%;
+  min-height: 3.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: background-color var(--motion-state) var(--motion-ease);
+}
+.track[aria-pressed="true"] { background-color: color-mix(in srgb, var(--cue-tone) 10%, transparent); }
+.sequence { justify-self: center; font-variant-numeric: tabular-nums; }
+.duration { padding-inline-end: .4rem; }
+.context {
+  margin-top: 1.5rem;
+  border-block-start: 2px solid var(--cue-tone);
+  padding: 1rem .75rem;
+  background-color: color-mix(in srgb, var(--cue-tone) 7%, var(--surface));
+  transition: border-color var(--motion-state) var(--motion-ease),
+    background-color var(--field-duration) var(--field-ease);
+}
+.note {
+  margin-top: .4rem;
+  padding: .6rem .75rem;
+  width: 100%;
+  border-radius: var(--radius-control);
+  background: var(--surface2);
+  border: 1px solid var(--control-border);
+  color: var(--text);
+  font-size: 1rem;
+}
+.study [data-blend="false"] :is(.field,.context,.track) { transition: none; }
+@media (prefers-reduced-motion: reduce) {
+  .study :is(.field,.context,.track) { transition: none; }
+  .field { transform: none; }
+}

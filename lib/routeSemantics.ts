@@ -49,6 +49,9 @@ export function routeChromeSemantics(
   if (path === "/security") {
     return { title: "Security & privacy", back: "/about", hideBottomNav: true, bottomNavSection: null };
   }
+  if (path === "/hot" || path.startsWith("/hot/")) {
+    return { title: "Bewegingsstudio", back: path === "/hot" ? "/" : "/hot", hideBottomNav: true, bottomNavSection: null };
+  }
   if (path === "/sandbox") {
     return { title: "Intimiteit sandbox", back: "/", hideBottomNav: true, bottomNavSection: null };
   }

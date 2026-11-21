@@ -16,11 +16,15 @@ export default function ProfileSelect({
   value,
   onChange,
   placeholder,
+  emptyOption,
+  labelledBy,
 }: {
-  profiles: Profile[];
+  profiles: Pick<Profile, "id" | "name">[];
   value: string;
   onChange: (id: string) => void;
   placeholder: string;
+  emptyOption?: string;
+  labelledBy?: string;
 }) {
   const t = useMotionSafe();
   const listboxId = useId();
@@ -30,7 +34,8 @@ export default function ProfileSelect({
   const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const selected = profiles.find((p) => p.id === value);
-  const usesPartnerDefault = placeholder === "Geen partner gekozen";
+  const options = emptyOption ? [{ id: "", name: emptyOption }, ...profiles] : profiles;
+  const usesPartnerDefault = !emptyOption && placeholder === "Geen partner gekozen";
 
   useEffect(() => {
     if (!usesPartnerDefault || value || !preferredPartnerId) return;
@@ -48,17 +53,17 @@ export default function ProfileSelect({
   }, [open]);
 
   function focusOption(index: number) {
-    if (profiles.length === 0) return;
-    const next = (index + profiles.length) % profiles.length;
+    if (!options.length) return;
+    const next = (index + options.length) % options.length;
     optionRefs.current[next]?.focus();
   }
 
   function openAndFocusSelected(direction: 1 | -1) {
-    if (!profiles.length) return;
+    if (!options.length) return;
     setOpen(true);
     window.requestAnimationFrame(() => {
-      const selectedIndex = Math.max(0, profiles.findIndex((profile) => profile.id === value));
-      const index = value ? selectedIndex : direction === 1 ? 0 : profiles.length - 1;
+      const selectedIndex = Math.max(0, options.findIndex((profile) => profile.id === value));
+      const index = value ? selectedIndex : direction === 1 ? 0 : options.length - 1;
       focusOption(index);
     });
   }
@@ -75,7 +80,11 @@ export default function ProfileSelect({
         type="button"
         onClick={() => setOpen((o) => !o)}
         onKeyDown={(event) => {
-          if (event.key === "ArrowDown") {
+          if (event.key === "Escape" && open) {
+            event.preventDefault();
+            event.stopPropagation();
+            closeAndReturnFocus();
+          } else if (event.key === "ArrowDown") {
             event.preventDefault();
             openAndFocusSelected(1);
           } else if (event.key === "ArrowUp") {
@@ -84,6 +93,7 @@ export default function ProfileSelect({
           }
         }}
         className="ks-motion-choice w-full focus-ring"
+        aria-labelledby={labelledBy ? `${labelledBy} ${listboxId}-value` : undefined}
         aria-expanded={open}
         aria-haspopup="listbox"
         aria-controls={open ? listboxId : undefined}
@@ -102,7 +112,7 @@ export default function ProfileSelect({
           width: "100%",
         }}
       >
-        <span className="truncate">{selected?.name ?? placeholder}</span>
+        <span id={`${listboxId}-value`} className="truncate">{selected?.name ?? placeholder}</span>
         <motion.span
           animate={{ rotate: open ? 180 : 0 }}
           transition={t.fast}
@@ -136,9 +146,10 @@ export default function ProfileSelect({
                 focusOption(0);
               } else if (event.key === "End") {
                 event.preventDefault();
-                focusOption(profiles.length - 1);
+                focusOption(options.length - 1);
               } else if (event.key === "Escape") {
                 event.preventDefault();
+                event.stopPropagation();
                 closeAndReturnFocus();
               }
             }}
@@ -156,12 +167,12 @@ export default function ProfileSelect({
             }}
           >
             <div style={{ overflowY: "auto", maxHeight: 220 }}>
-              {profiles.length === 0 ? (
+              {options.length === 0 ? (
                 <p style={{ padding: "10px 12px", fontSize: 14, color: "var(--text2)" }}>
                   Geen profielen
                 </p>
               ) : (
-                profiles.map((p, i) => (
+                options.map((p, i) => (
                   <button
                     key={p.id}
                     ref={(element) => { optionRefs.current[i] = element; }}
@@ -182,7 +193,7 @@ export default function ProfileSelect({
                       background: p.id === value
                         ? "color-mix(in srgb, var(--accent) 8%, transparent)"
                         : "transparent",
-                      borderBottom: i < profiles.length - 1 ? "1px solid var(--border)" : "none",
+                      borderBottom: i < options.length - 1 ? "1px solid var(--border)" : "none",
                       display: "block",
                       minHeight: 44,
                     }}

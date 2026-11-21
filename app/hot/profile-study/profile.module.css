@@ -1,0 +1,108 @@
+.study {
+  overflow-wrap: anywhere;
+}
+.study > header {
+  border-bottom: 1px solid var(--border);
+  padding-block: .5rem 1.25rem;
+}
+.study h2, .name {
+  font-family: var(--font-display), Georgia, serif;
+  color: var(--text);
+}
+.name {
+  font-size: clamp(2.7rem, 11vw, 4rem);
+  line-height: 1.05;
+}
+.kicker, .hint, .privateHeading small, .sealed {
+  color: var(--text2);
+}
+.kicker { margin-bottom: .4rem; font-size: .875rem; }
+.study h2 { font-size: 1.45rem; line-height: 1.2; }
+.toolbar, .privateHeading, .filters button, .action, .verdict, .sealed, .privateSection h2 {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+}
+.toolbar, .privateHeading {
+  justify-content: space-between;
+  flex-wrap: wrap;
+}
+.toolbar { margin-block: 1.15rem .4rem; }
+.action {
+  min-height: var(--touch-target);
+  font-size: .875rem;
+  font-weight: 600;
+  color: var(--accent-text);
+  text-align: start;
+}
+.filters {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
+  gap: 0 1rem;
+  margin-bottom: .75rem;
+}
+.filters button {
+  position: relative;
+  min-height: var(--touch-target);
+  color: var(--text2);
+  text-align: start;
+}
+.filters button[aria-pressed="true"] { color: var(--text); font-weight: 650; }
+.filters small { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+.selection { position: absolute; inset: auto 0 0; height: 2px; }
+.searchField {
+  display: flex;
+  border-bottom: 2px solid var(--control-border);
+  align-items: center;
+  margin-bottom: .5rem;
+}
+.searchField:focus-within { border-color: var(--focus); }
+.searchField input { flex: 1; min-width: 0; min-height: var(--touch-target); outline: none; font-size: 1rem; }
+.searchField button { min-width: var(--touch-target); min-height: var(--touch-target); display: grid; place-items: center; }
+.hint { font-size: .875rem; padding-block: .6rem; }
+.boundaries { margin-top: 1.4rem; }
+.boundaries h2 { color: var(--hard-no-text); }
+.privateSection {
+  margin-top: 1.6rem;
+  padding: .95rem 1rem 1rem;
+  border-top: 1px solid var(--identity-border);
+  background: linear-gradient(120deg, color-mix(in srgb, var(--accent2) 7%, var(--surface)), var(--surface) 85%);
+}
+.privateSection h2 svg { color: var(--accent2); }
+.privateAnswer { padding-block: .65rem .15rem; }
+.privateHeading small { display: block; font-size: .8rem; margin-top: .2rem; }
+.privateLane { margin-top: .5rem; position: relative; isolation: isolate; }
+.sealed, .openLane { min-height: 2.75rem; }
+.sealed { font-size: .875rem; }
+.openLane { position: relative; overflow: hidden; padding-block: .4rem; }
+.openLane p + p { margin-top: .35rem; line-height: 1.45; }
+.verdict { font-size: .925rem; font-weight: 650; }
+@media (prefers-reduced-motion: no-preference) {
+  .searchField { animation: unfold .26s var(--motion-ease) both; }
+  .openLane::after {
+    content: "";
+    position: absolute;
+    pointer-events: none;
+    inset: -1px -8%;
+    background: linear-gradient(90deg, var(--surface2) 60%, var(--surface3) 87%, var(--identity-border) 99%, var(--surface2));
+    transform-origin: right;
+    animation: peel .46s cubic-bezier(.41,.02,.17,1) both;
+  }
+  .openLane .verdict { animation: uncover .44s var(--motion-ease) both; }
+}
+@keyframes unfold { from { clip-path: inset(0 92% 0 0); } to { clip-path: inset(0); } }
+@keyframes peel {
+  from { transform: translateX(0) skewX(0); }
+  25% { transform: translateX(7%) skewX(-6deg); }
+  to { transform: translateX(105%) skewX(-4deg); }
+}
+@keyframes uncover { from { transform: translateX(-.4rem); } to { transform: none; } }
+
+.compare { margin-block-start:.75rem; color:var(--text2); font-size:.85rem; }
+.compare :is(summary,label) { min-height:var(--touch-target); padding-block:.65rem; cursor:pointer; }
+.compare label { display:block; }
+@media (prefers-reduced-motion: no-preference) {
+  .privateSection[data-reveal="soft"] .openLane::after { content:none; }
+  .privateSection[data-reveal="soft"] .openLane { animation:softReveal .28s var(--motion-ease) both; }
+  @keyframes softReveal { from { opacity:.15; } to { opacity:1; } }
+}

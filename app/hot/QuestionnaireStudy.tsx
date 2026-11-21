@@ -36,7 +36,7 @@ export default function QuestionnaireStudy() {
     { id: "restart", label: "Opnieuw beginnen", icon: <ArrowsClockwise size={19} />,
       onClick: () => { setEntries({}); setSession(value => value + 1); } },
   ], [folio]);
-  useTopNavActions(actions, folio ? "Vragenlijst · Prototype" : "Vragenlijst · Origineel", "/");
+  useTopNavActions(actions, folio ? "Vragenlijst · Prototype" : "Vragenlijst · Origineel", "/hot");
 
   return (
     <PageShell width="lg" flush className="questionnaire-study">

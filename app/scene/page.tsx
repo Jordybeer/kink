@@ -3,6 +3,7 @@ import { useState, useCallback, useEffect, useRef, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { SceneArcBar, SceneIntensityOptions, intensityColor } from "@/components/scenes/SceneIntensity";
 import DisclosureBody from "@/components/ui/DisclosureBody";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
@@ -29,39 +30,6 @@ import { sceneDetailHref } from "@/lib/localRoutes";
 
 function uid() {
   return crypto.randomUUID();
-}
-
-function SceneArcBar({ items }: { items: SceneItem[] }) {
-  if (items.length === 0) return null;
-  const counts = { zacht: 0, midden: 0, intens: 0 };
-  for (const it of items) counts[it.intensity]++;
-  const total = items.length;
-  const segments = [
-    { key: "zacht" as const, color: "var(--willing)", flex: counts.zacht / total },
-    { key: "midden" as const, color: "var(--maybe)", flex: counts.midden / total },
-    { key: "intens" as const, color: "var(--hard-no)", flex: counts.intens / total },
-  ].filter((s) => s.flex > 0);
-
-  return (
-    <div
-      className="flex rounded-full overflow-hidden"
-      style={{ height: 4, gap: 2 }}
-      role="img"
-      aria-label={`Energie-arc: ${counts.zacht} zacht, ${counts.midden} midden, ${counts.intens} intens`}
-    >
-      {segments.map((s) => (
-        <div
-          key={s.key}
-          className="scene-arc-segment rounded-full"
-          style={{ flex: s.flex, background: s.color, opacity: 0.75 }}
-        />
-      ))}
-    </div>
-  );
-}
-
-function intensityColor(v: SceneItem["intensity"]) {
-  return v === "zacht" ? "var(--willing)" : v === "midden" ? "var(--maybe)" : "var(--hard-no)";
 }
 
 interface SceneItemRowProps {
@@ -123,27 +91,11 @@ function SceneItemRow({
         </div>
 
         <div className="mb-1 flex flex-wrap items-center gap-1.5">
-          {(["zacht", "midden", "intens"] as const).map((v) => {
-            const active = item.intensity === v;
-            const c = intensityColor(v);
-            return (
-              <button
-                key={v}
-                onClick={() => onUpdate(item.id, { intensity: v })}
-                disabled={locked}
-                aria-pressed={active}
-                className="focus-ring ks-motion-choice rounded-full border px-3 text-xs disabled:opacity-60"
-                style={{
-                  minHeight: 44,
-                  background: active ? `color-mix(in srgb, ${c} 20%, transparent)` : "transparent",
-                  borderColor: active ? c : "var(--border)",
-                  color: active ? c : "var(--text2)",
-                }}
-              >
-                {v === "zacht" ? "Zacht" : v === "midden" ? "Midden" : "Intens"}
-              </button>
-            );
-          })}
+          <SceneIntensityOptions
+            value={item.intensity}
+            disabled={locked}
+            onChange={(intensity) => onUpdate(item.id, { intensity })}
+          />
           <button
             onClick={() => setDetailsOpen((o) => !o)}
             aria-expanded={visibleDetails}

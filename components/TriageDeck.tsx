@@ -181,11 +181,11 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
               <p key={folio ? current.id + "-essence" : "essence"} data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
 
               <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
+                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>{folio ? "Meer uitleg" : "Info & uitleg"}</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
                 {current.safetyNote && <button type="button" data-testid="safety-disclosure" aria-haspopup="dialog" aria-expanded={safetyOpen} onClick={() => setSafetyKinkId(current.id)} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span><CaretRight size={14} aria-hidden="true" /></button>}
               </div>
 
-              <StatusOptionRows presentation={folio ? "list" : "cards"} current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
+              <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 
               {folio && markers}
               <section data-testid="question-agreements" className="min-h-0 border-t pb-2 pt-2.5" style={{ borderColor: "color-mix(in srgb, var(--border) 88%, transparent)" }}>
@@ -202,16 +202,32 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
       </div>
 
       {current && presentation.hasDetails && (
-        <Sheet open={detailOpen} onClose={() => setDetailKinkId(null)} title="Info & uitleg" headerIcon={<Info size={20} weight="duotone" />} variant="surface" contentSized scrollable aria-label={`Info en uitleg bij ${presentation.title}`}>
+        <Sheet
+          open={detailOpen}
+          onClose={() => setDetailKinkId(null)}
+          title={folio ? presentation.title : "Info & uitleg"}
+          headerIcon={folio ? undefined : <Info size={20} weight="duotone" />}
+          variant={folio ? "sheet" : "surface"}
+          contentSized
+          scrollable={!folio}
+          testIds={folio ? { header: "folio-topic-header" } : undefined}
+          aria-label={`Info en uitleg bij ${presentation.title}`}
+        >
           <ExplanationContent>
-            <EditorialHeading title={presentation.title} size="compact" level={3} />
-            <ExplanationSection title="In het kort" emphasis>
-              <ExplanationProse testId="question-detail-essence">{presentation.essence}</ExplanationProse>
-            </ExplanationSection>
-            {presentation.details && (
-              <ExplanationSection title="Meer context">
-                <ExplanationProse>{presentation.details}</ExplanationProse>
-              </ExplanationSection>
+            {folio ? (
+              <ExplanationProse>{presentation.details}</ExplanationProse>
+            ) : (
+              <>
+                <EditorialHeading title={presentation.title} size="compact" level={3} />
+                <ExplanationSection title="In het kort" emphasis>
+                  <ExplanationProse testId="question-detail-essence">{presentation.essence}</ExplanationProse>
+                </ExplanationSection>
+                {presentation.details && (
+                  <ExplanationSection title="Meer context">
+                    <ExplanationProse>{presentation.details}</ExplanationProse>
+                  </ExplanationSection>
+                )}
+              </>
             )}
             {current.aliases && current.aliases.length > 0 && (
               <ExplanationSection title="Ook bekend als">

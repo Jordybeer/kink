@@ -23,6 +23,7 @@ import { useMotionSafe, STAGGER_CHILDREN, fadeUp, SHAKE_ANIM } from '@/lib/motio
 interface OnboardingProps {
   onComplete: () => void;
   onRestore?: () => void;
+  rehearsal?: { vocabulary: React.ReactNode };
 }
 
 const PIN_KEYS = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '', '0', '⌫'];
@@ -37,7 +38,7 @@ const primaryButton: React.CSSProperties = {
   fontWeight: 650,
 };
 
-export default function Onboarding({ onComplete, onRestore }: OnboardingProps) {
+export default function Onboarding({ onComplete, onRestore, rehearsal }: OnboardingProps) {
   const t = useMotionSafe();
   const [step, setStep] = useState(0);
   const [lockout, setLockout] = useState(false);
@@ -55,8 +56,8 @@ export default function Onboarding({ onComplete, onRestore }: OnboardingProps) {
   const enableBiometric = useStore((s) => s.enableBiometric);
 
   useEffect(() => {
-    isPlatformAuthenticatorAvailable().then(setBioAvailable);
-  }, []);
+    if (!rehearsal) isPlatformAuthenticatorAvailable().then(setBioAvailable);
+  }, [rehearsal]);
 
   const advance = useCallback(() => setStep((current) => current + 1), []);
 
@@ -92,6 +93,13 @@ export default function Onboarding({ onComplete, onRestore }: OnboardingProps) {
         setPin2([]);
         setLockSub('pin1');
       }, 500);
+      return;
+    }
+
+    if (rehearsal) {
+      setPin1([]);
+      setPin2([]);
+      advance();
       return;
     }
 
@@ -184,14 +192,14 @@ export default function Onboarding({ onComplete, onRestore }: OnboardingProps) {
                 <motion.div variants={STAGGER_CHILDREN} initial="hidden" animate="show" className="w-full">
                   {step === 0 && <Welcome />}
                   {step === 1 && <AgeGate />}
-                  {step === 2 && <Discover />}
+                  {step === 2 && <Discover example={rehearsal?.vocabulary} />}
                   {step === 3 && <Together />}
                   {step === 4 && lockSub === 'intro' && <Privacy bioAvailable={bioAvailable} />}
                   {step === 4 && lockSub === 'biometric' && <Biometric bioError={bioError} />}
                   {step === 4 && (lockSub === 'pin1' || lockSub === 'pin2') && (
                     <Pin sub={lockSub} digits={currentDigits} shake={shake} onKey={handlePinKey} />
                   )}
-                  {step === 5 && <Finale onComplete={onComplete} />}
+                  {step === 5 && <Finale onComplete={onComplete} rehearsal={Boolean(rehearsal)} />}
                 </motion.div>
               </motion.div>
             </AnimatePresence>
@@ -404,7 +412,7 @@ const statuses = [
   ['Harde grens', 'var(--hard-no)'],
 ] as const;
 
-function Discover() {
+function Discover({ example }: { example?: React.ReactNode }) {
   return (
     <div className="pt-[clamp(0.25rem,1dvh,0.75rem)]">
       <Eyebrow>Jouw profiel</Eyebrow>
@@ -415,9 +423,9 @@ function Discover() {
           <FeatureIcon><Sparkle size={18} weight="duotone" aria-hidden="true" /></FeatureIcon>
           <span className="text-base font-semibold">Waar sta jij?</span>
         </div>
-        <div className="mt-5 flex flex-wrap gap-2.5">
+        {example ?? <div className="mt-5 flex flex-wrap gap-2.5">
           {statuses.map(([label, color]) => <span key={label} className="rounded-full border px-3 py-1.5 text-[0.8125rem] font-medium" style={{ borderColor: `color-mix(in srgb, ${color} 45%, var(--border))`, color }}>{label}</span>)}
-        </div>
+        </div>}
       </motion.div>
       <motion.p variants={childV} className="mt-7 text-base leading-7" style={{ color: 'var(--text2)' }}>Geen goed of fout.<br />Geen score voor hoe kinky je bent.</motion.p>
       <motion.p variants={childV} className="mt-5 text-base font-semibold leading-7">Gewoon waar jij staat.</motion.p>
@@ -504,7 +512,7 @@ function Biometric({ bioError }: { bioError: string | null }) {
   );
 }
 
-function Finale({ onComplete }: { onComplete: () => void }) {
+function Finale({ onComplete, rehearsal }: { onComplete: () => void; rehearsal: boolean }) {
   return (
     <div className="pt-[clamp(1rem,3.5dvh,2.5rem)]">
       <IconBadge bordered><Lock size={24} weight="duotone" aria-hidden="true" /></IconBadge>
@@ -512,6 +520,7 @@ function Finale({ onComplete }: { onComplete: () => void }) {
       <motion.p variants={childV} className="mt-[clamp(1rem,2.4dvh,1.25rem)] text-xl font-medium leading-8">Nu is de beurt aan jou.</motion.p>
       <motion.div variants={childV} className="mt-[clamp(1.5rem,4dvh,2rem)]">
         <TurnDial onComplete={onComplete} />
+        {rehearsal && <Action onClick={onComplete}>Open KinkSync</Action>}
       </motion.div>
     </div>
   );

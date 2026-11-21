@@ -98,8 +98,11 @@ const THEME_OPTIONS: Array<{ value: ThemePreference; label: string }> = [
   { value: "dark", label: "Donker" },
 ];
 
-function ThemeSelector() {
-  const { preference, setPreference } = useTheme();
+export function ThemeSelector({ preference, setPreference, samples = false }: {
+  preference: ThemePreference;
+  setPreference: (value: ThemePreference) => void;
+  samples?: boolean;
+}) {
 
   return (
     <fieldset className="min-w-0 px-1.5 sm:px-2">
@@ -116,7 +119,7 @@ function ThemeSelector() {
         {THEME_OPTIONS.map((option) => {
           const active = preference === option.value;
           return (
-            <label key={option.value} className="relative cursor-pointer">
+            <label key={option.value} data-theme-sample={samples ? option.value : undefined} className="relative cursor-pointer">
               <input
                 type="radio"
                 name="kleurmodus"
@@ -134,6 +137,7 @@ function ThemeSelector() {
                   boxShadow: active ? "var(--shadow-control)" : "none",
                 }}
               >
+                {samples && <span aria-hidden="true" data-preview-theme={option.value === "system" ? undefined : option.value} className="overlay-study-swatch">Aa</span>}
                 <span className="flex w-3.5 flex-none items-center justify-center" aria-hidden="true">
                   <Check size={14} weight="bold" style={{ visibility: active ? "visible" : "hidden" }} aria-hidden="true" />
                 </span>
@@ -201,6 +205,7 @@ export default function SettingsSheet({
   importSuccess,
   importReading = false,
 }: SettingsSheetProps) {
+  const { preference, setPreference } = useTheme();
   const appLockEnabled = useStore((state) => state.appLockEnabled);
   const biometricEnabled = useStore((state) => state.biometricEnabled);
   const disableBiometric = useStore((state) => state.disableBiometric);
@@ -243,7 +248,7 @@ export default function SettingsSheet({
         <section>
           <SectionTitle>Kleurmodus</SectionTitle>
           <p className="mb-3 px-1 text-xs leading-4" style={{ color: "var(--text2)" }}>Gebruik je toestelvoorkeur of kies zelf</p>
-          <ThemeSelector />
+          <ThemeSelector preference={preference} setPreference={setPreference} />
         </section>
 
         <section>

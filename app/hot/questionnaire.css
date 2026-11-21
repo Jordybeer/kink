@@ -37,12 +37,14 @@
 [data-presentation="folio"] [data-tour="pills"] button {
   min-height: var(--touch-target);
 }
-[data-presentation="folio"] [data-tour="pills"] button > span:last-child {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: .25rem .75rem;
-  flex-wrap: wrap;
+[data-presentation="folio"] [data-testid="question-category-meta"] {
+  padding-inline-start: .25rem;
+}
+[data-testid="folio-topic-header"] h2 {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.4rem, 5vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.15;
 }
 [data-presentation="folio"] [data-testid="question-utilities"] {
   display: grid;
