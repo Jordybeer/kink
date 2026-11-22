@@ -65,3 +65,5 @@
   .study :is(.field,.context,.track) { transition: none; }
   .field { transform: none; }
 }
+.study { overflow-wrap: anywhere; }
+.study fieldset { min-inline-size: 0; }

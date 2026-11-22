@@ -43,3 +43,4 @@
 .folio-review output { display:block; font-size:.85rem; color:var(--text2); }
 .folio-return { display:inline-block; text-decoration:underline; }
 [data-folio-mode]:has([data-folio-screen="home"]) .folio-return { display:none; }
+.folio-mast { font-size: clamp(min(2.25rem, 12vw), 10vw, 3.25rem); }
