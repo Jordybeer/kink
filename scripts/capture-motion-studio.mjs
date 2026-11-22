@@ -236,6 +236,22 @@ const cases = {
     await page.getByRole("status").filter({ hasText: /Gepland voor dinsdag 24 november om 20:00/ }).waitFor();
     await button("Moment bijhouden").click();
     await shot("light-recorded-moment");
+    const dialog = page.getByRole("dialog");
+    await dialog.locator("summary").filter({ hasText: "Partner toevoegen" }).click();
+    const partner = dialog.getByRole("combobox", { name: "Met wie?" });
+    await partner.selectOption({label: "Sam"});
+    for (const width of [402, 320]) {
+      await page.setViewportSize({width, height:710});
+      const bounds = await dialog.locator(".os-pair input").evaluateAll(inputs =>
+        inputs.map(input => {
+          const r = input.getBoundingClientRect(), label = input.parentElement.getBoundingClientRect();
+          return r.left >= label.left - 1 && r.right <= label.right + 1;
+        }));
+      assert.deepEqual(bounds, [true,true]);
+      await assertVerticalLayout("Moment met partner, " + width);
+    }
+    await button("Bewaar moment").click();
+    await page.setViewportSize({width:390, height:844});
   },
   async scenes() {
     await go("scenes");

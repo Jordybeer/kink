@@ -4,7 +4,6 @@ import { useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Bell, CalendarBlank, Feather, LockSimple } from "@phosphor-icons/react";
 import Sheet from "@/components/Sheet";
-import ProfileSelect from "@/components/ProfileSelect";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
 
 const partners = [{ id: "studio-sam", name: "Sam" }, { id: "studio-noor", name: "Noor" }];
@@ -86,9 +85,12 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
       <details className="os-extra" open={Boolean(record?.partnerProfileId || record?.reminderDaysBefore !== undefined || (planned && record?.note))}>
         <summary>{planned ? "Partner, privénotitie en herinnering" : "Partner toevoegen"}</summary>
         <div className="os-extra-fields">
-          <div><p className="os-label" id={id+"-partner"}>Met wie?</p>
-            <ProfileSelect value={partner} profiles={partners} onChange={setPartner} placeholder="Zonder partner" emptyOption="Zonder partner" labelledBy={id+"-partner"}/>
-          </div>
+          <label>Met wie?
+            <select value={partner} onChange={event => setPartner(event.target.value)}>
+              <option value="">Zonder partner</option>
+              {partners.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+            </select>
+          </label>
           {planned && noteField}
           {planned && <div className="os-reminder">
             <label><Bell size={17} aria-hidden="true"/><span>Herinner mij</span><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/></label>

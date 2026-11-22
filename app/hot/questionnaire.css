@@ -68,7 +68,7 @@
 
 /* On a phone there is space for the longest combined title and essence in this
    round. A minimum keeps all text in flow when font metrics or content change. */
-@media (min-height: 40rem) {
+@media (orientation: portrait), (min-height: 40rem) {
   @container (min-width: 20rem) {
     .folio-question-prompt { min-block-size: 13rem; }
   }
@@ -210,6 +210,6 @@
 }
 
 @keyframes study-arrive {
-  from { transform: translateY(.2em); opacity: .75; }
-  to { transform: translateY(0); opacity: 1; }
+  from { opacity: .75; }
+  to { opacity: 1; }
 }

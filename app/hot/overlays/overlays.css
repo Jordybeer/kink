@@ -67,18 +67,18 @@
 [data-sheet-variant][data-preview-theme] { color: var(--text); }
 .os-lock-row { border-block: 1px solid var(--border); padding: .85rem 0; font-weight: 600; }
 .os-lock-row small { display: block; font-weight: 400; }
-.os-form { display: grid; gap: 1.15rem; min-width: 0; padding: .25rem .25rem .6rem; }
-.os-form label, .os-label { display: grid; min-width: 0; gap: .35rem; font-weight: 600; font-size: .875rem; }
+.os-form { display: grid; grid-template-columns: minmax(0,1fr); gap: 1.15rem; min-width: 0; padding: .25rem .25rem .6rem; }
+.os-form label, .os-label { display: grid; grid-template-columns: minmax(0,1fr); min-width: 0; gap: .35rem; font-weight: 600; font-size: .875rem; }
 .os-label { margin-bottom: .35rem; }
-.os-form :is(input:not([type=checkbox]):not([type=range]),textarea) { width: 100%; min-width: 0; max-width: 100%; min-height: var(--touch-target); box-sizing: border-box; color: var(--text); background: var(--profile-form-control-surface); border: 1px solid var(--control-border); border-radius: var(--radius-control); padding: .55rem .7rem; font: 400 1rem/1.5 var(--font-sans, sans-serif); }
+.os-form :is(input:not([type=checkbox]):not([type=range]),textarea,select) { width: 100%; min-width: 0; max-width: 100%; min-height: var(--touch-target); box-sizing: border-box; color: var(--text); background: var(--profile-form-control-surface); border: 1px solid var(--control-border); border-radius: var(--radius-control); padding: .55rem .7rem; font: 400 1rem/1.5 var(--font-sans, sans-serif); }
 .os-form :is(input,textarea)::placeholder { color: var(--text2); opacity: 1; }
-.os-form input[type=date], .os-form input[type=time] { display: block; text-align: start; }
+.os-form input[type=date], .os-form input[type=time] { appearance: none; display: block; text-align: start; }
 .os-form input::-webkit-date-and-time-value { text-align: start; }
 .os-form textarea { resize: vertical; }
 .os-form small { font-size: .75rem; font-weight: 400; }
 .os-form input[aria-invalid=true] { border-color: var(--hard-no); }
 .os-form .os-error { color: var(--hard-no-text); font-size: .875rem; padding-top: .35rem; }
-.os-pair { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,7.3rem),1fr)); gap: .65rem; }
+.os-pair { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: .65rem; }
 .os-date-imprint { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .85rem; min-height: var(--touch-target); text-align: start; }
 .os-date-change { margin-inline-start: auto; color: var(--accent-text); font-size: .875rem; text-decoration: underline; text-underline-offset: .2em; }
 .os-date-imprint b { color: var(--accent-text); font-size: 3.25rem; line-height: 1; font-variant-numeric: lining-nums; }
