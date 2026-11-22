@@ -14,6 +14,7 @@ import { CATEGORIES, KINKS, getKinksByCategory, kinkCategoryLabel } from "@/lib/
 import { searchAllKinks } from "@/lib/questionnaire";
 import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
 import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
+import { useProfileDraft } from "../ProfileDrafts";
 import styles from "./profile.module.css";
 
 type Filter = NonNullable<KinkStatus>;
@@ -84,9 +85,17 @@ function PrivateAnswer({ kink, entry, open, toggle, onChange }: {
 
 export default function ProfileStudy() {
   useTopNavActions(navActions, "Profiel · Studio", "/hot");
-  const [entries, setEntries] = useState(initial);
+  return <PageShell width="lg" className={styles.study}>
+    <header><p className={styles.kicker}>Voorbeeldprofiel</p><h1 className={styles.name}>Alex</h1></header>
+    <ProfileInterests profileId="alex" seed={initial} />
+  </PageShell>;
+}
+
+export function ProfileInterests({ profileId, seed }: { profileId: string; seed: Record<string, KinkEntry> }) {
+  const { entries, updateEntry } = useProfileDraft(profileId, seed);
   const [soft, setSoft] = useState(false);
-  const [filter, setFilter] = useState<Filter>("yes");
+  const [filter, setFilter] = useState<Filter>(() => STATUS_ORDER.find(status =>
+    Object.values(entries).some(entry => !entry.privateResponse && entry.status === status)) ?? "yes");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<KinkCategoryId | "">("");
@@ -94,7 +103,7 @@ export default function ProfileStudy() {
   const [revealed, setRevealed] = useState<string | null>(null);
   const launch = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
-  const filters = useRef<HTMLDivElement>(null);
+  const activeFilter = useRef<HTMLButtonElement>(null);
   const resultList = useRef<HTMLDivElement>(null);
   const boundaryList = useRef<HTMLElement>(null);
   const lastSelection = useRef({ searchOpen, category, filter });
@@ -139,11 +148,11 @@ export default function ProfileStudy() {
     launch.current?.focus({ preventScroll: true });
   }
   function patch(id: string, change: Partial<KinkEntry>) {
-    setEntries(previous => ({ ...previous, [id]: { ...(previous[id] ?? unrated), ...change } }));
+    updateEntry(id, change);
     if (change.privateResponse !== undefined) {
       setEditor(null);
       setRevealed(null);
-      (searchOpen ? input.current : filters.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]'))?.focus({ preventScroll: true });
+      (searchOpen ? input.current : activeFilter.current)?.focus({ preventScroll: true });
     }
   }
   const owned = KINKS.filter(kink => entries[kink.id]);
@@ -155,7 +164,7 @@ export default function ProfileStudy() {
     ? editor.section === "interest"
     : entries[kink.id].status === filter);
   const searching = Boolean(query.trim());
-  const catalogue = !searchOpen ? [] : searching ? searchAllKinks(query) : category ? getKinksByCategory(category) : [];
+  const catalogue = !searchOpen ? [] : searching ? searchAllKinks(query) : category ? getKinksByCategory(category) : publicEntries.filter(kink => entries[kink.id].status || (editor?.section === "catalogue" && editor.id === kink.id));
   const results = catalogue.filter(kink => (!category || kink.category === category) && !entries[kink.id]?.privateResponse);
   const showResults = searching || Boolean(category);
 
@@ -170,8 +179,9 @@ export default function ProfileStudy() {
         onToggle={() => {
           setRevealed(null);
           setEditor(active ? null : { id: kink.id, section });
+          if (active && section === "catalogue" && !showResults && !entry.status) input.current?.focus({ preventScroll: true });
           if (active && section !== "catalogue" && entries[kink.id]?.status !== (section === "boundary" ? "hard_no" : filter)) {
-            filters.current?.querySelector<HTMLButtonElement>('[aria-pressed="true"]')?.focus({ preventScroll: true });
+            activeFilter.current?.focus({ preventScroll: true });
           }
         }}
         onChange={change => patch(kink.id, change)} onReveal={() => setRevealed(kink.id)} onConceal={() => setRevealed(null)} />;
@@ -179,8 +189,7 @@ export default function ProfileStudy() {
   }
 
   return (
-    <PageShell width="lg" className={styles.study}>
-      <header><p className={styles.kicker}>Voorbeeldprofiel</p><h1 className={styles.name}>Alex</h1></header>
+    <div className={styles.study}>
       <section aria-labelledby="studio-interests">
         <div className={styles.toolbar}>
           <h2 id="studio-interests">Interesses &amp; grenzen</h2>
@@ -188,7 +197,7 @@ export default function ProfileStudy() {
             aria-controls="studio-search" onClick={() => {
               if (searchOpen) closeSearch();
               else { setEditor(null); setRevealed(null); setSearchOpen(true); }
-            }}><MagnifyingGlass size={16} aria-hidden="true" /> Zoek in catalogus</button>
+            }}><MagnifyingGlass size={16} aria-hidden="true" /> {searchOpen ? "Sluit catalogus" : "Zoek in catalogus"}</button>
         </div>
         {searchOpen ? <section id="studio-search">
           <div className={styles.searchField}>
@@ -209,16 +218,18 @@ export default function ProfileStudy() {
             </select>
           </label>
           <p role="status" className={styles.hint}>{showResults
-            ? `${results.length} ${results.length === 1 ? "resultaat" : "resultaten"}`
-            : "Zoek een onderwerp of kies een categorie."}</p>
+            ? results.length ? `${results.length} ${results.length === 1 ? "resultaat" : "resultaten"}` : "Geen onderwerpen gevonden. Probeer een andere naam of categorie."
+            : results.length ? "Al beoordeeld in dit profiel" : "Zoek een onderwerp of kies een categorie."}</p>
           <div ref={resultList}>{rows(results, "catalogue")}</div>
         </section> : <>
-          <div className={styles.filters} ref={filters} role="group" aria-label="Antwoordstatus">
-            {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring" aria-pressed={filter === status} style={answerTone(status)}
+          <div className={styles.filters} role="group" aria-label="Antwoordstatus">
+            {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring"
+              ref={filter === status ? activeFilter : undefined} aria-pressed={filter === status} style={answerTone(status)}
               aria-controls={status === "hard_no" ? "studio-boundaries" : "studio-filter-results"}
               onClick={() => { setFilter(status); setEditor(null); setRevealed(null); }}>
-              <StatusGlyph status={status} size={15} /><span>{STATUS_LABEL[status]}</span>
-              <small>{publicEntries.filter(kink => entries[kink.id].status === status).length}</small>
+              <span className={styles.filterMark}><StatusGlyph status={status} size={16} />
+                <small>{publicEntries.filter(kink => entries[kink.id].status === status).length}</small></span>
+              {STATUS_LABEL[status]}
             </button>)}
           </div>
           <div id="studio-filter-results" ref={resultList}>
@@ -240,6 +251,6 @@ export default function ProfileStudy() {
           <label><input type="checkbox" checked={soft} onChange={e => { setRevealed(null); setSoft(e.target.checked); }} /> Zachte overgang</label>
         </details>
       </section>}
-    </PageShell>
+    </div>
   );
 }

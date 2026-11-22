@@ -65,12 +65,10 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
     </div>
     {invalid && <p id={id+"-error"} className="os-error" role="alert">{invalid === "date" ? "Kies een datum." : "Kies een tijd om dit moment te plannen."}</p>}
   </div>;
-  const writing = <div className="os-writing">
-    <label className="os-writing-title">Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>
-    <label className="os-writing-note"><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
+  const titleField = <label className="os-writing-title">Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>;
+  const noteField = <label className="os-writing-note"><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
       <textarea rows={planned ? 2 : 3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
-      <small>Alleen zichtbaar in deze proef.</small></label>
-  </div>;
+      <small>Alleen zichtbaar in deze proef.</small></label>;
   const heading = record ? (planned ? "Gepland moment bewerken" : "Bijgehouden moment bewerken")
     : (planned ? "Moment plannen" : "Moment bijhouden");
 
@@ -78,17 +76,23 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
     footer={<div className="os-footer"><button type="button" onClick={onClose}>Annuleer</button>
       <button className="os-primary" type="submit" form={id}>{record ? "Wijzigingen bewaren" : planned ? "Plan moment" : "Bewaar moment"}</button></div>}>
     <form id={id} noValidate className="os-form os-moment" data-mode={mode} onSubmit={submit}>
-      {planned ? when : writing}
-      <div><p className="os-label" id={id+"-partner"}>Met wie? (optioneel)</p>
-        <ProfileSelect value={partner} profiles={partners} onChange={setPartner} placeholder="Zonder partner" emptyOption="Zonder partner" labelledBy={id+"-partner"}/>
-      </div>
-      {planned ? writing : when}
-      {planned && <div className="os-reminder">
-        <label><Bell size={17} aria-hidden="true"/><span>Herinner mij</span><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/></label>
-        {reminder && <label className="os-days">{days} {days === 1 ? "dag" : "dagen"} vooraf
-          <input type="range" min={1} max={14} value={days} onChange={e => setDays(Number(e.target.value))}/>
-        </label>}
-      </div>}
+      {planned ? when : <div className="os-writing">{titleField}{noteField}</div>}
+      {planned ? titleField : when}
+      <details className="os-extra" open={Boolean(record?.partnerProfileId || record?.reminderDaysBefore !== undefined || (planned && record?.note))}>
+        <summary>{planned ? "Partner, privénotitie en herinnering" : "Partner toevoegen"}</summary>
+        <div className="os-extra-fields">
+          <div><p className="os-label" id={id+"-partner"}>Met wie?</p>
+            <ProfileSelect value={partner} profiles={partners} onChange={setPartner} placeholder="Zonder partner" emptyOption="Zonder partner" labelledBy={id+"-partner"}/>
+          </div>
+          {planned && noteField}
+          {planned && <div className="os-reminder">
+            <label><Bell size={17} aria-hidden="true"/><span>Herinner mij</span><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/></label>
+            {reminder && <label className="os-days">{days} {days === 1 ? "dag" : "dagen"} vooraf
+              <input type="range" min={1} max={14} value={days} onChange={e => setDays(Number(e.target.value))}/>
+            </label>}
+          </div>}
+        </div>
+      </details>
     </form>
   </Sheet>;
 }

@@ -37,32 +37,43 @@
   width: 100%;
   min-height: 3.5rem;
   border-bottom: 1px solid var(--border);
-  transition: background-color var(--field-duration) var(--field-ease);
 }
-.track[aria-pressed="true"] { background-color: color-mix(in srgb, var(--cue-tone) 10%, transparent); }
-.sequence { justify-self: center; font-variant-numeric: tabular-nums; }
+.track[aria-pressed="true"] { font-weight: 600; }
+.track[aria-pressed="true"] .sequence {
+  background-color: color-mix(in srgb, var(--cue-tone) 18%, transparent);
+  border-color: var(--cue-tone);
+}
+.sequence {
+  display: grid;
+  place-items: center;
+  width: 1.65rem;
+  height: 1.65rem;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  font-variant-numeric: tabular-nums;
+  transition: border-color var(--field-duration) var(--field-ease), background-color var(--field-duration) var(--field-ease);
+}
 .duration { padding-inline-end: .4rem; }
 .context {
   margin-top: 1.5rem;
   border-block-start: 2px solid var(--cue-tone);
-  padding: 1rem .75rem;
-  background-color: color-mix(in srgb, var(--cue-tone) 7%, var(--surface));
-  transition: border-color var(--field-duration) var(--field-ease),
-    background-color var(--field-duration) var(--field-ease);
+  padding-block: 1rem;
+  transition: border-color var(--field-duration) var(--field-ease);
 }
 .note {
   margin-top: .4rem;
   padding: .6rem .75rem;
   width: 100%;
   border-radius: var(--radius-control);
-  background: var(--surface2);
+  background-color: color-mix(in srgb, var(--cue-tone) 5%, var(--surface2));
+  transition: background-color var(--field-duration) var(--field-ease);
   border: 1px solid var(--control-border);
   color: var(--text);
   font-size: 1rem;
 }
-.study [data-blend="false"] :is(.field,.context,.track) { transition: none; }
+.study [data-blend="false"] :is(.field,.context,.sequence,.note) { transition: none; }
 @media (prefers-reduced-motion: reduce) {
-  .study :is(.field,.context,.track) { transition: none; }
+  .study :is(.field,.context,.sequence,.note) { transition: none; }
   .field { transform: none; }
 }
 .study { overflow-wrap: anywhere; }

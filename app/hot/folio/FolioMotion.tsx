@@ -22,6 +22,10 @@ type Journey = {
 const ArrivalContext = createContext<(screen: HTMLElement, id?: string) => void>(() => {});
 export const useFolioArrival = () => useContext(ArrivalContext);
 
+function screenForPath(path: string) {
+  return path === FOLIO_HOME ? "home" : path.startsWith(FOLIO_HOME + "/") ? path.slice(FOLIO_HOME.length + 1) : "";
+}
+
 export default function FolioMotion({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<Mode>("folio");
   const [slow, setSlow] = useState(false);
@@ -63,7 +67,7 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
     const capture = (path: string, nativeGesture = false) => {
       const screen = currentScreen.current;
       const origin = screen?.dataset.folioScreen;
-      const next = path === FOLIO_HOME ? "home" : path.startsWith(FOLIO_HOME + "/") ? path.slice(FOLIO_HOME.length + 1) : "";
+      const next = screenForPath(path);
       const profile = profileForId(origin === "home" ? next : origin ?? "");
       if (!screen?.isConnected || !origin || !next || origin === next || !profile || (origin !== "home" && next !== "home")) {
         clear();
@@ -105,7 +109,7 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
         // A failed or very slow response must release the source, but focus should
         // still reach the real heading or return link if that destination arrives.
         active.current = { ...journey, flights: [], covered: [], stops: [] };
-      }, 4000);
+      }, 160);
       journey.stops.push(() => clearTimeout(expiry));
     };
     const onClick = (event: MouseEvent) => {
@@ -126,7 +130,20 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
     const touchMove = (event: TouchEvent) => {
       if (edgeX !== null && Math.abs(event.touches[0].clientX - edgeX) > 28) { edgeTravel = performance.now(); clear(); }
     };
-    const pop = () => capture(location.pathname, edgeTravel > 0 && performance.now() - edgeTravel < 1000);
+    const traverse = (path: string) => {
+      const destination = screenForPath(path);
+      // Some browsers deliver popstate after the App Router has already committed.
+      if (destination && (currentScreen.current?.dataset.folioScreen === destination || active.current?.destination === destination)) return;
+      capture(path, edgeTravel > 0 && performance.now() - edgeTravel < 1000);
+    };
+    const pop = () => traverse(location.pathname);
+    const navigation = (window as Window & { navigation?: EventTarget }).navigation;
+    const beforeTraversal = (event: Event) => {
+      const { navigationType, destination } = event as Event & {
+        navigationType: string; destination: { sameDocument: boolean; url: string };
+      };
+      if (navigationType === "traverse" && destination.sameDocument) traverse(new URL(destination.url).pathname);
+    };
     const scroll = () => { if (active.current?.phase !== "measuring") clear(); };
     const theme = new MutationObserver(clear);
     theme.observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
@@ -135,6 +152,7 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
     document.addEventListener("click", onClick, options);
     window.addEventListener("touchstart", touchStart, options);
     window.addEventListener("touchmove", touchMove, options);
+    navigation?.addEventListener("navigate", beforeTraversal, options);
     window.addEventListener("popstate", pop, options);
     window.addEventListener("resize", clear, options);
     window.addEventListener("scroll", scroll, { passive: true, signal: events.signal });
@@ -145,9 +163,18 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
   }, [clear, mode, slow, interrupt, still, late]);
 
   const arrive = useCallback((screen: HTMLElement, profileId?: string) => {
+    const previous = currentScreen.current?.dataset.folioScreen;
     currentScreen.current = screen;
     const journey = active.current;
-    if (!journey || journey.phase !== "waiting") return;
+    if (!journey) {
+      // On a post-commit traversal there is no source left to measure.
+      // Restore the actual row for keyboard users even on that direct path.
+      if (!profileId && previous && profileForId(previous)) {
+        screen.querySelector<HTMLElement>(`[data-folio-open="${previous}"]`)?.focus({ preventScroll: true });
+      }
+      return;
+    }
+    if (journey.phase !== "waiting") return;
     if (journey.destination !== (profileId ?? "home")) { clear(); return; }
     journey.phase = "measuring";
     const elapsed = Math.round(performance.now() - journey.started);
@@ -160,6 +187,14 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
     for (const { part } of journey.flights) {
       const element = screen.querySelector<HTMLElement>(`[data-folio-${part}~="${journey.id}"]`);
       if (element) { element.dataset.folioCovered = ""; journey.covered.push(element); }
+    }
+    // The destination can paint before rAF runs. Give background content its
+    // entrance pose in the commit, while the persistent identity stays visible.
+    const paper = profileId ? screen.querySelector<HTMLElement>(journey.mode === "aperture" ? "#studio-interests" : "[data-folio-body]") :
+      journey.mode === "aperture" ? screen.querySelector<HTMLElement>("[data-folio-home-heading]") : screen;
+    if (paper) {
+      paper.dataset.folioArrival = journey.mode === "aperture" ? "aperture" : profileId ? "detail" : "home";
+      journey.stops.push(() => paper.removeAttribute("data-folio-arrival"));
     }
     const frame = requestAnimationFrame(() => {
       if (active.current !== journey) return;
@@ -201,12 +236,12 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
           animations.push(play(ink, { transform: pose(start, target.rect, part) }, { transform: pose(target.rect, target.rect, part) }, duration));
         });
         if (!animations.length) { direct(); return; }
-        const paper = screen.querySelector<HTMLElement>("[data-folio-body], [data-folio-home-heading]");
         if (paper) {
           const opening = journey.mode === "aperture";
           animations.push(play(paper,
-            opening ? { clipPath: "inset(0 0 94% 0)" } : { opacity: .22, transform: `translateY(${profileId ? 12 : -6}px)` },
-            opening ? { clipPath: "inset(0)" } : { opacity: 1, transform: "translateY(0)" }, duration * .83));
+            opening ? { clipPath: "inset(0 0 94% 0)" } : profileId ? { opacity: .32, transform: "translateY(12px)" } : { opacity: .48 },
+            opening ? { clipPath: "inset(0)" } : profileId ? { opacity: 1, transform: "translateY(0)" } : { opacity: 1 }, duration * .83));
+          paper.removeAttribute("data-folio-arrival");
         }
         setReport(`${MODES[journey.mode]} · route ${elapsed} ms · beweging ${duration} ms`);
         if (profileId && journey.interrupt) {
@@ -225,28 +260,31 @@ export default function FolioMotion({ children }: { children: ReactNode }) {
     <div ref={host} data-folio-mode={mode} data-folio-engine={engineState}>
       {children}
       <div ref={layer} className="folio-flight-layer" aria-hidden="true" inert />
-      <fieldset className="folio-modes">
-        <legend>Overgang vergelijken</legend>
-        {Object.entries(MODES).map(([key, label]) => (
-          <label key={key}>
-            <input type="radio" name="folio-treatment" value={key} checked={mode === key} onChange={() => { clear(); setMode(key as Mode); }} /> {label}
-          </label>
-        ))}
-        {mode === "gsap" && engineState !== "ready" && <p role="status" className="text-xs">
-          {engineState === "failed" ? "GSAP kon niet laden. De navigatie opent direct." : "GSAP wordt geladen…"}
-        </p>}
-        <details className="folio-review">
-          <summary>Proefbediening</summary>
-          <label><input type="checkbox" checked={slow} onChange={e => setSlow(e.target.checked)} /> 0,25× snelheid</label>
-          <label><input type="checkbox" checked={still} onChange={e => setStill(e.target.checked)} /> Minder beweging</label>
-          <label><input type="checkbox" checked={late} onChange={e => setLate(e.target.checked)} /> Simuleer late aankomst (direct openen)</label>
-          <label>Automatisch terug <select value={interrupt} onChange={e => setInterrupt(Number(e.target.value))}>
-            <option value={0}>Uit</option>{[25,50,75].map(value => <option key={value} value={value}>{value}%</option>)}
-          </select></label>
-          <output>{report}</output>
-        </details>
-        <Link data-folio-return href={FOLIO_HOME} className="focus-ring folio-return">Terug naar profielkeuze</Link>
-      </fieldset>
+      <details className="folio-bench">
+        <summary>Overgang vergelijken</summary>
+        <fieldset className="folio-modes">
+          <legend className="sr-only">Bewegingstechniek</legend>
+          {Object.entries(MODES).map(([key, label]) => (
+            <label key={key}>
+              <input type="radio" name="folio-treatment" value={key} checked={mode === key} onChange={() => { clear(); setMode(key as Mode); }} /> {label}
+            </label>
+          ))}
+          {mode === "gsap" && engineState !== "ready" && <p role="status" className="text-xs">
+            {engineState === "failed" ? "GSAP kon niet laden. De navigatie opent direct." : "GSAP wordt geladen…"}
+          </p>}
+          <details className="folio-review">
+            <summary>Proefbediening</summary>
+            <label><input type="checkbox" checked={slow} onChange={e => setSlow(e.target.checked)} /> 0,25× snelheid</label>
+            <label><input type="checkbox" checked={still} onChange={e => setStill(e.target.checked)} /> Minder beweging</label>
+            <label><input type="checkbox" checked={late} onChange={e => setLate(e.target.checked)} /> Simuleer late aankomst (direct openen)</label>
+            <label>Automatisch terug <select value={interrupt} onChange={e => setInterrupt(Number(e.target.value))}>
+              <option value={0}>Uit</option>{[25,50,75].map(value => <option key={value} value={value}>{value}%</option>)}
+            </select></label>
+            <output>{report}</output>
+          </details>
+        </fieldset>
+      </details>
+      <Link data-folio-return href={FOLIO_HOME} className="focus-ring folio-return">Terug naar profielkeuze</Link>
     </div>
   </ArrivalContext.Provider>;
 }

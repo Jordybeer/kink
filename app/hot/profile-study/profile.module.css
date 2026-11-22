@@ -19,7 +19,7 @@
 }
 .kicker { margin-bottom: .4rem; font-size: .875rem; }
 .study h2 { font-size: 1.45rem; line-height: 1.2; }
-.toolbar, .privateHeading, .filters button, .action, .verdict, .sealed, .privateSection h2 {
+.toolbar, .privateHeading, .action, .verdict, .sealed, .privateSection h2 {
   display: flex;
   align-items: center;
   gap: .5rem;
@@ -37,33 +37,43 @@
   text-align: start;
 }
 .filters {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr));
-  gap: 0 1rem;
-  margin-bottom: .75rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .25rem;
+  margin-block: .35rem 1rem;
 }
 .filters button {
+  flex: 1 0 auto;
+  max-inline-size: 100%;
+  min-inline-size: min(44px, 100%);
   position: relative;
-  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .25rem;
   min-height: var(--touch-target);
-  padding-block: .4rem;
+  padding-block: .45rem .65rem;
+  font-size: .8125rem;
+  line-height: 1.2;
   color: var(--text2);
-  font-weight: 600;
-  text-align: start;
 }
-.filters button > span:first-child, .filters button[aria-pressed="true"] { color: var(--answer-tone); }
-.filters small { margin-inline-start: auto; font-variant-numeric: tabular-nums; }
+.filterMark { display: inline-flex; align-items: center; gap: .25rem; color: var(--answer-tone); }
+.filterMark small { color: var(--text2); font-variant-numeric: tabular-nums; }
+.filters button[aria-pressed="true"] { color: var(--text); font-weight: 650; }
 .filters button::after {
   content: "";
   position: absolute;
-  inset: auto 0 0;
+  bottom: 0;
+  width: 1.6rem;
   height: 2px;
+  border-radius: 1px;
   background: var(--answer-tone);
-  transform-origin: left center;
-  transform: scaleX(.1);
-  opacity: 0;
+  transform: scaleX(0);
 }
-.filters button[aria-pressed="true"]::after { transform: scaleX(1); opacity: 1; }
+.filters button[aria-pressed="true"]::after { transform: scaleX(1); }
+@media (prefers-reduced-motion: no-preference) {
+  .filters button::after { transition: transform var(--motion-progress) var(--motion-ease); }
+}
 .searchField {
   display: flex;
   border-bottom: 2px solid var(--control-border);
@@ -149,8 +159,7 @@
 .openLane p + p { margin-top: .35rem; line-height: 1.45; }
 .verdict { font-size: .925rem; font-weight: 650; }
 @media (prefers-reduced-motion: no-preference) {
-  .filters button::after { transition: transform .22s var(--motion-ease), opacity .15s ease-out; }
-  .filters button, .choices button { transition: color .16s ease-out, background-color .16s ease-out; }
+  .choices button { transition: color .16s ease-out, background-color .16s ease-out; }
   .searchField { animation: unfold .26s var(--motion-ease) both; }
   .openLane::after {
     content: "";

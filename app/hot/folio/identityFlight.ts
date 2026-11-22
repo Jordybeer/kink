@@ -33,7 +33,7 @@ export function dressInk(ink: HTMLElement, { element, rect }: Anchor) {
     width: `${rect.width}px`, height: `${rect.height}px`,
     fontFamily: style.fontFamily, fontWeight: style.fontWeight, fontStyle: style.fontStyle,
     fontSize: style.fontSize, lineHeight: style.lineHeight, letterSpacing: style.letterSpacing,
-    color: style.color, textShadow: style.textShadow,
+    textAlign: style.textAlign, color: style.color, textShadow: style.textShadow,
     backgroundColor: style.backgroundColor, backgroundImage: style.backgroundImage,
     borderRadius: style.borderRadius,
   });

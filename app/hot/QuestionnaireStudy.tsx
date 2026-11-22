@@ -41,6 +41,8 @@ export default function QuestionnaireStudy() {
   return (
     <PageShell width="lg" flush className="questionnaire-study">
       <h1 className="sr-only">Vragenlijst uitproberen</h1>
+      {folio && round.coverage.total > 0 && <progress className="folio-round-progress" aria-label="Beoordeelde onderwerpen"
+        value={round.coverage.answered} max={round.coverage.total} />}
       <TriageDeck key={session} presentationStyle={folio ? "folio" : "classic"} standalone
         kinks={round.visibleKinks} queueItems={round.queue} entries={entries}
         progressLabel={folio ? `${round.coverage.answered} / ${round.coverage.total}` : `Dynamic · ${round.coverage.answered} / ${round.coverage.total}`}

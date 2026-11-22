@@ -65,6 +65,7 @@ const cases = {
     await shot("dark-folio-profile");
     await page.goBack();
     await home.waitFor();
+    await page.locator(".folio-bench > summary").click();
     const samples = {};
     for (const mode of ["direct", "folio", "gsap", "aperture"]) {
       await page.locator('input[value="'+mode+'"]').check();
@@ -95,6 +96,10 @@ const cases = {
       await profile.waitFor();
       await page.goBack();
       await home.waitFor();
+      if (mode === "folio" || mode === "aperture") {
+        await page.waitForFunction(() => document.querySelector('[data-folio-flight="avatar"]')?.getAnimations().length);
+        await page.waitForFunction(() => !document.querySelector("[data-folio-covered]"));
+      }
     }
     assert(samples.folio.animated && samples.gsap.animated && !samples.direct.animated, JSON.stringify(samples));
     await page.locator('input[value="folio"]').check();
@@ -105,6 +110,49 @@ const cases = {
     await home.waitFor();
     assert.equal(await open.evaluate(el => el === document.activeElement), true);
     return samples;
+  },
+  async folioHandoff() {
+    await go("folio");
+    const open = page.locator('[data-folio-open="noor"]');
+    await open.click();
+    const avatar = page.locator('[data-folio-flight="avatar"]');
+    await page.waitForFunction(() => document.querySelector('[data-folio-flight="avatar"]')?.getAnimations().length);
+    const stages = [];
+    for (const fraction of [.15, .5, .85]) {
+      await page.evaluate(progress => {
+        const parts = document.querySelectorAll("[data-folio-flight], [data-folio-body]");
+        for (const part of parts) for (const animation of part.getAnimations()) {
+          animation.pause();
+          animation.currentTime = animation.effect.getTiming().duration * progress;
+        }
+      }, fraction);
+      stages.push((await avatar.boundingBox()).width);
+      await page.screenshot({ type: "jpeg", quality: 82, path: path.join(directory, `folio-travel-${fraction}.jpg`) });
+    }
+    assert(stages[0] < stages[1] && stages[1] < stages[2], "Portrait must travel through distinct poses");
+    await page.evaluate(() => {
+      for (const part of document.querySelectorAll("[data-folio-flight], [data-folio-body]"))
+        for (const animation of part.getAnimations()) animation.finish();
+    });
+    await avatar.waitFor({ state: "detached" });
+    const body = page.locator('[data-folio-screen="noor"]');
+    await body.getByRole("button", { name: "Zoek in catalogus" }).click();
+    const row = body.locator('[data-kink-id="praise_kink"]').first();
+    await row.locator("[data-answer-summary]").click();
+    // Clear the currently selected status. The editor remains available until closed.
+    await row.getByRole("group", { name: "Status kiezen" }).getByRole("button", { name: /Heel graag/ }).click();
+    assert.equal(await row.locator("[data-answer-summary]").getAttribute("aria-expanded"), "true");
+    await row.locator("[data-answer-summary]").click();
+    assert(await body.getByRole("searchbox").evaluate(el => el === document.activeElement));
+    const back = page.locator('nav a[href="/hot/folio"]').first();
+    await back.click();
+    await open.click();
+    await body.getByRole("group", {name: "Antwoordstatus"}).getByRole("button", {name: /Heel graag/}).click();
+    await body.locator("#studio-filter-results").getByText("Geen openbare antwoorden met deze status.").waitFor();
+    await back.click();
+    await page.locator('[data-folio-open="robin-leidt"]').click();
+    await page.locator('[data-folio-screen="robin-leidt"] [data-answer-verdict="yes"]').first().waitFor();
+    return { portraitWidths: stages };
   },
   async questionnaires() {
     await go("questions");
@@ -180,7 +228,7 @@ const cases = {
     assert(await time.evaluate(el => el === document.activeElement));
     await time.fill("20:00");
     await button("Plan moment").click();
-    await page.getByText("Moment bewaard voor deze proef.").waitFor();
+    await page.getByRole("status").filter({ hasText: /Gepland voor .*20:00/ }).waitFor();
     await button("Moment bijhouden").click();
     await shot("light-recorded-moment");
   },
@@ -213,7 +261,7 @@ const cases = {
   async narrowLayers() {
     await page.setViewportSize({width:320, height:700});
     try {
-      for (const slug of ["questions", "onboarding", "overlays", "profile-study", "folio", "scenes"]) {
+      for (const slug of ["questions", "onboarding", "overlays", "profile-study", "folio", "folio/robin-leidt", "scenes"]) {
         await go(slug);
         await page.addStyleTag({ content: ":root{font-size:200%!important}" });
         await assertVerticalLayout(slug);
@@ -229,6 +277,24 @@ const cases = {
       }
     } finally { await page.setViewportSize({width:390, height:844}); }
   },
+  async reducedDesktop() {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    try {
+      await page.emulateMedia({ colorScheme: "light", reducedMotion: "reduce" });
+      await go("folio");
+      await page.locator('[data-folio-open="robin-volgt"]').click();
+      const screen = page.locator('[data-folio-screen="robin-volgt"]');
+      await screen.waitFor();
+      assert.equal(await page.locator("[data-folio-flight], [data-folio-covered]").count(), 0);
+      assert(await screen.locator("h1").evaluate(el => el === document.activeElement));
+      await screen.getByRole("button", {name:"Zoek in catalogus"}).click();
+      await assertVerticalLayout("Desktopprofiel");
+      await page.goBack();
+      const opener = page.locator('[data-folio-open="robin-volgt"]');
+      await opener.waitFor();
+      assert(await opener.evaluate(el => el === document.activeElement));
+    } finally { await page.setViewportSize({width:390, height:844}); }
+  },
   async lightDeck() {
     await go("questions");
     await button("Privé").waitFor();
@@ -242,7 +308,7 @@ try {
     if (requested.length && !requested.includes(name)) continue;
     const result = path.join(directory, name + ".json");
     if (await exists(result)) { console.log("cached", name); continue; }
-    const dark = ["folio", "questionnaires", "profile"].includes(name);
+    const dark = ["folio", "folioHandoff", "questionnaires", "profile"].includes(name);
     await page.emulateMedia({ colorScheme: dark ? "dark" : "light", reducedMotion: "no-preference" });
     const before = errors.length;
     try {

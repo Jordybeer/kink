@@ -4,9 +4,9 @@ import PageShell from "@/components/PageShell";
 import EditorialHeading from "@/components/ui/EditorialHeading";
 
 const studies = [
-  { href: "folio", name: "Van start naar profiel", detail: "Open een profiel en keer halverwege terug." },
-  { href: "profile-study", name: "Profiel & privéantwoorden", detail: "Zoek een interesse, wijzig een antwoord of licht de sluier op." },
-  { href: "questions", name: "Vragenlijst", detail: "Probeer de duimbediening en vergelijk met het origineel." },
+  { href: "folio", name: "Van start naar profiel", detail: "Kies een profiel, bewerk een antwoord en ga terug." },
+  { href: "profile-study", name: "Profiel & privéantwoorden", detail: "Zoek in de catalogus of open een privéantwoord." },
+  { href: "questions", name: "Vragenlijst", detail: "Beantwoord een vraag of bewaar die voor later." },
   { href: "overlays", name: "Instellingen & agenda", detail: "Bekijk een dag, plan een moment of pas het uiterlijk aan." },
   { href: "scenes", name: "Scènes", detail: "Wissel van sfeer tijdens het samenstellen." },
   { href: "onboarding", name: "Eerste kennismaking", detail: "Ontdek met één oefenvraag hoe je jouw voorkeuren vastlegt." },

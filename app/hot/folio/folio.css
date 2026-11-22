@@ -1,6 +1,6 @@
 .folio-screen { min-width:0; padding-block:clamp(1rem,4vh,2.5rem) 1rem; }
 .folio-mast { margin:0 0 2rem; text-align:center; font-size:clamp(2.25rem,10vw,3.25rem); line-height:1.1; }
-.folio-subhead,.folio-reading h2 { font:italic 500 1.35rem/1.25 var(--font-display,Georgia,serif); }
+.folio-subhead { font:italic 500 1.35rem/1.25 var(--font-display,Georgia,serif); }
 .folio-row,.folio-group,.folio-hero { display:flex; align-items:center; gap:.9rem; position:relative; }
 .folio-row { min-height:4.4rem; padding:.65rem .2rem; }
 .folio-group { padding-block:1.25rem .25rem; }
@@ -12,16 +12,19 @@
 .folio-rule { position:absolute; bottom:0; inset-inline:0; height:1px; background:var(--border); }
 .folio-row .folio-rule { inset-inline-start:3.1rem; }
 .folio-group ~ .folio-row .folio-rule { inset-inline-start:0; }
-.folio-hero { gap:1.2rem; padding-block:.5rem 1.6rem; }
+.folio-hero { isolation:isolate; gap:1.2rem; padding-block:.5rem 1.6rem; }
 .folio-hero::before { content:""; pointer-events:none; position:absolute; inset:-2rem 0 0; background:var(--profile-hero-glow); z-index:-1; }
 .folio-hero .folio-portrait { width:clamp(4.8rem,24vw,6.6rem); height:clamp(4.8rem,24vw,6.6rem); font-size:2.3rem; }
 .folio-hero .folio-name { font-size:clamp(2.2rem,9vw,3.2rem); }
 .folio-hero h1:focus:not(:focus-visible) { outline:none; }
 .folio-hero .folio-role { margin-top:.5rem; color:var(--text); font-weight:600; }
-.folio-reading { padding-block:1.75rem 0; }
-.folio-reading h2 { margin-bottom:.8rem; }
-.folio-modes { width:min(calc(100% - 2 * var(--page-gutter)),29rem); margin:0 auto var(--page-bottom-clearance); border:0; border-top:1px solid var(--border); }
-.folio-modes legend { font-size:.8rem; color:var(--text2); padding-inline-end:.6rem; }
+.folio-bench, .folio-return { width:min(calc(100% - 2 * var(--page-gutter)),29rem); margin-inline:auto; }
+.folio-bench { border-top:1px solid var(--border); margin-block-end:1rem; color:var(--text2); }
+.folio-bench > summary { cursor:pointer; min-height:var(--touch-target); padding-block:.75rem; font-size:.875rem; }
+.folio-modes { min-width:0; padding-block:.25rem .75rem; color:var(--text); }
+[data-folio-arrival="detail"] { opacity:.32; transform:translateY(12px); }
+[data-folio-arrival="home"] { opacity:.48; }
+[data-folio-arrival="aperture"] { clip-path:inset(0 0 94% 0); }
 .folio-modes label { display:inline-flex; align-items:center; gap:.4rem; min-height:var(--touch-target); margin-inline-end:.85rem; font-size:.85rem; }
 .folio-modes input { accent-color:var(--accent-fill); }
 /* Only the shared ink floats. Links, headings, focus rings and the app chrome stay put. */
@@ -41,6 +44,15 @@
 .folio-review summary,.folio-return { min-height:var(--touch-target); padding-block:.65rem; cursor:pointer; }
 .folio-review select { color:var(--text); background:var(--surface); padding:.4rem; }
 .folio-review output { display:block; font-size:.85rem; color:var(--text2); }
-.folio-return { display:inline-block; text-decoration:underline; }
+.folio-return { display:block; color:var(--text2); font-size:.875rem; text-underline-offset:.2em; text-decoration:underline; margin-bottom:var(--page-bottom-clearance); }
 [data-folio-mode]:has([data-folio-screen="home"]) .folio-return { display:none; }
 .folio-mast { font-size: clamp(min(2.25rem, 12vw), 10vw, 3.25rem); }
+
+/* The same duotone light expands with the monogram, including in the in-flight copy. */
+.folio-portrait, [data-folio-flight="avatar"] { isolation:isolate; }
+.folio-portrait { position:relative; }
+.folio-portrait::before, [data-folio-flight="avatar"]::before {
+  content:""; position:absolute; inset:-52%; z-index:-1; pointer-events:none;
+  background-image:inherit;
+  mask-image:radial-gradient(closest-side,transparent 46%, rgb(0 0 0 / .18) 53%, transparent 100%);
+}

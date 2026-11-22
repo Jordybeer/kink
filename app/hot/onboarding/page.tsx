@@ -72,27 +72,24 @@ export default function OnboardingStudy() {
           {spread && <div aria-hidden="true" className={styles.track}><span /></div>}
         </header>
 
-        <div className={styles.body}>
+        <div key={view} className={styles.body}>
           {view === "welcome" && (
             <>
               <p className={styles.lead}>
-                Probeer één vraag. Je ziet hoe je een wens of grens onder woorden kunt brengen.
-                Jij kiest wat je later met iemand deelt.
+                Soms weet je meteen wat je fijn vindt. Soms hangt het ervan af. Probeer het met één vraag.
               </p>
-              <p className={styles.note}>Je oefenantwoord wordt niet opgeslagen.</p>
+              <p className={styles.note}>Je oefenantwoord blijft alleen hier, zolang je deze kennismaking open hebt.</p>
               <h2 className={styles.question}>Ben je 18 jaar of ouder?</h2>
-              <p className={styles.note}>KinkSync is alleen voor volwassenen.</p>
+
             </>
           )}
           {view === "practice" && (
             <>
               <p className={styles.lead}>
-                Stel, na een intiem moment wil je partner nog even tegen je aan liggen.
-                Wat zou jij willen?
+                Je partner wil na een intiem moment nog even tegen je aan liggen. Hoe voelt dat voor jou?
               </p>
               <p className={styles.consent}>
-                Ook als je allebei ja invult, vraag je elkaar op het moment zelf om toestemming.
-                Je mag altijd van gedachten veranderen.
+                Een antwoord is geen toestemming. Ook bij twee keer ja stem je op het moment zelf af.
               </p>
               <StatusOptionRows current={answer} onSelect={setAnswer} />
             </>
@@ -100,8 +97,7 @@ export default function OnboardingStudy() {
           {view === "example" && (
             <>
               <p className={styles.lead}>
-                KinkSync bewaart je profiel in de browser op je toestel. Als je het deelt,
-                blijven privéantwoorden standaard buiten de gedeelde versie.
+                Je profiel staat in de browser op je toestel. Deel je een profiel, dan blijven privéantwoorden standaard buiten de gedeelde versie.
               </p>
               <div className={styles.sample}>
                 <div className={styles.sampleHead}>
@@ -127,7 +123,7 @@ export default function OnboardingStudy() {
                   ) : <span>{answer ? "Verborgen" : "Je hebt de vraag overgeslagen."}</span>}
                 </div>
               </div>
-              <p className={styles.note}>Deze oefening schrijft niets in je profiel.</p>
+
             </>
           )}
           {view === "declined" && <p className={styles.lead}>KinkSync is alleen voor mensen van 18 jaar en ouder.</p>}

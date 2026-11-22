@@ -295,6 +295,7 @@ export default function Sheet({
               aria-modal="true"
               aria-label={ariaLabel ?? title}
               data-preview-theme={previewTheme}
+              data-sheet-draggable={draggable || undefined}
               data-sheet-variant={variant}
               className={`pointer-events-auto min-w-0 w-full max-w-full [overflow-wrap:anywhere] ${variant === "surface" ? "sm:max-w-xl" : "sm:max-w-lg"}`}
               style={quickSheet

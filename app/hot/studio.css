@@ -14,3 +14,6 @@ body:has([data-motion-studio]) [data-sheet-variant] :where(fieldset, form, label
   min-inline-size: 0;
   max-inline-size: 100%;
 }
+
+/* A scrolling study sheet closes via its close control or backdrop. */
+body:has([data-motion-studio]) [data-sheet-variant="sheet"]:not([data-sheet-draggable]) [data-sheet-handle] { display: none; }

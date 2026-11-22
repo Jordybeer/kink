@@ -126,3 +126,8 @@
   .os-entry { grid-template-columns: minmax(0,1fr) auto; }
   .os-time { grid-column: 1 / -1; }
 }
+
+.os-extra { border-block-start: 1px solid var(--border); }
+.os-extra summary { min-block-size: var(--touch-target); padding-block: .8rem; color: var(--text2); cursor: pointer; font-size: .9rem; font-weight: 550; }
+.os-extra-fields { display: grid; gap: 1rem; padding-block: .35rem; }
+.os-extra summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }

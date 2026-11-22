@@ -12,7 +12,7 @@ import { resolveTheme } from "@/lib/theme";
 import { KINKS } from "@/lib/kinks";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
-import Agenda, { exampleDay, exampleMoments } from "./Agenda";
+import Agenda, { exampleDay, exampleMoments, fullDay } from "./Agenda";
 import MomentEditor from "./MomentEditor";
 
 const topic = getQuestionnairePresentation(KINKS.find(item => item.id === "dominance_submission")!);
@@ -71,7 +71,8 @@ export default function OverlayStudy() {
   function save(record: IntimacyRecord) {
     setMoments(previous => [record, ...previous.filter(item => item.id !== record.id)]);
     setSelectedDate(record.date);
-    setFeedback("Moment bewaard voor deze proef.");
+    const day = fullDay.format(new Date(`${record.date}T12:00:00`));
+    setFeedback(`${record.status === "planned" ? "Gepland voor" : "Bijgehouden voor"} ${day}${record.time ? " om " + record.time : ""}.`);
     setSurface(null);
     if (editing && selectedDate !== record.date) {
       requestAnimationFrame(() => document.querySelector<HTMLButtonElement>(`[data-moment-id="${CSS.escape(record.id)}"]`)?.focus());

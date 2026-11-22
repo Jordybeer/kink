@@ -155,3 +155,11 @@
   .field, .track span { transition: none; }
   .field { transform: none; }
 }
+
+@media (prefers-reduced-motion: no-preference) {
+  .body > .lead { animation: onboarding-read .32s var(--motion-ease) both; }
+  @keyframes onboarding-read {
+    from { opacity: .55; transform: translateY(.45rem); }
+    to { opacity: 1; transform: none; }
+  }
+}

@@ -1,19 +1,16 @@
 "use client";
 
-import { useLayoutEffect, useRef } from "react";
+import { useLayoutEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { CaretRight } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import Wordmark from "@/components/Wordmark";
-import KinkListRow from "@/components/KinkListRow";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import { avatarStyle } from "@/lib/avatar";
-import { KINKS } from "@/lib/kinks";
 import { perspectives, FOLIO_HOME, type FolioProfile } from "./fixtures";
 import { useFolioArrival } from "./FolioMotion";
 
 const NO_ACTIONS: TopNavAction[] = [];
-const noop = () => {};
 const linked = perspectives.filter(person => person.linked);
 const groupKeys = linked.map(person => person.id).join(" ");
 
@@ -36,7 +33,7 @@ function Row({ profile }: { profile: FolioProfile }) {
   </Link>;
 }
 
-export default function FolioScreen({ profile }: { profile?: FolioProfile }) {
+export default function FolioScreen({ profile, children }: { profile?: FolioProfile; children?: ReactNode }) {
   const screen = useRef<HTMLDivElement>(null);
   const arrive = useFolioArrival();
   useTopNavActions(NO_ACTIONS, profile ? "Profiel" : "Mijn profielen", profile ? FOLIO_HOME : "/hot");
@@ -53,13 +50,7 @@ export default function FolioScreen({ profile }: { profile?: FolioProfile }) {
           </div>
           <span className="folio-rule" data-folio-rule={profile.id} aria-hidden="true" />
         </header>
-        <section data-folio-body className="folio-reading">
-          <h2>Interesses &amp; grenzen</h2>
-          {profile.topics.map((id, index) => {
-            const kink = KINKS.find(item => item.id === id);
-            return kink && <KinkListRow key={id} kink={kink} entry={{ status: index === 0 ? "yes" : "maybe", comment: "" }} onOpen={noop} editable={false} />;
-          })}
-        </section>
+        <div data-folio-body>{children}</div>
       </> : <>
         <div data-folio-home-heading>
           <h1 className="folio-mast"><Wordmark /></h1>
