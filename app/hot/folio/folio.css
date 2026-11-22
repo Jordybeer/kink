@@ -24,7 +24,19 @@
 .folio-modes legend { font-size:.8rem; color:var(--text2); padding-inline-end:.6rem; }
 .folio-modes label { display:inline-flex; align-items:center; gap:.4rem; min-height:var(--touch-target); margin-inline-end:.85rem; font-size:.85rem; }
 .folio-modes input { accent-color:var(--accent-fill); }
-.folio-screen [data-folio-avatar],.folio-screen [data-folio-name],.folio-screen [data-folio-role],.folio-screen [data-folio-rule] { transform-origin:top left; }
+/* Only the shared ink floats. Links, headings, focus rings and the app chrome stay put. */
+[data-folio-covered] { opacity:0 !important; }
+.folio-flight-layer { position:fixed; top:0; left:0; z-index:5; width:0; height:0; pointer-events:none; }
+.folio-flight-layer:empty { display:none; }
+[data-folio-flight] { position:absolute; top:0; left:0; display:block; transform-origin:top left; overflow-wrap:anywhere; }
+[data-folio-flight="avatar"] { display:grid; place-items:center; }
+[data-folio-flight="rule"]::after { content:""; position:absolute; inset:0; background:var(--text2); transform-origin:left; animation:folio-edge .46s ease-out both; }
+@keyframes folio-edge {
+  from { opacity:.2; transform:scaleX(.12); }
+  40% { opacity:.85; }
+  to { opacity:0; transform:scaleX(1); }
+}
+.folio-row:active .folio-rule { background:var(--text2); }
 
 .folio-review summary,.folio-return { min-height:var(--touch-target); padding-block:.65rem; cursor:pointer; }
 .folio-review select { color:var(--text); background:var(--surface); padding:.4rem; }

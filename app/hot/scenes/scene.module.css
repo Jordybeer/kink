@@ -5,7 +5,7 @@
 
 .header {
   position: relative;
-  overflow: hidden;
+  overflow: clip;
   isolation: isolate;
   margin: 0 calc(-1 * var(--page-gutter)) 1.25rem;
   padding: clamp(2rem, 9vh, 5rem) var(--page-gutter) 1.5rem;
@@ -37,7 +37,7 @@
   width: 100%;
   min-height: 3.5rem;
   border-bottom: 1px solid var(--border);
-  transition: background-color var(--motion-state) var(--motion-ease);
+  transition: background-color var(--field-duration) var(--field-ease);
 }
 .track[aria-pressed="true"] { background-color: color-mix(in srgb, var(--cue-tone) 10%, transparent); }
 .sequence { justify-self: center; font-variant-numeric: tabular-nums; }
@@ -47,7 +47,7 @@
   border-block-start: 2px solid var(--cue-tone);
   padding: 1rem .75rem;
   background-color: color-mix(in srgb, var(--cue-tone) 7%, var(--surface));
-  transition: border-color var(--motion-state) var(--motion-ease),
+  transition: border-color var(--field-duration) var(--field-ease),
     background-color var(--field-duration) var(--field-ease);
 }
 .note {

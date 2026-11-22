@@ -31,11 +31,24 @@ const go = async slug => {
 async function exists(file) {
   return access(file).then(() => true, () => false);
 }
+async function assertVerticalLayout(name) {
+  const problems = await page.evaluate(() => {
+    const owners = [...document.querySelectorAll("body *")].filter(element =>
+      element instanceof HTMLElement && element.clientWidth > 0 &&
+      element.scrollWidth > element.clientWidth + 1 &&
+      ["auto", "scroll"].includes(getComputedStyle(element).overflowX));
+    return {
+      documentOverflow: Math.max(0, document.documentElement.scrollWidth - innerWidth),
+      horizontalPanes: owners.map(element => element.dataset.testid || element.className || element.tagName),
+    };
+  });
+  assert(problems.documentOverflow <= 1 && !problems.horizontalPanes.length, name + ": " + JSON.stringify(problems));
+}
 async function shot(name) {
   const filename = path.join(directory, name + ".jpg");
   if (await exists(filename)) return;
   await page.waitForTimeout(550);
-  assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), "Horizontal overflow at " + name);
+  await assertVerticalLayout(name);
   await page.screenshot({ type: "jpeg", quality: 82, path: filename + ".partial" });
   await rename(filename + ".partial", filename);
 }
@@ -67,7 +80,8 @@ const cases = {
           function frame(now) {
             const hero = document.querySelector('[data-folio-screen="noor"] [data-folio-avatar]');
             if (hero && !shown) { commit = Math.round(now - start); shown = true; }
-            if (hero && getComputedStyle(hero).transform !== "none") animated = true;
+            const flight = document.querySelector('[data-folio-flight="avatar"]');
+            if (flight && getComputedStyle(flight).visibility !== "hidden" && flight.getBoundingClientRect().width > 0) animated = true;
             times.push(now);
             if (now - start > 750) resolve(); else requestAnimationFrame(frame);
           }
@@ -96,12 +110,33 @@ const cases = {
     await go("questions");
     await button("Privé").waitFor();
     await shot("dark-questionnaire");
+    const agreements = page.getByTestId("question-agreements");
+    const summary = agreements.locator("summary");
+    assert.equal(await agreements.getAttribute("open"), null);
+    await summary.click();
+    const firstAgreement = agreements.getByRole("button", { name: /Eerst vragen/ });
+    await firstAgreement.click();
+    assert.equal(await firstAgreement.getAttribute("aria-pressed"), "true");
+    await summary.click();
+    assert.match(await summary.innerText(), /Eerst vragen/i);
     await button("Privé").click();
     await button("Nieuwsgierig").click();
     assert.equal(await button("Privé").getAttribute("aria-pressed"), "true");
     await page.getByTestId("question-info-disclosure").click();
     await page.getByRole("dialog").waitFor();
     await shot("dark-question-info");
+    await page.keyboard.press("Escape");
+    const firstAnswer = page.locator('[data-tour="pills"] button').first();
+    const positions = [];
+    for (let i = 0; i < 5; i++) {
+      positions.push((await firstAnswer.boundingBox()).y);
+      const topic = await page.getByTestId("question-title").innerText();
+      await firstAnswer.click();
+      await page.waitForFunction(previous =>
+        document.querySelector('[data-testid="question-title"]')?.textContent !== previous, topic);
+    }
+    assert(Math.max(...positions) - Math.min(...positions) <= 1, "Answer positions: " + positions.join(", "));
+    return { answerY: positions };
   },
   async profile() {
     await go("profile-study");
@@ -116,11 +151,18 @@ const cases = {
     await button("Zoek in catalogus").click();
     await page.getByRole("searchbox").fill("wax");
     await shot("dark-profile-search");
+    const categories = page.getByRole("combobox", {name:"Categorie"});
+    if (await categories.count()) {
+      await page.getByRole("searchbox").fill("");
+      await categories.selectOption({index:1});
+      await assertVerticalLayout("catalogue category");
+    }
     await page.getByRole("searchbox").press("Escape");
     assert(await button("Zoek in catalogus").evaluate(el => el === document.activeElement));
   },
   async overlays() {
     await go("overlays");
+    await shot("light-agenda");
     await button("Instellingen").click();
     await page.getByRole("dialog").waitFor();
     await shot("light-settings");
@@ -148,14 +190,34 @@ const cases = {
   },
   async onboarding() {
     await go("onboarding");
-    for (const label of ["Begin", "Ik ben 18+"]) await button(label).click();
-    await page.getByText("Probeer een antwoord.", {exact:false}).waitFor();
+    await shot("light-onboarding-intro");
+    await button("Ik ben 18 of ouder").click();
+    await page.getByRole("button", { name: /Misschien/ }).click();
     await shot("light-first-use");
-    for (const label of ["Kom maar door", "Verder", "Niet nu"]) await button(label).click();
-    await button("Open KinkSync").waitFor();
-    await shot("light-vault");
-    await button("Open KinkSync").click();
-    await page.getByRole("heading", { name:"Bewegingsstudio" }).waitFor();
+    await button("Bekijk mijn voorbeeld").click();
+    const response = page.locator("#practice-result").getByText("Misschien", {exact:true});
+    assert.equal(await response.count(), 0);
+    await button("Toon oefenantwoord").click();
+    await response.waitFor();
+    await button("Verberg oefenantwoord").click();
+    assert.equal(await response.count(), 0);
+    await page.getByRole("link", { name: "Naar de vragenlijst" }).click();
+    await button("Privé").waitFor();
+  },
+  async narrowLayers() {
+    await page.setViewportSize({width:320, height:700});
+    try {
+      for (const slug of ["questions", "onboarding", "overlays", "profile-study", "folio", "scenes"]) {
+        await go(slug);
+        await page.addStyleTag({ content: ":root{font-size:200%!important}" });
+        await assertVerticalLayout(slug);
+        if (slug === "overlays") {
+          await button("Moment plannen").click();
+          await page.getByRole("dialog").waitFor();
+          await assertVerticalLayout("Moment plannen");
+        }
+      }
+    } finally { await page.setViewportSize({width:390, height:844}); }
   },
   async lightDeck() {
     await go("questions");

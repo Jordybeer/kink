@@ -7,9 +7,9 @@ const studies = [
   { href: "folio", name: "Van start naar profiel", detail: "Open een profiel en keer halverwege terug." },
   { href: "profile-study", name: "Profiel & privéantwoorden", detail: "Zoek een interesse, wijzig een antwoord of licht de sluier op." },
   { href: "questions", name: "Vragenlijst", detail: "Probeer de duimbediening en vergelijk met het origineel." },
-  { href: "overlays", name: "Instellingen & agenda", detail: "Kies een thema, lees een toelichting of plan een moment." },
+  { href: "overlays", name: "Instellingen & agenda", detail: "Bekijk een dag, plan een moment of pas het uiterlijk aan." },
   { href: "scenes", name: "Scènes", detail: "Wissel van sfeer tijdens het samenstellen." },
-  { href: "onboarding", name: "Eerste kennismaking", detail: "Doorloop de introductie en open de kluis." },
+  { href: "onboarding", name: "Eerste kennismaking", detail: "Ontdek met één oefenvraag hoe je jouw voorkeuren vastlegt." },
 ] as const;
 
 export default function StudioIndex() {

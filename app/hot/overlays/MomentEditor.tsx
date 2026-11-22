@@ -2,28 +2,26 @@
 
 import { useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
+import { Bell, CalendarBlank, Feather, LockSimple } from "@phosphor-icons/react";
 import Sheet from "@/components/Sheet";
 import ProfileSelect from "@/components/ProfileSelect";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
 
 const partners = [{ id: "studio-sam", name: "Sam" }, { id: "studio-noor", name: "Noor" }];
-const dayFormat = new Intl.DateTimeFormat("nl-BE", { weekday: "long", day: "numeric", month: "long" });
+const weekdayFormat = new Intl.DateTimeFormat("nl-BE", { weekday: "long" });
+const monthFormat = new Intl.DateTimeFormat("nl-BE", { month: "long", year: "numeric" });
 
-function today() {
-  const now = new Date();
-  return new Date(now.getTime() - now.getTimezoneOffset() * 60_000).toISOString().slice(0, 10);
-}
-
-export default function MomentEditor({ open, mode, record, onClose, onSave }: {
+export default function MomentEditor({ open, mode, selectedDate, record, onClose, onSave }: {
   open: boolean;
   mode: IntimacyStatus;
+  selectedDate: string;
   record?: IntimacyRecord;
   onClose: () => void;
   onSave: (record: IntimacyRecord) => void;
 }) {
   const planned = mode === "planned";
   const id = useId();
-  const [date, setDate] = useState(() => record?.date ?? today());
+  const [date, setDate] = useState(record?.date ?? selectedDate);
   const [time, setTime] = useState(record?.time ?? "");
   const [title, setTitle] = useState(record?.title ?? "");
   const [note, setNote] = useState(record?.note ?? "");
@@ -33,6 +31,7 @@ export default function MomentEditor({ open, mode, record, onClose, onSave }: {
   const [invalid, setInvalid] = useState<"date" | "time" | null>(null);
   const dateInput = useRef<HTMLInputElement>(null);
   const timeInput = useRef<HTMLInputElement>(null);
+  const local = date ? new Date(`${date}T12:00:00`) : null;
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -51,8 +50,11 @@ export default function MomentEditor({ open, mode, record, onClose, onSave }: {
     });
   }
 
-  const when = <div className="os-when">
-    <p className="os-day">{date ? dayFormat.format(new Date(date + "T12:00:00")) : "Kies een dag"}</p>
+  const when = <div className={planned ? "os-when os-when-planned" : "os-when"}>
+    {planned && <div className="os-date-imprint" aria-hidden="true">
+      <b>{local?.getDate() ?? '·'}</b><span><strong>{local ? weekdayFormat.format(local) : "Kies een dag"}</strong>
+        {local && <small>{monthFormat.format(local)}</small>}</span>
+    </div>}
     <div className="os-pair">
       <label>Datum<input type="date" ref={dateInput} required value={date}
         aria-invalid={invalid === "date" || undefined} aria-describedby={invalid === "date" ? id+"-error" : undefined}
@@ -63,23 +65,26 @@ export default function MomentEditor({ open, mode, record, onClose, onSave }: {
     </div>
     {invalid && <p id={id+"-error"} className="os-error" role="alert">{invalid === "date" ? "Kies een datum." : "Kies een tijd om dit moment te plannen."}</p>}
   </div>;
-  const writing = <>
-    <label>Titel (optioneel)<input type="text" value={title} placeholder="Geef dit moment een naam" onChange={e => setTitle(e.target.value)} /></label>
-    <label>Privénotitie (optioneel)<textarea rows={3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
+  const writing = <div className="os-writing">
+    <label className="os-writing-title">Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>
+    <label className="os-writing-note"><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
+      <textarea rows={planned ? 2 : 3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
       <small>Alleen zichtbaar in deze proef.</small></label>
-  </>;
+  </div>;
+  const heading = record ? (planned ? "Gepland moment bewerken" : "Bijgehouden moment bewerken")
+    : (planned ? "Moment plannen" : "Moment bijhouden");
 
-  return <Sheet open={open} onClose={onClose} title={planned ? "Moment plannen" : "Moment bijhouden"} variant="task" scrollable
-    footer={<div className="os-footer"><button onClick={onClose}>Annuleer</button>
+  return <Sheet open={open} onClose={onClose} title={heading} headerIcon={planned ? <CalendarBlank size={20}/> : <Feather size={20}/>} variant="task" scrollable
+    footer={<div className="os-footer"><button type="button" onClick={onClose}>Annuleer</button>
       <button className="os-primary" type="submit" form={id}>{record ? "Wijzigingen bewaren" : planned ? "Plan moment" : "Bewaar moment"}</button></div>}>
-    <form id={id} noValidate className="os-form" onSubmit={submit}>
+    <form id={id} noValidate className="os-form os-moment" data-mode={mode} onSubmit={submit}>
       {planned ? when : writing}
       <div><p className="os-label" id={id+"-partner"}>Met wie? (optioneel)</p>
         <ProfileSelect value={partner} profiles={partners} onChange={setPartner} placeholder="Zonder partner" emptyOption="Zonder partner" labelledBy={id+"-partner"}/>
       </div>
       {planned ? writing : when}
       {planned && <div className="os-reminder">
-        <label><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/>Herinner mij</label>
+        <label><Bell size={17} aria-hidden="true"/><span>Herinner mij</span><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/></label>
         {reminder && <label className="os-days">{days} {days === 1 ? "dag" : "dagen"} vooraf
           <input type="range" min={1} max={14} value={days} onChange={e => setDays(Number(e.target.value))}/>
         </label>}

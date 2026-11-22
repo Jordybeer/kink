@@ -1,9 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Eye, EyeSlash, LockKey, MagnifyingGlass, X } from "@phosphor-icons/react";
-import { motion } from "framer-motion";
-import { useMotionSafe } from "@/lib/motion";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
+import { CaretDown, Check, Eye, EyeSlash, LockKey, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { useReducedMotionPreference } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import ProfileTopicRow from "@/components/profile/ProfileTopicRow";
 import Accordion from "@/components/ui/Accordion";
@@ -11,10 +10,10 @@ import TopicDetailsFields from "@/components/profile/TopicDetailsFields";
 import StatusOptionRows from "@/components/StatusOptionRows";
 import StatusGlyph from "@/components/StatusGlyph";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
-import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
+import { CATEGORIES, KINKS, getKinksByCategory, kinkCategoryLabel } from "@/lib/kinks";
 import { searchAllKinks } from "@/lib/questionnaire";
-import { STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
-import type { Kink, KinkEntry, KinkStatus } from "@/types";
+import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
+import type { Kink, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import styles from "./profile.module.css";
 
 type Filter = NonNullable<KinkStatus>;
@@ -31,6 +30,21 @@ const initial: Record<string, KinkEntry> = {
 };
 const unrated: KinkEntry = { status: null, comment: "" };
 const navActions: TopNavAction[] = [];
+
+function answerTone(status: Filter): CSSProperties {
+  return { "--answer-tone": STATUS_VAR[status] } as CSSProperties;
+}
+
+function AnswerChoices({ current, onSelect }: { current: KinkStatus; onSelect: (status: KinkStatus) => void }) {
+  return <div role="group" aria-label="Status kiezen" className={styles.choices}>
+    {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring" style={answerTone(status)}
+      aria-pressed={current === status} onClick={() => onSelect(current === status ? null : status)}>
+      <StatusGlyph status={status} size={18} />
+      <span><strong>{STATUS_LABEL[status]}</strong><small>{STATUS_HINT[status]}</small></span>
+      {current === status && <Check size={16} weight="bold" aria-hidden="true" />}
+    </button>)}
+  </div>;
+}
 
 function RevealedAnswer({ entry, onChange }: { entry: KinkEntry; onChange: (patch: Partial<KinkEntry>) => void }) {
   return (
@@ -75,12 +89,33 @@ export default function ProfileStudy() {
   const [filter, setFilter] = useState<Filter>("yes");
   const [searchOpen, setSearchOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const [category, setCategory] = useState<KinkCategoryId | "">("");
   const [editor, setEditor] = useState<Editor | null>(null);
   const [revealed, setRevealed] = useState<string | null>(null);
   const launch = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
   const filters = useRef<HTMLDivElement>(null);
-  const motionSafe = useMotionSafe();
+  const resultList = useRef<HTMLDivElement>(null);
+  const boundaryList = useRef<HTMLElement>(null);
+  const lastSelection = useRef({ searchOpen, category, filter });
+  const reduced = useReducedMotionPreference();
+
+  useLayoutEffect(() => {
+    const previous = lastSelection.current;
+    lastSelection.current = { searchOpen, category, filter };
+    if (reduced || previous.searchOpen !== searchOpen || (searchOpen ? previous.category === category : previous.filter === filter)) return;
+    const list = !searchOpen && filter === "hard_no" ? boundaryList.current : resultList.current;
+    if (!list || typeof list.animate !== "function") return;
+
+    // Animate only the first few pieces of incoming text. Hit areas and the
+    // rest of a long catalogue are already in their final, readable positions.
+    const parts = Array.from(list.querySelectorAll<HTMLElement>("[data-answer-subject], [data-answer-verdict], [data-empty-result]")).slice(0, 6);
+    const animations = parts.map((part, i) => part.animate([
+      { transform: "translateY(5px)", opacity: 0.78 },
+      { transform: "translateY(0)", opacity: 1 },
+    ], { duration: 210, delay: i * 11, easing: "cubic-bezier(.16, 1, .3, 1)", fill: "backwards" }));
+    return () => animations.forEach(animation => animation.cancel());
+  }, [searchOpen, category, filter, reduced, query]);
 
   useEffect(() => {
     if (searchOpen) input.current?.focus({ preventScroll: true });
@@ -99,6 +134,7 @@ export default function ProfileStudy() {
   function closeSearch() {
     setSearchOpen(false);
     setQuery("");
+    setCategory("");
     setEditor(null);
     launch.current?.focus({ preventScroll: true });
   }
@@ -118,13 +154,18 @@ export default function ProfileStudy() {
   const interests = publicEntries.filter(kink => editor?.id === kink.id
     ? editor.section === "interest"
     : entries[kink.id].status === filter);
-  const results = searchOpen ? searchAllKinks(query).filter(kink => !entries[kink.id]?.privateResponse) : [];
+  const searching = Boolean(query.trim());
+  const catalogue = !searchOpen ? [] : searching ? searchAllKinks(query) : category ? getKinksByCategory(category) : [];
+  const results = catalogue.filter(kink => (!category || kink.category === category) && !entries[kink.id]?.privateResponse);
+  const showResults = searching || Boolean(category);
 
   function rows(items: Kink[], section: Section) {
     return items.map(kink => {
       const active = editor?.id === kink.id && editor.section === section;
       const pinnedBoundary = section === "boundary" && editor?.id === kink.id && !active;
-      return <ProfileTopicRow key={kink.id} kink={kink} entry={entries[kink.id] ?? unrated}
+      const entry = entries[kink.id] ?? unrated;
+      return <ProfileTopicRow key={kink.id} kink={kink} entry={entry} showCategory
+        answerChoices={active && <AnswerChoices current={entry.status} onSelect={status => patch(kink.id, { status, desire: null })} />}
         editable={!pinnedBoundary} selected={active} open={active} concealed={false}
         onToggle={() => {
           setRevealed(null);
@@ -156,27 +197,41 @@ export default function ProfileStudy() {
               onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); closeSearch(); } }} />
             <button type="button" className="focus-ring" aria-label="Sluit zoeken" onClick={closeSearch}><X size={18} aria-hidden="true" /></button>
           </div>
-          {query.trim() && <p role="status" className={styles.hint}>{results.length} {results.length === 1 ? "resultaat" : "resultaten"}</p>}
-          {rows(results, "catalogue")}
+          <label className={styles.categoryPicker}>
+            <span>Categorie</span>
+            <strong aria-hidden="true">{category ? kinkCategoryLabel(category) : "Alle categorieën"}</strong>
+            <CaretDown size={15} aria-hidden="true" />
+            <select aria-label="Categorie" value={category} onChange={event => {
+              setEditor(null); setRevealed(null); setCategory(event.target.value as KinkCategoryId | "");
+            }}>
+              <option value="">Alle categorieën</option>
+              {CATEGORIES.map(id => <option key={id} value={id}>{kinkCategoryLabel(id)}</option>)}
+            </select>
+          </label>
+          <p role="status" className={styles.hint}>{showResults
+            ? `${results.length} ${results.length === 1 ? "resultaat" : "resultaten"}`
+            : "Zoek een onderwerp of kies een categorie."}</p>
+          <div ref={resultList}>{rows(results, "catalogue")}</div>
         </section> : <>
           <div className={styles.filters} ref={filters} role="group" aria-label="Antwoordstatus">
-            {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring" aria-pressed={filter === status}
+            {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring" aria-pressed={filter === status} style={answerTone(status)}
+              aria-controls={status === "hard_no" ? "studio-boundaries" : "studio-filter-results"}
               onClick={() => { setFilter(status); setEditor(null); setRevealed(null); }}>
               <StatusGlyph status={status} size={15} /><span>{STATUS_LABEL[status]}</span>
               <small>{publicEntries.filter(kink => entries[kink.id].status === status).length}</small>
-              {filter === status && <motion.span className={styles.selection} aria-hidden="true"
-                layoutId={motionSafe.reduced ? undefined : "studio-profile-selection"} transition={motionSafe.state}
-                style={{ background: STATUS_VAR[status] }} />}
             </button>)}
           </div>
-          {filter !== "hard_no" && <section aria-label={STATUS_LABEL[filter]}>{rows(interests, "interest")}
-            {!interests.length && <p className={styles.hint}>Geen openbare antwoorden met deze status.</p>}
-          </section>}
+          <div id="studio-filter-results" ref={resultList}>
+            {filter !== "hard_no" && <section aria-label={STATUS_LABEL[filter]}>{rows(interests, "interest")}
+              {!interests.length && <p data-empty-result className={styles.hint}>Geen openbare antwoorden met deze status.</p>}
+            </section>}
+          </div>
         </>}
       </section>
-      {boundaries.length > 0 && <section className={styles.boundaries}>
+      <section id="studio-boundaries" ref={boundaryList} hidden={!boundaries.length && (searchOpen || filter !== "hard_no")} className={styles.boundaries}>
         <h2>Harde grenzen</h2>{rows(boundaries, "boundary")}
-      </section>}
+        {!boundaries.length && <p data-empty-result className={styles.hint}>Geen openbare antwoorden met deze status.</p>}
+      </section>
       {privateEntries.length > 0 && <section className={styles.privateSection} data-reveal={soft ? "soft" : "matte"}>
         <h2><LockKey size={19} aria-hidden="true" /> Privéantwoorden</h2>
         {privateEntries.map(kink => <PrivateAnswer key={kink.id} kink={kink} entry={entries[kink.id]} open={revealed === kink.id}

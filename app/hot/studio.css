@@ -1,0 +1,16 @@
+/* A route marker without an extra layout box or a containing block for fixed layers. */
+[data-motion-studio] { display: contents; }
+
+/* Sheets portal to body. Prevent a gesture on the scrim from moving the
+   underlying page while preserving the sheet's native vertical scroll and zoom. */
+html:has([data-motion-studio]):has([data-sheet-variant]) {
+  overflow: hidden;
+}
+body:has([data-motion-studio]) [data-testid="sheet-visual-viewport"] {
+  inset-inline: 0;
+  max-inline-size: 100%;
+}
+body:has([data-motion-studio]) [data-sheet-variant] :where(fieldset, form, label) {
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CaretRight, Check, Circle, Info, ShieldCheck } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, CaretRight, Check, Circle, Info, ShieldCheck } from "@phosphor-icons/react";
 import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { kinkCategoryExplainer } from "@/lib/kinkCategories";
@@ -149,6 +149,59 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
     />
   );
 
+  const contextButtonClass = folio ? "ks-motion-choice focus-ring" : "ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left";
+  const contextButtonStyle = folio ? undefined : { background: "var(--question-utility-surface)", color: "var(--text2)" };
+  const prompt = current && (
+    <>
+      <div key={folio ? current.id : "title"} data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
+      <p key={folio ? current.id + "-essence" : "essence"} data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
+
+      <div data-testid="question-detail-slot" className={folio ? "folio-question-links" : "grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2"}>
+        {presentation.hasDetails && (
+          <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)}
+            aria-haspopup="dialog" aria-expanded={detailOpen} className={contextButtonClass} style={contextButtonStyle}>
+            <Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} />
+            <span className={folio ? undefined : "min-w-0 truncate text-xs font-semibold"} style={folio ? undefined : { color: "var(--text)" }}>{folio ? "Meer uitleg" : "Info & uitleg"}</span>
+            {!folio && <CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" />}
+          </button>
+        )}
+        {current.safetyNote && (
+          <button type="button" data-testid="safety-disclosure" onClick={() => setSafetyKinkId(current.id)}
+            aria-haspopup="dialog" aria-expanded={safetyOpen} className={contextButtonClass} style={contextButtonStyle}>
+            <ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" />
+            <span className={folio ? undefined : "text-xs font-semibold"} style={folio ? undefined : { color: "var(--text)" }}>Veiligheid</span>
+            {!folio && <CaretRight size={14} aria-hidden="true" />}
+          </button>
+        )}
+      </div>
+    </>
+  );
+
+  const selectedAgreements = AGREEMENTS.filter(agreement => currentEntry?.tags?.includes(agreement.value));
+  const agreementChoices = (
+    <div className={folio ? "folio-agreement-options" : "grid grid-cols-2 gap-2"}>
+      {AGREEMENTS.map(agreement => {
+        const active = selectedAgreements.includes(agreement);
+        const classicStyle = active
+          ? {
+              color: agreement.emphasized ? "var(--accent)" : "var(--text)",
+              background: agreement.emphasized ? "color-mix(in srgb, var(--accent) 10%, var(--surface2))" : "color-mix(in srgb, var(--surface3) 82%, transparent)",
+              border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 34%, var(--border))" : "color-mix(in srgb, var(--text2) 20%, var(--border))"}`,
+            }
+          : { color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 76%, transparent)", border: "1px solid color-mix(in srgb, var(--border) 92%, var(--text2))" };
+        return (
+          <button key={agreement.value} type="button" data-tour={agreement.tour} onClick={() => toggleAgreement(agreement.value)}
+            aria-pressed={active} className={folio ? "focus-ring ks-motion-choice" : "focus-ring ks-motion-choice inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold"}
+            style={folio ? undefined : classicStyle}>
+            {active ? <Check size={13} weight="bold" aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}
+            {agreement.label}
+          </button>
+        );
+      })}
+    </div>
+  );
+  const progress = progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`;
+
   return (
     <>
       <p key={current?.id ?? "complete"} data-testid="question-announcement" className="sr-only" role="status" aria-live="polite" aria-atomic="true">
@@ -158,7 +211,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
         {current ? (
           <div data-presentation={presentationStyle} data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
             <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
-              <div className="flex min-h-0 min-w-0 items-center gap-2">
+              <div className={folio ? "folio-question-meta" : "flex min-h-0 min-w-0 items-center gap-2"}>
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="ks-motion-choice focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
                   <span
                     aria-hidden="true"
@@ -170,30 +223,41 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
                         : `0 0 10px color-mix(in srgb, ${categoryAccent} 28%, transparent)`,
                     }}
                   />
-                  <span className="min-w-0 truncate text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(current.category)} · <span className="tabular-nums">nog {remainingInCat}</span></span>
+                  <span className="min-w-0 truncate text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(current.category)}{!folio && <> · <span className="tabular-nums">nog {remainingInCat}</span></>}</span>
                   {current.category !== "custom" && <Info size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />}
                 </button>
 
-                {!folio && markers}
+                {folio ? <span data-testid="question-progress" className="folio-question-progress">{progress}</span> : markers}
               </div>
 
-              <div key={folio ? current.id : "title"} data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-              <p key={folio ? current.id + "-essence" : "essence"} data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
+              {folio ? <header className="folio-question-prompt">{prompt}</header> : prompt}
 
-              <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>{folio ? "Meer uitleg" : "Info & uitleg"}</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
-                {current.safetyNote && <button type="button" data-testid="safety-disclosure" aria-haspopup="dialog" aria-expanded={safetyOpen} onClick={() => setSafetyKinkId(current.id)} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span><CaretRight size={14} aria-hidden="true" /></button>}
-              </div>
-
-              <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
+              <StatusOptionRows presentation={folio ? "list" : "cards"} current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 
               {folio && markers}
-              <section data-testid="question-agreements" className="min-h-0 border-t pb-2 pt-2.5" style={{ borderColor: "color-mix(in srgb, var(--border) 88%, transparent)" }}>
-                <p data-testid="question-agreements-label" className="mb-2 text-xs font-semibold" style={{ color: "var(--text)" }}>Afspraken <span className="font-normal" style={{ color: "var(--text2)" }}>· optioneel</span></p>
-                <div className="grid grid-cols-2 gap-2">{AGREEMENTS.map((agreement) => { const active = currentEntry?.tags?.includes(agreement.value) ?? false; return <button key={agreement.value} type="button" data-tour={agreement.tour} onClick={() => toggleAgreement(agreement.value)} aria-pressed={active} className="focus-ring ks-motion-choice inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold" style={active ? { color: agreement.emphasized ? "var(--accent)" : "var(--text)", background: agreement.emphasized ? "color-mix(in srgb, var(--accent) 10%, var(--surface2))" : "color-mix(in srgb, var(--surface3) 82%, transparent)", border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 34%, var(--border))" : "color-mix(in srgb, var(--text2) 20%, var(--border))"}` } : { color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 76%, transparent)", border: "1px solid color-mix(in srgb, var(--border) 92%, var(--text2))" }}>{active ? <Check size={13} weight="bold" aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}{agreement.label}</button>; })}</div>
-              </section>
+              {folio ? (
+                <details key={current.id} data-testid="question-agreements" className="folio-agreements">
+                  <summary data-testid="question-agreements-label" className="focus-ring">
+                    <span>Afspraak of ervaring</span>
+                    <span className="folio-agreement-summary">{selectedAgreements.length ? selectedAgreements.map(agreement => agreement.label).join(" · ") : "Optioneel"}</span>
+                    <CaretDown size={16} aria-hidden="true" />
+                  </summary>
+                  {agreementChoices}
+                </details>
+              ) : (
+                <section data-testid="question-agreements" className="min-h-0 border-t pb-2 pt-2.5" style={{ borderColor: "color-mix(in srgb, var(--border) 88%, transparent)" }}>
+                  <p data-testid="question-agreements-label" className="mb-2 text-xs font-semibold" style={{ color: "var(--text)" }}>Afspraken <span className="font-normal" style={{ color: "var(--text2)" }}>· optioneel</span></p>
+                  {agreementChoices}
+                </section>
+              )}
 
-              <div className="flex min-h-0 items-center gap-3"><span data-testid="question-progress" className="min-w-0 flex-1 truncate text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}</span><button type="button" onClick={() => skip(current)} className="ks-motion-choice focus-ring inline-flex h-11 items-center gap-1 rounded-full px-3 text-xs" style={{ color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 66%, transparent)" }}>Later <ArrowRight size={13} aria-hidden="true" /></button></div>
+              <div className="flex min-h-0 items-center justify-end gap-3">
+                {!folio && <span data-testid="question-progress" className="min-w-0 flex-1 truncate text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progress}</span>}
+                <button type="button" onClick={() => skip(current)} className="ks-motion-choice focus-ring inline-flex h-11 items-center gap-1 rounded-full px-3 text-xs"
+                  style={folio ? { color: "var(--text2)" } : { color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 66%, transparent)" }}>
+                  Later <ArrowRight size={13} aria-hidden="true" />
+                </button>
+              </div>
             </div>
           </div>
         ) : (

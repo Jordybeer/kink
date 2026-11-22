@@ -61,8 +61,10 @@ export default function FolioScreen({ profile }: { profile?: FolioProfile }) {
           })}
         </section>
       </> : <>
-        <h1 className="folio-mast"><Wordmark /></h1>
-        <h2 className="folio-subhead">Mijn profielen</h2>
+        <div data-folio-home-heading>
+          <h1 className="folio-mast"><Wordmark /></h1>
+          <h2 className="folio-subhead">Mijn profielen</h2>
+        </div>
         {perspectives.filter(person => !person.linked).map(person => <Row profile={person} key={person.id} />)}
         <div className="folio-group">
           <Portrait profile={linked[0]} keys={groupKeys} />

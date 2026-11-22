@@ -78,14 +78,14 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                     />}
               </motion.span>
 
-              <span className="min-w-0 flex-1">
+              <span className="status-list-copy min-w-0 flex-1">
                 <span
                   className="block text-[15px] font-semibold leading-5"
                   style={{ color: active ? labelColour : "var(--text)" }}
                 >
                   {label}
                 </span>
-                <span className="mt-0.5 block text-xs leading-4" style={{ color: "var(--text2)" }}>
+                <span data-status-hint={s} className="mt-0.5 block text-xs leading-4" style={{ color: "var(--text2)" }}>
                   {hint}
                 </span>
               </span>

@@ -43,7 +43,7 @@ export default function QuestionnaireStudy() {
       <h1 className="sr-only">Vragenlijst uitproberen</h1>
       <TriageDeck key={session} presentationStyle={folio ? "folio" : "classic"} standalone
         kinks={round.visibleKinks} queueItems={round.queue} entries={entries}
-        progressLabel={`Dynamic · ${round.coverage.answered} / ${round.coverage.total}`}
+        progressLabel={folio ? `${round.coverage.answered} / ${round.coverage.total}` : `Dynamic · ${round.coverage.answered} / ${round.coverage.total}`}
         onStatusChange={(id, status) => update(id, { status, desire: null })}
         onCuriousChange={(id, curious) => update(id, { curious })}
         onPrivateChange={(id, privateResponse) => update(id, { privateResponse })}

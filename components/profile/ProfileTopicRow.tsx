@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useRef } from "react";
+import { useId, useRef, type ReactNode } from "react";
 import type { Kink, KinkEntry } from "@/types";
 import KinkListRow from "@/components/KinkListRow";
 import PrivateResponseStatus from "@/components/PrivateResponseStatus";
@@ -20,13 +20,15 @@ interface Props {
   open: boolean;
   concealed: boolean;
   compactPrivate?: boolean;
+  showCategory?: boolean;
+  answerChoices?: ReactNode;
   onToggle: () => void;
   onReveal: () => void;
   onConceal: () => void;
   onChange: (partial: Partial<KinkEntry>) => void;
 }
 
-export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, onToggle, onReveal, onConceal, onChange }: Props) {
+export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, showCategory = false, answerChoices, onToggle, onReveal, onConceal, onChange }: Props) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const visible = !entry.privateResponse || !concealed;
@@ -75,6 +77,7 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
       ) : (
         <>
           <KinkListRow kink={kink} entry={entry} editable={editable && visible} concealed={!visible}
+            categoryLabel={showCategory ? kinkCategoryLabel(kink.category) : undefined}
             onOpen={() => { trigger.current?.focus({ preventScroll: true }); onToggle(); }} triggerRef={trigger} expanded={open} controls={id} />
           {editable && entry.privateResponse && (
             <button type="button" onClick={visible ? onConceal : onReveal}
@@ -96,7 +99,7 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
                 </div>
               )}
               <h4 className="mb-2 text-sm font-semibold">Mijn antwoord</h4>
-              <StatusOptionRows current={entry.status} presentation="list" onSelect={(status) => onChange({ status, desire: null })} />
+              {answerChoices ?? <StatusOptionRows current={entry.status} presentation="list" onSelect={(status) => onChange({ status, desire: null })} />}
               <Accordion trigger="Details" className="mt-3" contentClassName="pb-2 pt-2">
                 <TopicDetailsFields entry={entry} onChange={onChange} />
               </Accordion>

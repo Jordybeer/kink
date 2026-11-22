@@ -26,8 +26,8 @@ export default function QuestionMarkers({ labelled, curious, concealed, onCuriou
           aria-pressed={marker.active} aria-label={labelled ? marker.label : marker.name}
           title={marker.title} onClick={marker.toggle}
           className="focus-ring ks-motion-choice inline-flex h-11 w-11 flex-none touch-manipulation items-center justify-center rounded-full">
-          <span aria-hidden="true" className={`ks-motion-state inline-flex shrink-0 items-center justify-center rounded-full border ${labelled ? "h-6 w-6" : "h-9 w-9"}`}
-            style={{
+          <span aria-hidden="true" className={`ks-motion-state inline-flex shrink-0 items-center justify-center ${labelled ? "" : "h-9 w-9 rounded-full border"}`}
+            style={labelled ? { color: marker.active ? marker.tone : "var(--text2)" } : {
               color: marker.active ? marker.tone : "var(--text2)",
               borderColor: marker.active ? `color-mix(in srgb, ${marker.tone} 34%, var(--border))` : "color-mix(in srgb, var(--border) 76%, transparent)",
               background: marker.active ? `color-mix(in srgb, ${marker.tone} 12%, var(--surface2))` : "color-mix(in srgb, var(--surface2) 48%, transparent)",
