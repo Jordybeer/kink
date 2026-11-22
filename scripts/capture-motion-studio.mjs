@@ -223,12 +223,17 @@ const cases = {
     await page.keyboard.press("Escape");
     await button("Moment plannen").click();
     await shot("light-planned-moment");
+    const date = page.getByLabel("Datum", { exact: true });
+    assert.equal(await date.count(), 0);
+    await page.getByRole("button", { name: /Wijzig datum/ }).click();
+    assert(await date.evaluate(el => el === document.activeElement));
+    await date.fill("2026-11-24");
     await button("Plan moment").click();
     const time = page.locator('input[type="time"]');
     assert(await time.evaluate(el => el === document.activeElement));
     await time.fill("20:00");
     await button("Plan moment").click();
-    await page.getByRole("status").filter({ hasText: /Gepland voor .*20:00/ }).waitFor();
+    await page.getByRole("status").filter({ hasText: /Gepland voor dinsdag 24 november om 20:00/ }).waitFor();
     await button("Moment bijhouden").click();
     await shot("light-recorded-moment");
   },

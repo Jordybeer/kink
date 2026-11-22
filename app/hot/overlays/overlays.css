@@ -79,7 +79,8 @@
 .os-form input[aria-invalid=true] { border-color: var(--hard-no); }
 .os-form .os-error { color: var(--hard-no-text); font-size: .875rem; padding-top: .35rem; }
 .os-pair { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,7.3rem),1fr)); gap: .65rem; }
-.os-date-imprint { display: flex; align-items: center; gap: .85rem; padding-bottom: .65rem; }
+.os-date-imprint { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .85rem; min-height: var(--touch-target); text-align: start; }
+.os-date-change { margin-inline-start: auto; color: var(--accent-text); font-size: .875rem; text-decoration: underline; text-underline-offset: .2em; }
 .os-date-imprint b { color: var(--accent-text); font-size: 3.25rem; line-height: 1; font-variant-numeric: lining-nums; }
 .os-date-imprint strong { display: block; font-size: 1.42rem; line-height: 1.05; }
 .os-date-imprint small { display: block; margin-top: .15rem; }

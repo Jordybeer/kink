@@ -16,6 +16,9 @@
   overflow-wrap: anywhere;
 }
 
+.spread[data-stage="welcome"] { min-block-size: 0; }
+.spread[data-stage="welcome"] .footer { margin-block-start: .5rem; }
+
 .spread[data-stage="practice"] {
   --spot-color: var(--category-sensation);
   --spot-offset: 7%;
@@ -83,8 +86,6 @@
 .lead { max-width: 44ch; font-size: 1.0625rem; line-height: 1.53; }
 .note, .consent { max-width: 57ch; font-size: .9375rem; line-height: 1.5; color: var(--text2); }
 .lead + .note, .sample + .note { margin-top: .65rem; }
-.question { margin-top: clamp(1.25rem, 4dvh, 2.2rem); font: 500 1.4rem/1.25 var(--font-display, Georgia, serif); }
-.question + .note { margin-top: .3rem; }
 .consent { margin-block: .5rem 1rem; }
 
 .sample {

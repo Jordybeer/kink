@@ -22,6 +22,7 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
   const planned = mode === "planned";
   const id = useId();
   const [date, setDate] = useState(record?.date ?? selectedDate);
+  const [editingDate, setEditingDate] = useState(!date);
   const [time, setTime] = useState(record?.time ?? "");
   const [title, setTitle] = useState(record?.title ?? "");
   const [note, setNote] = useState(record?.note ?? "");
@@ -51,14 +52,18 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
   }
 
   const when = <div>
-    {planned && <div className="os-date-imprint" aria-hidden="true">
-      <b>{local?.getDate() ?? '·'}</b><span><strong>{local ? weekdayFormat.format(local) : "Kies een dag"}</strong>
-        {local && <small>{monthFormat.format(local)}</small>}</span>
-    </div>}
     <div className="os-pair">
-      <label>Datum<input type="date" ref={dateInput} required value={date}
-        aria-invalid={invalid === "date" || undefined} aria-describedby={invalid === "date" ? id+"-error" : undefined}
-        onChange={e => { setDate(e.target.value); if (invalid === "date") setInvalid(null); }}/></label>
+      {planned && !editingDate && local ? (
+        <button type="button" className="os-date-imprint focus-ring" onClick={() => setEditingDate(true)}>
+          <b>{local.getDate()}</b>
+          <span><strong>{weekdayFormat.format(local)}</strong><small>{monthFormat.format(local)}</small></span>
+          <span className="os-date-change">Wijzig datum</span>
+        </button>
+      ) : (
+        <label>Datum<input type="date" ref={dateInput} required value={date} autoFocus={planned && editingDate}
+          aria-invalid={invalid === "date" || undefined} aria-describedby={invalid === "date" ? id+"-error" : undefined}
+          onChange={e => { setDate(e.target.value); if (invalid === "date") setInvalid(null); }}/></label>
+      )}
       <label>{planned ? "Tijd" : "Tijd (optioneel)"}<input type="time" ref={timeInput} required={planned} value={time}
         aria-invalid={invalid === "time" || undefined} aria-describedby={invalid === "time" ? id+"-error" : undefined}
         onChange={e => { setTime(e.target.value); if (invalid === "time") setInvalid(null); }}/></label>

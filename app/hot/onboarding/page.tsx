@@ -13,7 +13,7 @@ import styles from "./onboarding.module.css";
 
 const navActions: TopNavAction[] = [];
 const spreads = {
-  welcome: { number: 1, label: "Kennismaken", title: <>Wat past <em>bij jou?</em></> },
+  welcome: { number: 1, label: "Kennismaken", title: <>Ben je <em>18 of ouder?</em></> },
   practice: { number: 2, label: "Een vraag proberen", title: <>Samen blijven <em>liggen?</em></> },
   example: { number: 3, label: "Jouw voorbeeld", title: <>Jij kiest wat je <em>deelt.</em></> },
 } as const;
@@ -74,14 +74,7 @@ export default function OnboardingStudy() {
 
         <div key={view} className={styles.body}>
           {view === "welcome" && (
-            <>
-              <p className={styles.lead}>
-                Soms weet je meteen wat je fijn vindt. Soms hangt het ervan af. Probeer het met één vraag.
-              </p>
-              <p className={styles.note}>Je oefenantwoord blijft alleen hier, zolang je deze kennismaking open hebt.</p>
-              <h2 className={styles.question}>Ben je 18 jaar of ouder?</h2>
-
-            </>
+            <p className={styles.lead}>Probeer één vraag over wat je fijn vindt. Je oefenantwoord wordt niet opgeslagen.</p>
           )}
           {view === "practice" && (
             <>
