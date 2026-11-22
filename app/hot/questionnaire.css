@@ -56,7 +56,6 @@
 @media (min-height: 40rem) {
   @container (min-width: 20rem) {
     .folio-question-prompt { min-block-size: 13rem; }
-    .folio-question-links { margin-block-start: auto; }
   }
 }
 
@@ -64,13 +63,13 @@
 
 .folio-question-prompt h2 {
   padding: 0;
-  font-size: clamp(1.65rem, 7vw, 2.4rem);
+  font-size: clamp(1.875rem, 8.25vw, 2.4rem);
   line-height: 1.12;
 }
 
 .folio-question-prompt [data-testid="question-essence"] {
   min-height: 0;
-  font-size: .9375rem;
+  font-size: 1rem;
   line-height: 1.45;
 }
 
@@ -96,23 +95,11 @@
 .folio-question-links svg,
 .folio-agreement-options svg { flex: none; }
 
-[data-presentation="folio"] [data-tour="pills"] button {
-  min-height: max(var(--touch-target), 3.125rem);
-  padding-inline: .25rem;
+[data-presentation="folio"] .status-option-rows button {
+  min-block-size: max(var(--touch-target), 3.125rem);
 }
 
-[data-presentation="folio"] .status-list-copy > :first-child { font-size: .9375rem; }
-[data-presentation="folio"] [data-status-hint] { font-size: .875rem; }
-
-@container (min-width: 20rem) {
-  [data-presentation="folio"] .status-list-copy {
-    display: flex;
-    align-items: baseline;
-    justify-content: space-between;
-    gap: .75rem;
-  }
-  [data-presentation="folio"] [data-status-hint] { margin: 0; text-align: end; }
-}
+[data-presentation="folio"] .status-option-label { font-size: 1rem; }
 
 [data-presentation="folio"] [data-testid="question-utilities"] {
   display: flex;

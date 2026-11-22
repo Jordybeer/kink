@@ -94,7 +94,7 @@ export default function OnboardingStudy() {
                 Ook als je allebei ja invult, vraag je elkaar op het moment zelf om toestemming.
                 Je mag altijd van gedachten veranderen.
               </p>
-              <StatusOptionRows current={answer} onSelect={setAnswer} presentation="list" />
+              <StatusOptionRows current={answer} onSelect={setAnswer} />
             </>
           )}
           {view === "example" && (

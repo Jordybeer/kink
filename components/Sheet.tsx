@@ -14,6 +14,7 @@ import {
 import { createPortal } from "react-dom";
 import SheetBackdrop from "@/components/SheetBackdrop";
 import { useMotionSafe } from "@/lib/motion";
+import type { ResolvedTheme } from "@/lib/theme";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 
 const SheetCloseContext = createContext<(() => void) | null>(null);
@@ -98,6 +99,7 @@ interface Props {
   scrollBodyRef?: Ref<HTMLDivElement>;
   testIds?: SheetTestIds;
   "aria-label"?: string;
+  previewTheme?: ResolvedTheme;
 }
 
 function TitledSheetFrame({
@@ -234,6 +236,7 @@ export default function Sheet({
   scrollBodyRef,
   testIds,
   "aria-label": ariaLabel,
+  previewTheme,
 }: Props) {
   const t = useMotionSafe();
   const dragControls = useDragControls();
@@ -291,6 +294,7 @@ export default function Sheet({
               role="dialog"
               aria-modal="true"
               aria-label={ariaLabel ?? title}
+              data-preview-theme={previewTheme}
               data-sheet-variant={variant}
               className={`pointer-events-auto min-w-0 w-full max-w-full [overflow-wrap:anywhere] ${variant === "surface" ? "sm:max-w-xl" : "sm:max-w-lg"}`}
               style={quickSheet

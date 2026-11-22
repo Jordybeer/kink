@@ -50,7 +50,7 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
     });
   }
 
-  const when = <div className={planned ? "os-when os-when-planned" : "os-when"}>
+  const when = <div>
     {planned && <div className="os-date-imprint" aria-hidden="true">
       <b>{local?.getDate() ?? '·'}</b><span><strong>{local ? weekdayFormat.format(local) : "Kies een dag"}</strong>
         {local && <small>{monthFormat.format(local)}</small>}</span>

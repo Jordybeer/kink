@@ -12,7 +12,7 @@ import { resolveTheme } from "@/lib/theme";
 import { KINKS } from "@/lib/kinks";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
-import Agenda, { exampleDay, exampleMoments, fullDay } from "./Agenda";
+import Agenda, { exampleDay, exampleMoments } from "./Agenda";
 import MomentEditor from "./MomentEditor";
 
 const topic = getQuestionnairePresentation(KINKS.find(item => item.id === "dominance_submission")!);
@@ -91,7 +91,8 @@ export default function OverlayStudy() {
       </button>
 
       <Sheet open={surface === "settings" || surface === "pin"} onClose={close}
-        title={surface === "pin" ? "Appvergrendeling" : "Instellingen"} variant="surface" scrollable contentSized>
+        previewTheme={resolveTheme(preference, systemDark)}
+        title={surface === "pin" ? "Appvergrendeling" : "Instellingen"} variant="sheet" scrollable contentSized>
         {surface === "pin" ? <form className="os-form os-pin" onSubmit={event => {
           event.preventDefault();
           if (pinInput.current?.value !== "1234") {
@@ -111,10 +112,6 @@ export default function OverlayStudy() {
           <button className="os-primary">{pinActive ? "Proefvergrendeling uitzetten" : "Vergrendeling uitproberen"}</button>
         </form> : <div className="os-settings">
           <h3>Kleurmodus</h3>
-          <div className="os-theme-preview" data-preview-theme={resolveTheme(preference, systemDark)}>
-            <small>Voorbeeld</small><span>{fullDay.format(new Date(`${selectedDate}T12:00:00`))}</span>
-            <i aria-hidden="true"/><i aria-hidden="true"/><i aria-hidden="true"/>
-          </div>
           <ThemeSelector preference={preference} setPreference={setPreference}/>
           <h3>Beveiliging</h3>
           <button className="os-lock-row" type="button" ref={pinLauncher} onClick={() => setSurface("pin")}><LockKey aria-hidden="true"/>

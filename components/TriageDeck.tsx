@@ -232,7 +232,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
 
               {folio ? <header className="folio-question-prompt">{prompt}</header> : prompt}
 
-              <StatusOptionRows presentation={folio ? "list" : "cards"} current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
+              <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 
               {folio && markers}
               {folio ? (

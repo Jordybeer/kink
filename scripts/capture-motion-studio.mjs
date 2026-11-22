@@ -166,6 +166,12 @@ const cases = {
     await button("Instellingen").click();
     await page.getByRole("dialog").waitFor();
     await shot("light-settings");
+    const bounds = await page.getByRole("dialog").boundingBox();
+    assert(bounds && Math.abs(bounds.y + bounds.height - page.viewportSize().height) <= 1, "Settings should open at the bottom on mobile");
+    await page.getByRole("radio", { name: "Donker" }).check();
+    assert.equal(await page.getByRole("dialog").getAttribute("data-preview-theme"), "dark");
+    assert.equal(await page.locator("html").getAttribute("data-theme"), "light");
+    await shot("dark-settings-preview");
     await page.keyboard.press("Escape");
     await button("Moment plannen").click();
     await shot("light-planned-moment");
@@ -211,6 +217,10 @@ const cases = {
         await go(slug);
         await page.addStyleTag({ content: ":root{font-size:200%!important}" });
         await assertVerticalLayout(slug);
+        if (slug === "onboarding") {
+          await button("Ik ben 18 of ouder").click();
+          await assertVerticalLayout("Oefenvraag");
+        }
         if (slug === "overlays") {
           await button("Moment plannen").click();
           await page.getByRole("dialog").waitFor();
@@ -226,7 +236,10 @@ const cases = {
   },
 };
 try {
+  const requested = process.argv.slice(2);
+  for (const name of requested) assert(Object.hasOwn(cases, name), "Unknown study: " + name);
   for (const [name, run] of Object.entries(cases)) {
+    if (requested.length && !requested.includes(name)) continue;
     const result = path.join(directory, name + ".json");
     if (await exists(result)) { console.log("cached", name); continue; }
     const dark = ["folio", "questionnaires", "profile"].includes(name);

@@ -6,7 +6,7 @@
 
 .spread {
   --spot-color: var(--category-rituals);
-  --spot-offset: -11%;
+  --spot-offset: -8%;
   --progress: 0%;
   --spot-timing: 570ms cubic-bezier(.28,.02,.18,1);
   display: flex;
@@ -24,7 +24,7 @@
 
 .spread[data-stage="example"] {
   --spot-color: var(--category-aftercare);
-  --spot-offset: 25%;
+  --spot-offset: 16%;
   --progress: 200%;
 }
 
@@ -32,23 +32,21 @@
   position: relative;
   isolation: isolate;
   overflow: clip;
-  padding: clamp(.875rem, 3.6vw, 1.65rem);
-  padding-bottom: 0;
-  background: var(--surface);
+  padding: .875rem min(1.5vw, .625rem) 0;
 }
 
 .field {
   position: absolute;
   z-index: -1;
   pointer-events: none;
-  inset: -40% -12% -35% -19%;
+  inset: 0;
   background-color: var(--spot-color);
-  mask-image: radial-gradient(ellipse 62% 78% at 38% 38%, rgb(0 0 0 / .42), transparent 85%);
+  mask-image: radial-gradient(ellipse 40% 49% at 50% 54%, rgb(0 0 0 / .25), transparent);
   transform: translateX(var(--spot-offset));
   transition: transform var(--spot-timing), background-color var(--spot-timing);
 }
 
-.runningHead, .track { display: flex; justify-content: space-between; }
+.runningHead { display: flex; justify-content: space-between; }
 .runningHead {
   flex-wrap: wrap;
   gap: .25rem .75rem;
@@ -69,14 +67,16 @@
 }
 
 .title em { font-weight: inherit; }
-.track { position: relative; height: 3px; background: var(--border); }
+.track { display: flex; width: 3.75rem; height: 3px; overflow: hidden; border-radius: 2px; background: var(--border); }
 .track span {
   width: calc(100% / 3);
-  background: var(--text2);
+  border-radius: inherit;
+  background: var(--accent-text);
   transform: translateX(var(--progress));
   transition: transform var(--spot-timing);
 }
 .body {
+  container-type: inline-size;
   padding: clamp(1rem, 3.5vw, 1.6rem) clamp(.125rem, 1.5vw, .625rem);
   min-inline-size: 0;
 }

@@ -136,9 +136,8 @@
 .boundaries h2 { color: var(--hard-no-text); }
 .privateSection {
   margin-top: 1.6rem;
-  padding: .95rem 1rem 1rem;
+  padding-block: 1rem;
   border-top: 1px solid var(--identity-border);
-  background: linear-gradient(120deg, color-mix(in srgb, var(--accent2) 7%, var(--surface)), var(--surface) 85%);
 }
 .privateSection h2 svg { color: var(--accent2); }
 .privateAnswer { padding-block: .65rem .15rem; }
