@@ -32,23 +32,22 @@ function completedDynamicProfile(id: string): Profile {
 const PRIVATE_PROFILE = deepDiveWithOnlyOneQuestion("pw-closeout-private", "cuckolding");
 const COMPLETE_PROFILE = completedDynamicProfile("pw-closeout-complete");
 
-test("privacy and curious stay independent with non-overlapping top-right touch targets", async ({ page }) => {
+test("privacy and curious stay independent with labelled touch targets below the answers", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await seedAndGo(page, `/profile/${PRIVATE_PROFILE.id}/questions`, [PRIVATE_PROFILE]);
 
-  const category = page.getByTestId("question-category-meta");
+  const lastAnswer = page.getByRole("button", { name: /Harde grens/ });
   const curious = page.getByTestId("question-curious");
   const privateAnswer = page.getByTestId("question-private");
-  const [categoryBox, curiousBox, privateBox] = await Promise.all([
-    category.boundingBox(),
-    curious.boundingBox(),
-    privateAnswer.boundingBox(),
+  await expect(privateAnswer).toHaveAccessibleName("Privé");
+  await expect(curious).toHaveAccessibleName("Nieuwsgierig");
+  const [answerBox, privateBox, curiousBox] = await Promise.all([
+    lastAnswer.boundingBox(), privateAnswer.boundingBox(), curious.boundingBox(),
   ]);
-  expect(categoryBox).not.toBeNull();
-  expect(curiousBox).not.toBeNull();
-  expect(privateBox).not.toBeNull();
-  expect(curiousBox!.x - (categoryBox!.x + categoryBox!.width)).toBeGreaterThanOrEqual(4);
-  expect(privateBox!.x - (curiousBox!.x + curiousBox!.width)).toBeGreaterThanOrEqual(4);
+  expect(answerBox && privateBox && curiousBox).toBeTruthy();
+  expect(privateBox!.y).toBeGreaterThanOrEqual(answerBox!.y + answerBox!.height);
+  expect(curiousBox!.x - (privateBox!.x + privateBox!.width)).toBeGreaterThanOrEqual(4);
+  expect(Math.min(privateBox!.height, curiousBox!.height)).toBeGreaterThanOrEqual(44);
 
   await expect(curious).toHaveAttribute("aria-pressed", "false");
   await expect(privateAnswer).toHaveAttribute("aria-pressed", "false");
