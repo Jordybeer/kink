@@ -54,9 +54,9 @@
   content: "";
   position: absolute;
   z-index: -1;
-  inset: 0 0 -.5rem;
+  inset: 0;
   pointer-events: none;
-  background: linear-gradient(to bottom, var(--bg) 0 72%, transparent);
+  background: color-mix(in srgb, var(--bg) 94%, var(--accent2));
   opacity: 0;
   transition: opacity var(--motion-state) var(--motion-ease);
 }

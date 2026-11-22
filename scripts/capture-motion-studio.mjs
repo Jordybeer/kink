@@ -69,8 +69,21 @@ const cases = {
     assert.equal(await profile.locator(".folio-hero").evaluate(el => getComputedStyle(el, "::before").content), "none");
     assert.equal(await profile.locator(".folio-portrait").evaluate(el => getComputedStyle(el, "::before").content), "none");
     await page.locator(".folio-bench > summary").click();
-    await page.evaluate(() => window.scrollTo({top:document.documentElement.scrollHeight, behavior:"instant"}));
+    await profile.locator(".folio-portrait").evaluate(el => {
+      const navBottom = document.querySelector("[data-folio-nav]").getBoundingClientRect().bottom;
+      window.scrollBy({top: el.getBoundingClientRect().top + el.clientHeight / 2 - navBottom, behavior: "instant"});
+    });
     await page.waitForFunction(() => document.querySelector("[data-folio-nav][data-scrolled]"));
+    for (const theme of ["light","dark"]) {
+      await page.emulateMedia({colorScheme: theme});
+      await page.waitForFunction(t => document.documentElement.dataset.theme === t, theme);
+      const surface = await nav.evaluate(el => {
+        const style = getComputedStyle(el, "::before");
+        return [style.bottom, style.backgroundImage];
+      });
+      assert.deepEqual(surface, ["0px", "none"]);
+      await shot(theme + "-folio-scrolled");
+    }
     await page.locator(".folio-bench > summary").click();
     await page.evaluate(() => window.scrollTo({top:0, behavior:"instant"}));
     await page.waitForFunction(() => getComputedStyle(document.querySelector("[data-folio-nav]"), "::before").opacity === "0");
