@@ -1,19 +1,20 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { ArrowRight, CaretRight, Check, Circle, Eye, EyeSlash, Info, ShieldCheck, Star } from "@phosphor-icons/react";
+import { ArrowRight, CaretDown, Check, Circle, Info, ShieldCheck } from "@phosphor-icons/react";
 import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
 import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import { isConversationContinuation, positiveQuestionnaireStatus, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
+import QuestionMarkers from "./QuestionMarkers";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet from "./Sheet";
 import EditorialHeading from "./ui/EditorialHeading";
 import { ExplanationContent, ExplanationProse, ExplanationSection } from "./ExplanationContent";
 
 const AGREEMENTS = [
-  { value: "vraag eerst", label: "Eerst vragen", emphasized: true, tour: "agreement-ask-first" },
-  { value: "eerste keer", label: "Eerste keer", emphasized: false, tour: "agreement-first-time" },
+  { value: "vraag eerst", label: "Eerst vragen" },
+  { value: "eerste keer", label: "Eerste keer" },
 ] as const;
 
 const CATEGORY_ACCENT: Record<Kink["category"], string> = {
@@ -123,6 +124,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
   const remainingInCat = current ? queue.filter((item) => item.kink.category === current.category).length : 0;
   const totalDone = kinks.filter((kink) => entries[kink.id]?.status != null).length;
   const currentEntry = current ? entries[current.id] : undefined;
+  const selectedAgreements = AGREEMENTS.filter(({ value }) => currentEntry?.tags?.includes(value));
   const safetyOpen = Boolean(current?.safetyNote && safetyKinkId === current.id);
   const detailOpen = Boolean(current && detailKinkId === current.id);
   const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "var(--category-custom)";
@@ -141,7 +143,7 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
       <div className="h-full min-h-0">
         {current ? (
           <div data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
-            <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
+            <div data-testid="question-content" className="question-content relative z-[1] grid min-w-0 gap-1">
               <div className="flex min-h-0 min-w-0 items-center gap-2">
                 <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="ks-motion-choice focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
                   <span
@@ -158,32 +160,67 @@ export default function TriageDeck({ kinks, queueItems, entries, focusCategory, 
                   {current.category !== "custom" && <Info size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />}
                 </button>
 
-                <div className="flex flex-none items-center gap-2" data-testid="question-utilities">
-                  <button type="button" data-testid="question-curious" data-tour="curious" onClick={() => onCuriousChange(current.id, !currentEntry?.curious)} aria-pressed={!!currentEntry?.curious} aria-label={currentEntry?.curious ? "Verwijder nieuwsgierig markering" : "Markeer als nieuwsgierig"} title={currentEntry?.curious ? "Niet meer nieuwsgierig" : "Nieuwsgierig"} className="focus-ring ks-motion-choice inline-flex h-11 w-11 flex-none touch-manipulation items-center justify-center rounded-full">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border ks-motion-state" style={currentEntry?.curious ? { background: "color-mix(in srgb, var(--curious) 12%, var(--surface2))", borderColor: "color-mix(in srgb, var(--curious) 34%, var(--border))", color: "var(--curious)", boxShadow: "0 0 14px color-mix(in srgb, var(--curious) 8%, transparent)" } : { background: "color-mix(in srgb, var(--surface2) 48%, transparent)", borderColor: "color-mix(in srgb, var(--border) 76%, transparent)", color: "var(--text2)", boxShadow: "none" }}><Star size={17} weight={currentEntry?.curious ? "fill" : "regular"} aria-hidden="true" /></span>
-                  </button>
-                  <button type="button" data-testid="question-private" data-tour="private" onClick={() => onPrivateChange(current.id, !currentEntry?.privateResponse)} aria-pressed={!!currentEntry?.privateResponse} aria-label={currentEntry?.privateResponse ? "Antwoord niet langer privé maken" : "Antwoord privé maken"} title={currentEntry?.privateResponse ? "Privé antwoord" : "Antwoord privé maken"} className="focus-ring ks-motion-choice inline-flex h-11 w-11 flex-none touch-manipulation items-center justify-center rounded-full">
-                    <span className="inline-flex h-9 w-9 items-center justify-center rounded-full border ks-motion-state" style={currentEntry?.privateResponse ? { color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 32%, var(--border))", background: "color-mix(in srgb, var(--accent) 10%, var(--surface2))", boxShadow: "0 0 14px color-mix(in srgb, var(--accent) 7%, transparent)" } : { color: "var(--text2)", borderColor: "color-mix(in srgb, var(--border) 76%, transparent)", background: "color-mix(in srgb, var(--surface2) 48%, transparent)", boxShadow: "none" }}>{currentEntry?.privateResponse ? <EyeSlash size={17} weight="bold" aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}</span>
-                  </button>
+                <span data-testid="question-progress" className="min-w-0 text-right text-xs tabular-nums text-[var(--text2)]">
+                  {progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}
+                </span>
+              </div>
+
+              <header className="question-prompt">
+                <div data-testid="question-title-slot">
+                  <h2 key={current.id} data-testid="question-title" className="question-heading">{presentation.title}</h2>
                 </div>
-              </div>
-
-              <div data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-              <p data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
-
-              <div data-testid="question-detail-slot" className="grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2">
-                {presentation.hasDetails && <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)} aria-haspopup="dialog" aria-expanded={detailOpen} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><Info size={16} aria-hidden="true" style={{ color: "var(--accent)" }} /><span className="min-w-0 truncate text-xs font-semibold" style={{ color: "var(--text)" }}>Info & uitleg</span><CaretRight size={14} className="ml-auto flex-none" aria-hidden="true" /></button>}
-                {current.safetyNote && <button type="button" data-testid="safety-disclosure" aria-haspopup="dialog" aria-expanded={safetyOpen} onClick={() => setSafetyKinkId(current.id)} className="ks-motion-choice focus-ring inline-flex h-12 min-w-0 touch-manipulation items-center gap-2 rounded-xl px-3 text-left" style={{ background: "var(--question-utility-surface)", color: "var(--text2)" }}><ShieldCheck size={16} weight="duotone" style={{ color: "var(--accent)" }} aria-hidden="true" /><span className="text-xs font-semibold" style={{ color: "var(--text)" }}>Veiligheid</span><CaretRight size={14} aria-hidden="true" /></button>}
-              </div>
+                <p data-testid="question-essence" className="break-words text-[var(--text2)]">{presentation.essence}</p>
+                <div data-testid="question-detail-slot" className="flex flex-wrap gap-x-5">
+                  {presentation.hasDetails && (
+                    <button type="button" data-testid="question-info-disclosure" onClick={() => setDetailKinkId(current.id)}
+                      aria-haspopup="dialog" aria-expanded={detailOpen} className="question-context-action ks-motion-choice focus-ring">
+                      <Info size={16} aria-hidden="true" /> Info &amp; uitleg
+                    </button>
+                  )}
+                  {current.safetyNote && (
+                    <button type="button" data-testid="safety-disclosure" onClick={() => setSafetyKinkId(current.id)}
+                      aria-haspopup="dialog" aria-expanded={safetyOpen} className="question-context-action ks-motion-choice focus-ring">
+                      <ShieldCheck size={16} weight="duotone" aria-hidden="true" /> Veiligheid
+                    </button>
+                  )}
+                </div>
+              </header>
 
               <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 
-              <section data-testid="question-agreements" className="min-h-0 border-t pb-2 pt-2.5" style={{ borderColor: "color-mix(in srgb, var(--border) 88%, transparent)" }}>
-                <p data-testid="question-agreements-label" className="mb-2 text-xs font-semibold" style={{ color: "var(--text)" }}>Afspraken <span className="font-normal" style={{ color: "var(--text2)" }}>· optioneel</span></p>
-                <div className="grid grid-cols-2 gap-2">{AGREEMENTS.map((agreement) => { const active = currentEntry?.tags?.includes(agreement.value) ?? false; return <button key={agreement.value} type="button" data-tour={agreement.tour} onClick={() => toggleAgreement(agreement.value)} aria-pressed={active} className="focus-ring ks-motion-choice inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl px-2.5 text-xs font-semibold" style={active ? { color: agreement.emphasized ? "var(--accent)" : "var(--text)", background: agreement.emphasized ? "color-mix(in srgb, var(--accent) 10%, var(--surface2))" : "color-mix(in srgb, var(--surface3) 82%, transparent)", border: `1px solid ${agreement.emphasized ? "color-mix(in srgb, var(--accent) 34%, var(--border))" : "color-mix(in srgb, var(--text2) 20%, var(--border))"}` } : { color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 76%, transparent)", border: "1px solid color-mix(in srgb, var(--border) 92%, var(--text2))" }}>{active ? <Check size={13} weight="bold" aria-hidden="true" /> : <Circle size={13} aria-hidden="true" />}{agreement.label}</button>; })}</div>
-              </section>
+              <QuestionMarkers
+                curious={!!currentEntry?.curious}
+                concealed={!!currentEntry?.privateResponse}
+                onCurious={() => onCuriousChange(current.id, !currentEntry?.curious)}
+                onPrivacy={() => onPrivateChange(current.id, !currentEntry?.privateResponse)}
+              />
 
-              <div className="flex min-h-0 items-center gap-3"><span data-testid="question-progress" className="min-w-0 flex-1 truncate text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}</span><button type="button" onClick={() => skip(current)} className="ks-motion-choice focus-ring inline-flex h-11 items-center gap-1 rounded-full px-3 text-xs" style={{ color: "var(--text2)", background: "color-mix(in srgb, var(--surface2) 66%, transparent)" }}>Later <ArrowRight size={13} aria-hidden="true" /></button></div>
+              <details key={current.id} data-testid="question-agreements" className="question-agreements">
+                <summary data-tour="question-agreements" data-testid="question-agreements-label" className="focus-ring">
+                  <span>Afspraak of ervaring</span>
+                  <span className="ml-auto text-right font-normal text-[var(--text2)]">
+                    {selectedAgreements.map(({ label }) => label).join(" · ") || "Optioneel"}
+                  </span>
+                  <CaretDown size={16} aria-hidden="true" />
+                </summary>
+                <div className="flex flex-wrap gap-x-5 pb-1">
+                  {AGREEMENTS.map(agreement => {
+                    const active = selectedAgreements.includes(agreement);
+                    return (
+                      <button key={agreement.value} type="button" onClick={() => toggleAgreement(agreement.value)}
+                        aria-pressed={active} className="question-context-action ks-motion-choice focus-ring">
+                        {active ? <Check size={15} weight="bold" aria-hidden="true" /> : <Circle size={15} aria-hidden="true" />}
+                        {agreement.label}
+                      </button>
+                    );
+                  })}
+                </div>
+              </details>
+
+              <button type="button" onClick={() => skip(current)}
+                className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-1 justify-self-end rounded-full px-3 text-xs text-[var(--text2)]">
+                Later <ArrowRight size={13} aria-hidden="true" />
+              </button>
             </div>
           </div>
         ) : (

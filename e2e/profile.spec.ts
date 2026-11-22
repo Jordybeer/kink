@@ -41,8 +41,9 @@ test.describe("Profielpagina — Alex (gevorderd, Dominant)", () => {
     await expect(page.getByRole("button", { name: "Uitleg antwoordkeuzes" })).toBeVisible();
 
     const controls = [
-      page.getByRole("button", { name: "Eerst vragen" }),
-      page.getByRole("button", { name: "Eerste keer" }),
+      page.getByRole("button", { name: "Privé", exact: true }),
+      page.getByRole("button", { name: "Nieuwsgierig", exact: true }),
+      page.getByTestId("question-agreements-label"),
       page.getByRole("button", { name: /Later/ }),
     ];
 

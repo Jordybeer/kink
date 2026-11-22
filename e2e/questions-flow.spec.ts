@@ -32,7 +32,7 @@ const LONG_TITLE_PROFILE = profileWithOnlyQuestion("pw-long-title-007", "Long ti
 
 async function stableControlGeometry(page: import("@playwright/test").Page) {
   const card = page.locator('[data-tour="kink-card"]');
-  const names = [/Heel graag/i, /^Ja/, /Misschien/, /Voor hen/, /Harde grens/, /Eerst vragen/, /Eerste keer/, /Later/];
+  const names = [/Heel graag/i, /^Ja/, /Misschien/, /Voor hen/, /Harde grens/, /^Privé$/, /^Nieuwsgierig$/, /Later/];
   return Promise.all(names.map(async (name) => {
     const box = await card.getByRole("button", { name }).boundingBox();
     expect(box).not.toBeNull();
@@ -234,8 +234,8 @@ test("questionnaire keeps repeated controls geometrically fixed across dynamic c
   const essenceBefore = await card.getByTestId("question-essence").boundingBox();
   expect(cardBefore).not.toBeNull();
   expect(essenceBefore).not.toBeNull();
-  expect(essenceBefore!.height).toBeGreaterThanOrEqual(59);
-  expect(essenceBefore!.height).toBeLessThanOrEqual(61);
+  const lastAnswer = card.getByRole("button", { name: /Harde grens/ });
+  await expect(lastAnswer).toBeInViewport();
 
   await card.getByRole("button", { name: /Heel graag/i }).click();
   await expect(title).not.toHaveText(firstTitle);
@@ -331,22 +331,33 @@ test("answer hints share one right edge and selection never steals their space",
   expectSameGeometry(beforeGeometry, await stableControlGeometry(page));
 });
 
-test("agreements keep breathing room around their inline optional label", async ({ page }) => {
+test("optional agreements stay reachable, summarise both choices and reset for the next question", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, `/profile/${CUCKOLDING_PROFILE.id}/questions`, [CUCKOLDING_PROFILE]);
+  await seedAndGo(page, `/profile/${SELECTION_PROFILE.id}/questions`, [SELECTION_PROFILE]);
   const card = page.locator('[data-tour="kink-card"]');
-  const section = card.getByTestId("question-agreements");
-  const label = card.getByTestId("question-agreements-label");
-  const firstButton = card.getByRole("button", { name: "Eerst vragen" });
-  await expect(label).toHaveText("Afspraken · optioneel");
+  const summary = card.getByTestId("question-agreements-label");
+  const first = card.getByRole("button", { name: "Eerst vragen" });
+  const experience = card.getByRole("button", { name: "Eerste keer" });
+  const title = await card.getByTestId("question-title").innerText();
 
-  const sectionBox = await section.boundingBox();
-  const labelBox = await label.boundingBox();
-  const buttonBox = await firstButton.boundingBox();
-  expect(sectionBox && labelBox && buttonBox).toBeTruthy();
-  expect(labelBox!.y - sectionBox!.y).toBeGreaterThanOrEqual(8);
-  expect(buttonBox!.y - (labelBox!.y + labelBox!.height)).toBeGreaterThanOrEqual(6);
-  expect(sectionBox!.y + sectionBox!.height - (buttonBox!.y + buttonBox!.height)).toBeGreaterThanOrEqual(6);
+  await expect(summary).toContainText("Optioneel");
+  await expect(first).toBeHidden();
+  await summary.focus();
+  await page.keyboard.press("Enter");
+  await first.click();
+  await experience.click();
+  await expect(first).toHaveAttribute("aria-pressed", "true");
+  await expect(experience).toHaveAttribute("aria-pressed", "true");
+  await summary.click();
+  await expect(first).toBeHidden();
+  await expect(summary).toContainText("Eerst vragen · Eerste keer");
+  await page.reload();
+  await expect(summary).toContainText("Eerst vragen · Eerste keer");
+  await summary.click();
+  await card.getByRole("button", { name: /Heel graag/ }).click();
+  await expect(card.getByTestId("question-title")).not.toHaveText(title);
+  await expect(first).toBeHidden();
+  await expect(summary).toContainText("Optioneel");
 });
 
 test("flat question stage keeps all primary controls visible with unclipped copy", async ({ page }) => {
@@ -360,12 +371,10 @@ test("flat question stage keeps all primary controls visible with unclipped copy
   await expect(title).toBeVisible();
   await expect(essence).toBeVisible();
   await expect(card.getByTestId("question-info-disclosure")).toBeVisible();
-  const curious = card.getByRole("button", { name: "Markeer als nieuwsgierig" });
+  const curious = card.getByRole("button", { name: "Nieuwsgierig" });
   await expect(curious).toBeVisible();
-  await expect(card.getByRole("button", { name: "Antwoord privé maken" })).toBeVisible();
-  await expect(card.getByRole("button", { name: "Eerst vragen" })).toBeVisible();
-  await expect(card.getByRole("button", { name: "Eerste keer" })).toBeVisible();
-  await expect(card.getByTestId("question-agreements-label")).toHaveText("Afspraken · optioneel");
+  await expect(card.getByRole("button", { name: "Privé" })).toBeVisible();
+  await expect(card.getByTestId("question-agreements-label")).toContainText("Optioneel");
   await expect(card.getByTestId("question-progress")).toBeVisible();
   await expect(card.getByRole("group", { name: "Status kiezen" }).locator("button")).toHaveCount(5);
 
