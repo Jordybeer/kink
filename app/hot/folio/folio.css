@@ -13,7 +13,6 @@
 .folio-row .folio-rule { inset-inline-start:3.1rem; }
 .folio-group ~ .folio-row .folio-rule { inset-inline-start:0; }
 .folio-hero { isolation:isolate; gap:1.2rem; padding-block:.5rem 1.6rem; }
-.folio-hero::before { content:""; pointer-events:none; position:absolute; inset:-2rem 0 0; background:var(--profile-hero-glow); z-index:-1; }
 .folio-hero .folio-portrait { width:clamp(4.8rem,24vw,6.6rem); height:clamp(4.8rem,24vw,6.6rem); font-size:2.3rem; }
 .folio-hero .folio-name { font-size:clamp(2.2rem,9vw,3.2rem); }
 .folio-hero h1:focus:not(:focus-visible) { outline:none; }
@@ -48,11 +47,20 @@
 [data-folio-mode]:has([data-folio-screen="home"]) .folio-return { display:none; }
 .folio-mast { font-size: clamp(min(2.25rem, 12vw), 10vw, 3.25rem); }
 
-/* The same duotone light expands with the monogram, including in the in-flight copy. */
-.folio-portrait, [data-folio-flight="avatar"] { isolation:isolate; }
-.folio-portrait { position:relative; }
-.folio-portrait::before, [data-folio-flight="avatar"]::before {
-  content:""; position:absolute; inset:-52%; z-index:-1; pointer-events:none;
-  background-image:inherit;
-  mask-image:radial-gradient(closest-side,transparent 46%, rgb(0 0 0 / .18) 53%, transparent 100%);
+/* Keep the identity colour inside the monogram. At rest the page atmosphere
+   continues behind the nav. Only scrolling text needs a reading surface. */
+[data-folio-nav] { isolation: isolate; }
+[data-folio-nav]::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 -.5rem;
+  pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg) 0 72%, transparent);
+  opacity: 0;
+  transition: opacity var(--motion-state) var(--motion-ease);
+}
+[data-folio-nav][data-scrolled]::before { opacity: 1; }
+@media (prefers-reduced-motion: reduce) {
+  [data-folio-nav]::before { transition: none; }
 }

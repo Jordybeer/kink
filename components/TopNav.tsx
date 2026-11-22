@@ -26,6 +26,19 @@ const contentNavRow: React.CSSProperties = {
 
 export default function TopNav() {
   const path = usePathname();
+  const folioNav = path === "/hot/folio" || path.startsWith("/hot/folio/");
+  const headerRef = useRef<HTMLElement>(null);
+  useLayoutEffect(() => {
+    const header = headerRef.current;
+    if (!folioNav || !header) return;
+    const update = () => header.toggleAttribute("data-scrolled", window.scrollY > 4);
+    update();
+    window.addEventListener("scroll", update, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", update);
+      header.removeAttribute("data-scrolled");
+    };
+  }, [folioNav]);
   const hydrated = useHasHydrated();
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
@@ -183,7 +196,9 @@ export default function TopNav() {
   return (
     <header
       className="sticky top-0 z-40"
-      style={{ ...safeAreaShell, ...contentHeaderSurface }}
+      ref={headerRef}
+      data-folio-nav={folioNav || undefined}
+      style={folioNav ? safeAreaShell : { ...safeAreaShell, ...contentHeaderSurface }}
     >
       <nav
         className={`ks-content-nav mx-auto h-14 ${navWidth} px-[var(--page-gutter)]`}

@@ -63,6 +63,17 @@ const cases = {
     await open.click();
     await profile.waitFor();
     await shot("dark-folio-profile");
+    const nav = page.locator("[data-folio-nav]");
+    const surface = () => nav.evaluate(el => getComputedStyle(el, "::before").opacity);
+    assert.equal(await surface(), "0");
+    assert.equal(await profile.locator(".folio-hero").evaluate(el => getComputedStyle(el, "::before").content), "none");
+    assert.equal(await profile.locator(".folio-portrait").evaluate(el => getComputedStyle(el, "::before").content), "none");
+    await page.locator(".folio-bench > summary").click();
+    await page.evaluate(() => window.scrollTo({top:document.documentElement.scrollHeight, behavior:"instant"}));
+    await page.waitForFunction(() => document.querySelector("[data-folio-nav][data-scrolled]"));
+    await page.locator(".folio-bench > summary").click();
+    await page.evaluate(() => window.scrollTo({top:0, behavior:"instant"}));
+    await page.waitForFunction(() => getComputedStyle(document.querySelector("[data-folio-nav]"), "::before").opacity === "0");
     await page.goBack();
     await home.waitFor();
     await page.locator(".folio-bench > summary").click();
