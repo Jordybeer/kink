@@ -36,7 +36,7 @@ interface Props {
   entries: Record<string, KinkEntry>;
   focusCategory?: KinkCategoryId | null;
   progressLabel?: string;
-  showFollowUpCue?: boolean;
+  showConversationCues?: boolean;
   completedContent?: ReactNode;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
@@ -44,11 +44,12 @@ interface Props {
   onTagsChange: (kinkId: string, tags: string[]) => void;
 }
 
-export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, showFollowUpCue = false, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
+export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, showConversationCues = false, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
   const folio = presentationStyle === "folio";
+  const conversationCues = folio && showConversationCues;
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean } | null>(null);
-  const [lastAnsweredId, setLastAnsweredId] = useState<string | null>(null);
+  const [lastQuestion, setLastQuestion] = useState<Pick<Kink, "id" | "category"> | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const [safetyKinkId, setSafetyKinkId] = useState<string | null>(null);
   const [detailKinkId, setDetailKinkId] = useState<string | null>(null);
@@ -76,13 +77,15 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
     const deferredFocus = focusCategory ? unanswered.filter((item) => item.kink.category === focusCategory) : [];
     queue = deferredFocus.length ? deferredFocus : unanswered;
   }
-  const currentItem = selectConversationQuestion(queue, KINKS, { phase: conversationPhase, lastKinkId: lastAnsweredId });
+  const lastQuestionId = lastQuestion?.id ?? null;
+  const currentItem = selectConversationQuestion(queue, KINKS, { phase: conversationPhase, lastKinkId: lastQuestionId });
   const held = holding ? kinks.find((kink) => kink.id === holding.id) : null;
   const current = held ?? currentItem?.kink ?? null;
-  const followUpVisible = folio && showFollowUpCue && (held
+  const followUpVisible = conversationCues && (held
     ? holding?.wasContinuation === true
     : conversationPhase === "preferContinuation" && currentItem?.isProbe === true
-      && isConversationContinuation(currentItem, lastAnsweredId));
+      && isConversationContinuation(currentItem, lastQuestionId));
+  const categoryChanged = current && lastQuestion && current.category !== lastQuestion.category;
 
   function clearHoldTimer() {
     if (!holdTimer.current) return;
@@ -93,7 +96,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   function handleSelect(kink: Kink, status: KinkStatus) {
     const answeredWasContinuation = holding?.id === kink.id
       ? holding.wasContinuation
-      : isConversationContinuation(currentItem, lastAnsweredId);
+      : isConversationContinuation(currentItem, lastQuestionId);
     clearHoldTimer();
     if (status == null) {
       setHolding(null);
@@ -103,7 +106,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
     }
     setHolding({ id: kink.id, wasContinuation: answeredWasContinuation });
     onStatusChange(kink.id, status);
-    setLastAnsweredId(kink.id);
+    setLastQuestion(kink);
     if (answeredWasContinuation || status === "hard_no") setConversationPhase("topicBreakRequired");
     else setConversationPhase(positiveQuestionnaireStatus(status) ? "preferContinuation" : "preferComplement");
     holdTimer.current = setTimeout(() => { holdTimer.current = null; setHolding(null); }, CARD_FEEDBACK_MS);
@@ -118,7 +121,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   function skip(kink: Kink) {
     clearHoldTimer();
     setHolding(null);
-    setLastAnsweredId(kink.id);
+    setLastQuestion(kink);
     setConversationPhase("normal");
     setSkipped((previous) => new Set(previous).add(kink.id));
   }
@@ -207,6 +210,25 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
     </div>
   );
   const progress = progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`;
+  const categoryLabel = current ? kinkCategoryLabel(current.category) : "";
+  const categoryContent = current && (
+    <>
+      <span
+        aria-hidden="true"
+        className="h-2 w-2 flex-none rounded-full"
+        style={{
+          background: categoryAccent,
+          boxShadow: categoryUnseen
+            ? `0 0 0 3px color-mix(in srgb, ${categoryAccent} 16%, transparent), 0 0 10px color-mix(in srgb, ${categoryAccent} 34%, transparent)`
+            : `0 0 10px color-mix(in srgb, ${categoryAccent} 28%, transparent)`,
+        }}
+      />
+      <span className="min-w-0 truncate text-xs" style={{ color: "var(--text2)" }}>
+        {categoryLabel}{!folio && <> · <span className="tabular-nums">nog {remainingInCat}</span></>}
+      </span>
+      {current.category !== "custom" && <Info size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />}
+    </>
+  );
 
   return (
     <>
@@ -218,19 +240,12 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
           <div data-presentation={presentationStyle} data-tour="kink-card" className="questionnaire-stage relative isolate h-full min-h-0 overflow-y-auto overscroll-contain">
             <div data-testid="question-content" className="question-content relative z-[1] grid min-h-full min-w-0 gap-1">
               <div className={folio ? "folio-question-meta" : "flex min-h-0 min-w-0 items-center gap-2"}>
-                <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="ks-motion-choice focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${kinkCategoryLabel(current.category)}`}>
-                  <span
-                    aria-hidden="true"
-                    className="h-2 w-2 flex-none rounded-full"
-                    style={{
-                      background: categoryAccent,
-                      boxShadow: categoryUnseen
-                        ? `0 0 0 3px color-mix(in srgb, ${categoryAccent} 16%, transparent), 0 0 10px color-mix(in srgb, ${categoryAccent} 34%, transparent)`
-                        : `0 0 10px color-mix(in srgb, ${categoryAccent} 28%, transparent)`,
-                    }}
-                  />
-                  <span className="min-w-0 truncate text-xs" style={{ color: "var(--text2)" }}>{kinkCategoryLabel(current.category)}{!folio && <> · <span className="tabular-nums">nog {remainingInCat}</span></>}</span>
-                  {current.category !== "custom" && <Info size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />}
+                <button type="button" data-testid="question-category-meta" onClick={() => openCategoryExplainer(current.category)} className="ks-motion-choice focus-ring flex h-11 min-w-0 flex-1 touch-manipulation items-center gap-2.5 rounded-lg text-left" aria-label={`Uitleg over ${categoryLabel}`}>
+                  {conversationCues ? (
+                    <span key={current.category} className="folio-question-category flex min-w-0 items-center gap-2.5" data-category-changed={categoryChanged || undefined}>
+                      {categoryContent}
+                    </span>
+                  ) : categoryContent}
                 </button>
 
                 {folio ? (

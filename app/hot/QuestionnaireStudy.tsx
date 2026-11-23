@@ -79,7 +79,7 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
         value={round.coverage.answered} max={round.coverage.total} />}
       <TriageDeck key={session} presentationStyle={folio || followUpStudy ? "folio" : "classic"} standalone
         kinks={visibleKinks} queueItems={queue} entries={entries}
-        showFollowUpCue={followUpStudy}
+        showConversationCues={followUpStudy}
         completedContent={followUpStudy ? (
           <section className="mx-auto max-w-sm pt-10 text-center">
             <EditorialHeading title="Proef afgerond" level={2} size="compact" />
