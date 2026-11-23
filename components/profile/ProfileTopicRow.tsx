@@ -20,13 +20,15 @@ interface Props {
   open: boolean;
   concealed: boolean;
   compactPrivate?: boolean;
+  showCategory?: boolean;
+  onReturnToProfile?: () => void;
   onToggle: () => void;
   onReveal: () => void;
   onConceal: () => void;
   onChange: (partial: Partial<KinkEntry>) => void;
 }
 
-export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, onToggle, onReveal, onConceal, onChange }: Props) {
+export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, showCategory = false, onReturnToProfile, onToggle, onReveal, onConceal, onChange }: Props) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const visible = !entry.privateResponse || !concealed;
@@ -75,6 +77,7 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
       ) : (
         <>
           <KinkListRow kink={kink} entry={entry} editable={editable && visible} concealed={!visible}
+            categoryLabel={showCategory ? kink.category === "custom" ? "Eigen onderwerpen" : kinkCategoryLabel(kink.category) : undefined}
             onOpen={() => { trigger.current?.focus({ preventScroll: true }); onToggle(); }} triggerRef={trigger} expanded={open} controls={id} />
           {editable && entry.privateResponse && (
             <button type="button" onClick={visible ? onConceal : onReveal}
@@ -100,11 +103,16 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
               <Accordion trigger="Details" className="mt-3" contentClassName="pb-2 pt-2">
                 <TopicDetailsFields entry={entry} onChange={onChange} />
               </Accordion>
-              <button type="button" onClick={close}
-                className="focus-ring ks-motion-choice mt-3 min-h-11 px-1 text-sm font-semibold"
-                style={{ color: "var(--accent-text)" }}>
-                Klaar
-              </button>
+              <div className="mt-3 flex flex-wrap items-center gap-x-4">
+                <button type="button" onClick={close}
+                  className={`focus-ring ks-motion-choice min-h-11 px-1 text-sm font-semibold ${onReturnToProfile ? "text-[var(--text2)]" : "text-[var(--accent-text)]"}`}>
+                  Klaar
+                </button>
+                {onReturnToProfile && <button type="button" onClick={onReturnToProfile}
+                  className="focus-ring ks-motion-choice min-h-11 px-1 text-sm font-semibold text-[var(--accent-text)]">
+                  Terug naar profiel
+                </button>}
+              </div>
             </>
           )}
         </DisclosureBody>

@@ -1,6 +1,6 @@
 "use client";
 
-import { use, useEffect, useRef, useState } from "react";
+import { use, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -9,9 +9,11 @@ import {
   CaretDown,
   FileArrowDown,
   FileText,
+  FunnelSimple,
   Lock,
   MagnifyingGlass,
   UserMinus,
+  X,
 } from "@phosphor-icons/react";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { CATEGORIES, KINKS, LEVEL_MAX, kinkCategoryLabel } from "@/lib/kinks";
@@ -30,6 +32,7 @@ import ProfileHero from "@/components/ProfileHero";
 import ProfileSnapshotPanel from "@/components/ProfileSnapshotPanel";
 import CategorySection from "@/components/CategorySection";
 import ProfileTopicRow from "./ProfileTopicRow";
+import StatusGlyph from "@/components/StatusGlyph";
 import EditorialHeading from "@/components/ui/EditorialHeading";
 import { pinnedPublicItems, profileInlineStatus } from "@/lib/profileInline";
 import CategoryFilterSheet from "@/components/profile/CategoryFilterSheet";
@@ -85,7 +88,9 @@ export default function ProfilePage({ params }: Props) {
   const [privateReadOpen, setPrivateReadOpen] = useState(false);
   const editQueryConsumed = useRef(false);
   const manageTriggerRef = useRef<HTMLButtonElement | null>(null);
-  const restoreCatalogFocus = useRef(false);
+  const statusOverviewRef = useRef<HTMLDivElement>(null);
+  const catalogVisit = useRef<{ scrollY: number; changedTopic?: string } | null>(null);
+  const catalogStatusParam = useRef<KinkStatus>(null);
   const motionSafe = useMotionSafe();
   const interestsParam = searchParams.get("interests");
   useEffect(() => {
@@ -100,17 +105,28 @@ export default function ProfilePage({ params }: Props) {
     setCatalogCategoryFilter(null);
     setSearch("");
     editQueryConsumed.current = false;
-    restoreCatalogFocus.current = false;
+    catalogVisit.current = null;
+    catalogStatusParam.current = null;
   }, [id]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (catalogOpen) {
       document.getElementById("profile-catalog-title")?.focus();
       return;
     }
-    if (!restoreCatalogFocus.current) return;
-    restoreCatalogFocus.current = false;
-    manageTriggerRef.current?.focus();
+    const visit = catalogVisit.current;
+    if (!visit) return;
+    catalogVisit.current = null;
+    window.scrollTo({ top: visit.scrollY, behavior: "instant" });
+    const topic = visit.changedTopic && statusOverviewRef.current?.querySelector<HTMLButtonElement>(
+      `[data-kink-id="${CSS.escape(visit.changedTopic)}"] [data-profile-topic-trigger]`,
+    );
+    if (topic) {
+      topic.focus({ preventScroll: true });
+      topic.scrollIntoView({ block: "nearest", behavior: "instant" });
+    } else {
+      manageTriggerRef.current?.focus({ preventScroll: true });
+    }
   }, [catalogOpen]);
 
   useEffect(() => {
@@ -126,6 +142,9 @@ export default function ProfilePage({ params }: Props) {
   }, [hydrated, profile, router, searchParams]);
 
   useEffect(() => {
+    const catalogStatus = catalogStatusParam.current;
+    catalogStatusParam.current = null;
+    if (catalogStatus && catalogStatus === interestsParam) return;
     setEditor(null);
     setCatalogOpen(false);
     setSelectedStatus(null);
@@ -192,7 +211,7 @@ export default function ProfilePage({ params }: Props) {
     currentProfile.entries,
   );
   const publicItems = readSummary.groups.flatMap((group) => group.items);
-  const activeStatus = profileInlineStatus(STATUS_ORDER.find((status) => status === interestsParam) ?? selectedStatus, publicItems);
+  const activeStatus = profileInlineStatus(selectedStatus ?? interestsParam, publicItems);
   const privateIds = new Set(Object.keys(currentProfile.entries).filter((kinkId) => currentProfile.entries[kinkId].privateResponse));
   // Freeze list membership through edits; current privacy always overrides the snapshot.
   const displayItems = pinnedPublicItems(editor?.open && !catalogOpen ? editor.publicItems : undefined, publicItems, privateIds);
@@ -218,10 +237,13 @@ export default function ProfilePage({ params }: Props) {
     next.set("interests", status);
     router.push(`/profile?${next}`, { scroll: false });
   }
-  function renderTopic(kink: Kink, editable = !shared, compactPrivate = false) {
+  function renderTopic(kink: Kink, editable = !shared, compactPrivate = false, showCategory = false) {
     const entry = currentProfile.entries[kink.id] ?? { status: null, comment: "" };
     const selected = editor?.kink.id === kink.id;
+    const returnToProfile = catalogOpen && selected && catalogVisit.current?.changedTopic === kink.id
+      && entry.status && !entry.privateResponse ? closeCatalogManager : undefined;
     return <ProfileTopicRow kink={kink} entry={entry} editable={editable} compactPrivate={compactPrivate}
+      showCategory={showCategory} onReturnToProfile={returnToProfile}
       selected={selected} open={selected && !!editor?.open} concealed={!privateResponseRevealed(kink.id)}
       onToggle={() => {
         const closing = editor?.kink.id === kink.id && editor.open;
@@ -244,6 +266,8 @@ export default function ProfilePage({ params }: Props) {
           document.getElementById(catalogOpen ? "profile-catalog-search" : `profile-filter-${activeStatus}`)?.focus({ preventScroll: true });
         }
         setEntry(currentProfile.id, kink.id, partial);
+        const visit = catalogVisit.current;
+        if (catalogOpen && visit) visit.changedTopic = kink.id;
       }} />;
   }
   function renderReadItems(items: ProfileReadItem[]) {
@@ -288,9 +312,30 @@ export default function ProfilePage({ params }: Props) {
     setCustomInput("");
   }
 
-  function closeCatalogManager() {
+  function openCatalogManager() {
+    catalogVisit.current = { scrollY: window.scrollY };
     setEditor(null);
-    restoreCatalogFocus.current = true;
+    setRevealedPrivateResponses(new Set());
+    setCatalogOpen(true);
+  }
+
+  function closeCatalogManager() {
+    const visit = catalogVisit.current;
+    const item = visit?.changedTopic ? publicItems.find(({ id }) => id === visit.changedTopic) : undefined;
+    if (item) {
+      setSelectedStatus(item.status);
+      const url = new URL(window.location.href);
+      if (url.searchParams.get("interests") !== item.status) {
+        catalogStatusParam.current = item.status;
+        url.searchParams.set("interests", item.status);
+        window.history.replaceState(null, "", url);
+      }
+    } else if (visit) {
+      delete visit.changedTopic;
+    }
+
+    setEditor(null);
+    setRevealedPrivateResponses(new Set());
     setCatalogOpen(false);
     setCategoriesOpen(false);
     setSearch("");
@@ -370,14 +415,18 @@ export default function ProfilePage({ params }: Props) {
       )}
 
       {catalogOpen && !shared ? (
-        <section id="profile-catalog-manager" className="pb-5" aria-labelledby="profile-catalog-title">
+        <section id="profile-catalog-manager" className="pb-5" aria-labelledby="profile-catalog-title" onKeyDown={(event) => {
+          if (event.key === "Escape" && !event.nativeEvent.isComposing && !event.defaultPrevented && !categoriesOpen) {
+            event.preventDefault();
+            closeCatalogManager();
+          }
+        }}>
           <div
             data-testid="profile-catalog-manager-header"
-            className="mb-3 flex items-center gap-3 border-b px-[var(--page-gutter)] pb-3"
-            style={{ borderColor: "var(--border)" }}
+            className="mb-2 flex items-center gap-3 px-[var(--page-gutter)] pb-2"
           >
             <div className="min-w-0 flex-1">
-              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-base font-semibold outline-none">Catalogus</h2>
+              <h2 id="profile-catalog-title" tabIndex={-1} className="scroll-mt-[var(--nav-h)] text-2xl leading-tight outline-none [font-family:var(--font-display)]">Catalogus</h2>
               <p className="mt-0.5 text-xs tabular-nums" style={{ color: "var(--text2)" }}>
                 {catalogRated} van {KINKS.length} beoordeeld
               </p>
@@ -393,15 +442,27 @@ export default function ProfilePage({ params }: Props) {
           </div>
 
           <div className="mb-3 px-[var(--page-gutter)]" data-testid="profile-catalog-controls">
-            <input
-              id="profile-catalog-search"
-              value={search}
-              onChange={(event) => { setEditor(null); setSearch(event.target.value); }}
-              aria-label="Volledige catalogus doorzoeken"
-              placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
-              className="focus-ring min-h-11 w-full rounded-xl px-3 py-2.5 text-sm focus:outline-none"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)", color: "var(--text)" }}
-            />
+            <div className="flex min-h-11 items-center gap-2 border-b border-[var(--control-border)] text-[var(--accent-text)] focus-within:border-[var(--focus)]">
+              <MagnifyingGlass size={18} className="flex-none" aria-hidden="true" />
+              <input
+                id="profile-catalog-search"
+                inputMode="search"
+                value={search}
+                onChange={(event) => { setEditor(null); setSearch(event.target.value); }}
+                aria-label="Volledige catalogus doorzoeken"
+                placeholder={catalogCategoryFilter ? `Zoek in ${catalogCategoryFilterLabel}…` : "Zoek in de volledige catalogus…"}
+                className="min-h-11 min-w-0 flex-1 bg-transparent py-2 text-base text-[var(--text)] outline-none"
+              />
+              {search && <button type="button" aria-label="Wis zoekterm"
+                className="focus-ring grid min-h-11 min-w-11 flex-none place-items-center"
+                onClick={() => {
+                  setEditor(null);
+                  setSearch("");
+                  document.getElementById("profile-catalog-search")?.focus({ preventScroll: true });
+                }}>
+                <X size={16} aria-hidden="true" />
+              </button>}
+            </div>
 
             <button
               type="button"
@@ -409,12 +470,11 @@ export default function ProfilePage({ params }: Props) {
               aria-haspopup="dialog"
               aria-expanded={categoriesOpen}
               aria-label={`Categorie, ${catalogCategoryFilterLabel}`}
-              className="ks-motion-choice focus-ring mt-1 flex min-h-11 w-full items-center gap-3 border-b py-2 text-left text-sm"
-              style={{ borderColor: "var(--border)", color: "var(--text)" }}
+              className="ks-motion-choice focus-ring flex min-h-11 max-w-full items-center gap-2 py-2 text-left text-sm text-[var(--text)]"
             >
-              <span className="flex-none" style={{ color: "var(--text2)" }}>Categorie</span>
-              <span className="ml-auto min-w-0 truncate font-semibold">{catalogCategoryFilterLabel}</span>
-              <CaretDown size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />
+              <FunnelSimple size={16} className="flex-none text-[var(--text2)]" aria-hidden="true" />
+              <span className="min-w-0 font-medium [overflow-wrap:anywhere]">{catalogCategoryFilterLabel}</span>
+              <CaretDown size={13} className="flex-none text-[var(--text2)]" aria-hidden="true" />
             </button>
           </div>
 
@@ -487,22 +547,21 @@ export default function ProfilePage({ params }: Props) {
             </div>
           ) : (
             <div className="px-[var(--page-gutter)]">
+              <p role="status" className="pb-1 text-sm text-[var(--text2)]">
+                {searchResults.length === 0 ? "Geen onderwerpen gevonden."
+                  : searchResults.length === 1 ? "1 resultaat" : `${searchResults.length} resultaten`}
+              </p>
               <div className="flex flex-col">
                 {searchResults.map((kink) => (
-                  <div key={kink.id}>{renderTopic(kink)}</div>
+                  <div key={kink.id}>{renderTopic(kink, true, false, true)}</div>
                 ))}
               </div>
-              {searchResults.length === 0 && (
-                <p className="py-8 text-center text-sm" style={{ color: "var(--text2)" }}>
-                  Geen onderwerpen gevonden.
-                </p>
-              )}
             </div>
           )}
         </section>
       ) : (
         <section className="px-[var(--page-gutter)] pb-5" aria-label="Profieloverzicht">
-          <div className="mb-4 flex items-center justify-between gap-3">
+          <div className="mb-3">
             <h2
               id="profile-interests-title"
               tabIndex={-1}
@@ -515,29 +574,28 @@ export default function ProfilePage({ params }: Props) {
               <button
                 ref={manageTriggerRef}
                 type="button"
-                aria-label="Catalogus doorzoeken"
-                title="Catalogus doorzoeken"
-                onClick={() => { setEditor(null); setCatalogOpen(true); }}
-                className="focus-ring ks-motion-choice grid h-11 w-11 flex-none place-items-center rounded-full"
-                style={{ color: "var(--text2)" }}
+                onClick={openCatalogManager}
+                className="focus-ring ks-motion-choice mt-1 flex min-h-11 items-center gap-2 text-left text-sm font-semibold text-[var(--accent-text)]"
               >
-                <MagnifyingGlass size={20} aria-hidden="true" />
+                <MagnifyingGlass size={18} className="flex-none" aria-hidden="true" /> Catalogus doorzoeken
               </button>
             )}
           </div>
 
-          <div data-testid="profile-status-overview">
-            <div role="group" aria-label="Antwoordstatus" className="mb-4 grid grid-cols-[repeat(auto-fit,minmax(min(100%,10rem),1fr))] gap-x-5 gap-y-1">
+          <div ref={statusOverviewRef} data-testid="profile-status-overview">
+            <div role="group" aria-label="Antwoordstatus" className="mb-4 flex flex-wrap gap-x-2 gap-y-1">
               {STATUS_ORDER.map((status) => {
                 const count = publicItems.filter((item) => item.status === status).length;
                 return <button key={status} id={`profile-filter-${status}`} type="button" onClick={() => selectStatus(status)}
                   data-testid={`profile-read-status-${status}`} aria-pressed={activeStatus === status}
                   aria-label={`${STATUS_LABEL[status]}, ${count} ${count === 1 ? "antwoord" : "antwoorden"}`}
-                  className="focus-ring ks-motion-choice flex min-h-11 min-w-0 items-center gap-2 border-b-2 py-2 text-left text-sm"
+                  className="focus-ring ks-motion-choice flex min-h-11 min-w-11 max-w-full flex-[1_0_auto] flex-col items-center gap-1 border-b-2 py-2 text-center text-sm leading-tight text-[var(--text2)] aria-pressed:font-semibold aria-pressed:text-[var(--text)]"
                   style={{ borderColor: activeStatus === status ? STATUS_VAR[status] : "transparent" }}>
-                  <span className="h-2 w-2 flex-none rounded-full" style={{ background: STATUS_VAR[status] }} aria-hidden="true" />
-                  <span className="min-w-0 flex-1 font-semibold [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
-                  <span className="flex-none text-right tabular-nums" style={{ color: "var(--text2)" }}>{count}</span>
+                  <span className="flex items-center gap-1 text-xs leading-none" style={{ color: STATUS_VAR[status] }}>
+                    <StatusGlyph status={status} size={16} />
+                    <span className="tabular-nums text-[var(--text2)]">{count}</span>
+                  </span>
+                  <span className="max-w-full [overflow-wrap:anywhere]">{STATUS_LABEL[status]}</span>
                 </button>;
               })}
             </div>
