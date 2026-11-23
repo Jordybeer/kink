@@ -36,6 +36,7 @@ interface Props {
   entries: Record<string, KinkEntry>;
   focusCategory?: KinkCategoryId | null;
   progressLabel?: string;
+  showFollowUpCue?: boolean;
   completedContent?: ReactNode;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
@@ -43,7 +44,7 @@ interface Props {
   onTagsChange: (kinkId: string, tags: string[]) => void;
 }
 
-export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
+export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, showFollowUpCue = false, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
   const folio = presentationStyle === "folio";
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean } | null>(null);
@@ -78,6 +79,10 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   const currentItem = selectConversationQuestion(queue, KINKS, { phase: conversationPhase, lastKinkId: lastAnsweredId });
   const held = holding ? kinks.find((kink) => kink.id === holding.id) : null;
   const current = held ?? currentItem?.kink ?? null;
+  const followUpVisible = folio && showFollowUpCue && (held
+    ? holding?.wasContinuation === true
+    : conversationPhase === "preferContinuation" && currentItem?.isProbe === true
+      && isConversationContinuation(currentItem, lastAnsweredId));
 
   function clearHoldTimer() {
     if (!holdTimer.current) return;
@@ -137,7 +142,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   const presentation = current ? getQuestionnairePresentation(current) : { title: "", essence: "", details: null, hasDetails: false };
   const categoryCopy = categoryDetail ? kinkCategoryExplainer(categoryDetail) : null;
   const announcement = current
-    ? `Nieuwe vraag: ${presentation.title}. Categorie ${kinkCategoryLabel(current.category)}.`
+    ? `${followUpVisible ? "Vervolgvraag" : "Nieuwe vraag"}: ${presentation.title}. Categorie ${kinkCategoryLabel(current.category)}.`
     : skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld.";
 
   const markers = current && (
@@ -228,10 +233,14 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
                   {current.category !== "custom" && <Info size={13} className="flex-none" aria-hidden="true" style={{ color: "var(--text2)" }} />}
                 </button>
 
-                {folio ? <span data-testid="question-progress" className="folio-question-progress">{progress}</span> : markers}
+                {folio ? (
+                  <span data-testid="question-progress" className="folio-question-progress">
+                    {followUpVisible ? <span className="folio-follow-up-label">Vervolgvraag</span> : progress}
+                  </span>
+                ) : markers}
               </div>
 
-              {folio ? <header className="folio-question-prompt">{prompt}</header> : prompt}
+              {folio ? <header className="folio-question-prompt" data-follow-up={followUpVisible || undefined}>{prompt}</header> : prompt}
 
               <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 

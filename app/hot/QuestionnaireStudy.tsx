@@ -37,7 +37,7 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
       .map(kink => kink.id === FOLLOW_UP && folio ? {
         ...kink,
         name: "Aanspreektitels",
-        description: "Hoe sta je tegenover afgesproken titels zoals Sir of Meesteres? Spreek samen af welke titel past, wie die gebruikt en wanneer die geldt.",
+        description: "En hoe sta je tegenover afgesproken titels, zoals Sir of Meesteres? Spreek samen af welke titel past, wie die gebruikt en wanneer die geldt.",
       } : kink);
   }, [folio, followUpStudy, round.visibleKinks]);
   const queue = useMemo(() => {
@@ -70,7 +70,7 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
     { id: "restart", label: "Opnieuw beginnen", icon: <ArrowsClockwise size={19} />,
       onClick: restart },
   ], [folio, followUpStudy, restart]);
-  useTopNavActions(actions, followUpStudy ? "Vervolgvraag" : folio ? "Vragenlijst · Prototype" : "Vragenlijst · Origineel", "/hot");
+  useTopNavActions(actions, followUpStudy ? "Vragenlijst · Proef" : folio ? "Vragenlijst · Prototype" : "Vragenlijst · Origineel", "/hot");
 
   return (
     <PageShell width="lg" flush className="questionnaire-study">
@@ -79,6 +79,7 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
         value={round.coverage.answered} max={round.coverage.total} />}
       <TriageDeck key={session} presentationStyle={folio || followUpStudy ? "folio" : "classic"} standalone
         kinks={visibleKinks} queueItems={queue} entries={entries}
+        showFollowUpCue={followUpStudy}
         completedContent={followUpStudy ? (
           <section className="mx-auto max-w-sm pt-10 text-center">
             <EditorialHeading title="Proef afgerond" level={2} size="compact" />
