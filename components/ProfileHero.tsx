@@ -88,16 +88,6 @@ export default function ProfileHero({ profile, onShare, onEdit, profileType, emb
   return (
     <>
       <section data-testid="profile-hero" data-tour="profile-enrichment" className={`relative pb-2 pt-2 ${embedded ? "" : "mx-[var(--page-gutter)]"}`}>
-        <div
-          className="pointer-events-none absolute -left-[var(--page-gutter)] -right-[var(--page-gutter)] -top-20 h-[19rem]"
-          style={{
-            background: "var(--profile-hero-glow)",
-            filter: "blur(10px)",
-            opacity: 0.78,
-          }}
-          aria-hidden="true"
-        />
-
         <div className="relative flex flex-wrap items-start gap-5">
           <div className="relative flex-none">
             <button

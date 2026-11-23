@@ -14,9 +14,7 @@ import { useTopNav, type TopNavAction } from "@/components/nav/TopNavContext";
 const MotionLink = motion.create(Link);
 
 const contentHeaderSurface: React.CSSProperties = {
-  background: "color-mix(in srgb, var(--bg) 66%, transparent)",
-  backdropFilter: "blur(18px) saturate(120%)",
-  WebkitBackdropFilter: "blur(18px) saturate(120%)",
+  background: "var(--bg)",
   pointerEvents: "none",
 };
 
