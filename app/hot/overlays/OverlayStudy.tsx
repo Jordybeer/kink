@@ -93,7 +93,7 @@ export default function OverlayStudy() {
 
       <Sheet open={surface === "settings" || surface === "pin"} onClose={close}
         previewTheme={resolveTheme(preference, systemDark)}
-        title={surface === "pin" ? "Appvergrendeling" : "Instellingen"} variant="sheet" scrollable contentSized>
+        title={surface === "pin" ? "Appvergrendeling" : "Instellingen"} variant="sheet" titleTone="editorial" scrollable contentSized>
         {surface === "pin" ? <form className="os-form os-pin" onSubmit={event => {
           event.preventDefault();
           if (pinInput.current?.value !== "1234") {
@@ -121,7 +121,7 @@ export default function OverlayStudy() {
           </button>
         </div>}
       </Sheet>
-      <Sheet open={surface === "info"} onClose={close} title={topic.title} headerIcon={<BookOpen/>} variant="sheet" scrollable>
+      <Sheet open={surface === "info"} onClose={close} title={topic.title} headerIcon={<BookOpen/>} variant="sheet" titleTone="editorial" scrollable>
         <ExplanationContent><ExplanationProse>{topic.essence}</ExplanationProse>
           {topic.details && <ExplanationProse secondary>{topic.details}</ExplanationProse>}
         </ExplanationContent>

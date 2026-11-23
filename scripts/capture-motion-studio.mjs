@@ -261,7 +261,7 @@ const cases = {
     await button("Moment bijhouden").click();
     await shot("light-recorded-moment");
     const dialog = page.getByRole("dialog");
-    await dialog.locator("summary").filter({ hasText: "Partner toevoegen" }).click();
+    assert.equal(await dialog.locator("details").count(), 0);
     const partner = dialog.getByRole("combobox", { name: "Met wie?" });
     await partner.selectOption({label: "Sam"});
     for (const width of [402, 320]) {

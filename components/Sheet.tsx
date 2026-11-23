@@ -112,7 +112,7 @@ function TitledSheetFrame({
   eyebrow,
   subtitle,
   contentSized = false,
-  titleTone = "editorial",
+  titleTone,
   headerAfter,
   scrollBodyRef,
   testIds,
@@ -136,6 +136,7 @@ function TitledSheetFrame({
   const quickSheet = variant === "sheet";
   const surface = variant === "surface";
   const task = variant === "task";
+  const editorialTitle = titleTone === "editorial" || (surface && titleTone !== "utility");
 
   const sheetAmbient = "linear-gradient(156deg, color-mix(in srgb, var(--accent2) 5%, var(--surface)) 0%, var(--surface) 46%, color-mix(in srgb, var(--accent) 3%, var(--surface)) 100%)";
 
@@ -167,8 +168,8 @@ function TitledSheetFrame({
         <div className="min-w-0 flex-1 self-center">
           {eyebrow && <p className="ks-modal-eyebrow mb-2">{eyebrow}</p>}
           <h2
-            className={`break-words ${titleTone === "utility" ? "text-base font-semibold leading-tight" : surface ? "text-balance text-[clamp(1.65rem,7.5vw,2rem)] font-medium leading-[1.06] tracking-[-0.025em]" : "text-lg font-bold"}`}
-            style={titleTone === "utility" ? undefined : surface ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
+            className={`break-words ${titleTone === "utility" ? "text-base font-semibold leading-tight" : editorialTitle ? "text-balance text-[clamp(1.65rem,7.5vw,2rem)] font-medium leading-[1.06] tracking-[-0.025em]" : "text-lg font-bold"}`}
+            style={editorialTitle ? { fontFamily: "var(--font-display, Georgia, serif)" } : undefined}
           >{title}</h2>
           {subtitle && <p className="mt-2 max-w-[32rem] text-sm leading-5" style={{ color: "var(--text2)" }}>{subtitle}</p>}
         </div>
@@ -231,7 +232,7 @@ export default function Sheet({
   eyebrow,
   subtitle,
   contentSized = false,
-  titleTone = "editorial",
+  titleTone,
   headerAfter,
   scrollBodyRef,
   testIds,

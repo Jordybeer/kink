@@ -7,8 +7,7 @@ import Sheet from "@/components/Sheet";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
 
 const partners = [{ id: "studio-sam", name: "Sam" }, { id: "studio-noor", name: "Noor" }];
-const weekdayFormat = new Intl.DateTimeFormat("nl-BE", { weekday: "long" });
-const monthFormat = new Intl.DateTimeFormat("nl-BE", { month: "long", year: "numeric" });
+const dayFormat = new Intl.DateTimeFormat("nl-BE", { day: "numeric", month: "long", year: "numeric" });
 
 export default function MomentEditor({ open, mode, selectedDate, record, onClose, onSave }: {
   open: boolean;
@@ -54,8 +53,7 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
     <div className="os-pair">
       {planned && !editingDate && local ? (
         <button type="button" className="os-date-imprint focus-ring" onClick={() => setEditingDate(true)}>
-          <b>{local.getDate()}</b>
-          <span><strong>{weekdayFormat.format(local)}</strong><small>{monthFormat.format(local)}</small></span>
+          <span>{dayFormat.format(local)}</span>
           <span className="os-date-change">Wijzig datum</span>
         </button>
       ) : (
@@ -69,37 +67,40 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
     </div>
     {invalid && <p id={id+"-error"} className="os-error" role="alert">{invalid === "date" ? "Kies een datum." : "Kies een tijd om dit moment te plannen."}</p>}
   </div>;
-  const titleField = <label className="os-writing-title">Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>;
+  const titleField = <label>Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>;
   const noteField = <label className="os-writing-note"><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
       <textarea rows={planned ? 2 : 3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
       <small>Alleen zichtbaar in deze proef.</small></label>;
+  const partnerField = (
+    <label>Met wie?
+      <select value={partner} onChange={event => setPartner(event.target.value)}>
+        <option value="">Zonder partner</option>
+        {partners.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
+      </select>
+    </label>
+  );
   const heading = record ? (planned ? "Gepland moment bewerken" : "Bijgehouden moment bewerken")
     : (planned ? "Moment plannen" : "Moment bijhouden");
 
-  return <Sheet open={open} onClose={onClose} title={heading} headerIcon={planned ? <CalendarBlank size={20}/> : <Feather size={20}/>} variant="task" scrollable
+  return <Sheet open={open} onClose={onClose} title={heading} headerIcon={planned ? <CalendarBlank size={20}/> : <Feather size={20}/>} variant="task" titleTone="editorial" scrollable
     footer={<div className="os-footer"><button type="button" onClick={onClose}>Annuleer</button>
       <button className="os-primary" type="submit" form={id}>{record ? "Wijzigingen bewaren" : planned ? "Plan moment" : "Bewaar moment"}</button></div>}>
-    <form id={id} noValidate className="os-form os-moment" data-mode={mode} onSubmit={submit}>
+    <form id={id} noValidate className="os-form" onSubmit={submit}>
       {planned ? when : <div className="os-writing">{titleField}{noteField}</div>}
       {planned ? titleField : when}
-      <details className="os-extra" open={Boolean(record?.partnerProfileId || record?.reminderDaysBefore !== undefined || (planned && record?.note))}>
-        <summary>{planned ? "Partner, privénotitie en herinnering" : "Partner toevoegen"}</summary>
+      {planned ? <details className="os-extra" open={Boolean(record?.partnerProfileId || record?.reminderDaysBefore !== undefined || record?.note)}>
+        <summary>Partner, privénotitie en herinnering</summary>
         <div className="os-extra-fields">
-          <label>Met wie?
-            <select value={partner} onChange={event => setPartner(event.target.value)}>
-              <option value="">Zonder partner</option>
-              {partners.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
-            </select>
-          </label>
-          {planned && noteField}
-          {planned && <div className="os-reminder">
+          {partnerField}
+          {noteField}
+          <div className="os-reminder">
             <label><Bell size={17} aria-hidden="true"/><span>Herinner mij</span><input type="checkbox" checked={reminder} onChange={event => setReminder(event.target.checked)}/></label>
             {reminder && <label className="os-days">{days} {days === 1 ? "dag" : "dagen"} vooraf
               <input type="range" min={1} max={14} value={days} onChange={e => setDays(Number(e.target.value))}/>
             </label>}
-          </div>}
+          </div>
         </div>
-      </details>
+      </details> : partnerField}
     </form>
   </Sheet>;
 }

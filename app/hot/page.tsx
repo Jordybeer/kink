@@ -8,7 +8,7 @@ const studies = [
   { href: "profile-study", name: "Profiel & privéantwoorden", detail: "Zoek in de catalogus of open een privéantwoord." },
   { href: "questions", name: "Vragenlijst", detail: "Beantwoord een vraag of bewaar die voor later." },
   { href: "overlays", name: "Instellingen & agenda", detail: "Bekijk een dag, plan een moment of pas het uiterlijk aan." },
-  { href: "scenes", name: "Scènes", detail: "Wissel van sfeer tijdens het samenstellen." },
+  { href: "scenes", name: "Scènes · kleurproef", detail: "Kies een onderdeel en vergelijk een geleidelijke kleurwissel met een directe." },
   { href: "onboarding", name: "Eerste kennismaking", detail: "Ontdek met één oefenvraag hoe je jouw voorkeuren vastlegt." },
 ] as const;
 
