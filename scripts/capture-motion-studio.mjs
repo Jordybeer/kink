@@ -223,6 +223,32 @@ const cases = {
     await button("Zoek in catalogus").click();
     await page.getByRole("searchbox").fill("wax");
     await shot("dark-profile-search");
+    const wax = page.locator('#studio-search [data-kink-id="wax_play"]');
+    await wax.locator("[data-answer-summary]").click();
+    await wax.getByRole("button", { name: /Harde grens/ }).click();
+    await wax.getByRole("button", { name: "Terug naar profiel" }).click();
+    const limit = page.locator('#studio-boundaries [data-kink-id="wax_play"] [data-answer-summary]');
+    assert(await limit.evaluate(el => el === document.activeElement));
+    assert(await limit.locator('[data-answer-verdict="hard_no"]').isVisible());
+    const limitsTab = page.getByRole("group", {name:"Antwoordstatus"}).getByRole("button", {name:/Harde grens/});
+    assert.equal(await limitsTab.getAttribute("aria-pressed"), "true");
+    await page.setViewportSize({width:320, height:700});
+    try {
+      await page.emulateMedia({colorScheme:"light", reducedMotion:"reduce"});
+      await button("Zoek in catalogus").click();
+      await page.getByRole("searchbox").fill("wax");
+      await wax.locator("[data-answer-summary]").click();
+      await wax.getByRole("group", {name:"Status kiezen"}).getByRole("button", {name:/Heel graag/}).click();
+      await assertVerticalLayout("Inline catalogus op 320px");
+      await wax.getByRole("button", {name:"Terug naar profiel"}).click();
+      const interest = page.locator('#studio-filter-results [data-kink-id="wax_play"] [data-answer-summary]');
+      assert(await interest.evaluate(el => el === document.activeElement));
+      assert(await interest.locator('[data-answer-verdict="yes"]').isVisible());
+    } finally {
+      await page.setViewportSize({width:390, height:844});
+      await page.emulateMedia({colorScheme:"dark", reducedMotion:"no-preference"});
+    }
+    await button("Zoek in catalogus").click();
     const categories = page.getByRole("combobox", {name:"Categorie"});
     if (await categories.count()) {
       await page.getByRole("searchbox").fill("");
@@ -231,6 +257,8 @@ const cases = {
     }
     await page.getByRole("searchbox").press("Escape");
     assert(await button("Zoek in catalogus").evaluate(el => el === document.activeElement));
+    assert.equal(await limitsTab.getAttribute("aria-pressed"), "false");
+    assert.equal(await page.getByRole("group", {name:"Antwoordstatus"}).getByRole("button", {name:/Heel graag/}).getAttribute("aria-pressed"), "true");
   },
   async overlays() {
     await go("overlays");

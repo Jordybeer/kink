@@ -1,13 +1,12 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { CaretDown, Check, Eye, EyeSlash, LockKey, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { CaretDown, Check, Eye, EyeSlash, FunnelSimple, LockKey, MagnifyingGlass, X } from "@phosphor-icons/react";
 import { useReducedMotionPreference } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import ProfileTopicRow from "@/components/profile/ProfileTopicRow";
 import Accordion from "@/components/ui/Accordion";
 import TopicDetailsFields from "@/components/profile/TopicDetailsFields";
-import StatusOptionRows from "@/components/StatusOptionRows";
 import StatusGlyph from "@/components/StatusGlyph";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import { CATEGORIES, KINKS, getKinksByCategory, kinkCategoryLabel } from "@/lib/kinks";
@@ -55,7 +54,7 @@ function RevealedAnswer({ entry, onChange }: { entry: KinkEntry; onChange: (patc
       </p>
       {entry.comment && <p>{entry.comment}</p>}
       <Accordion trigger="Bewerk privéantwoord" className="mt-2" contentClassName="py-2">
-        <StatusOptionRows current={entry.status} presentation="list" onSelect={status => onChange({ status, desire: null })} />
+        <AnswerChoices current={entry.status} onSelect={status => onChange({ status, desire: null })} />
         <TopicDetailsFields entry={entry} onChange={onChange} />
       </Accordion>
     </div>
@@ -103,6 +102,7 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
   const [revealed, setRevealed] = useState<string | null>(null);
   const launch = useRef<HTMLButtonElement>(null);
   const input = useRef<HTMLInputElement>(null);
+  const searchOrigin = useRef<{ scrollY: number; changedTopic?: string } | null>(null);
   const activeFilter = useRef<HTMLButtonElement>(null);
   const resultList = useRef<HTMLDivElement>(null);
   const boundaryList = useRef<HTMLElement>(null);
@@ -126,8 +126,24 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
     return () => animations.forEach(animation => animation.cancel());
   }, [searchOpen, category, filter, reduced, query]);
 
-  useEffect(() => {
-    if (searchOpen) input.current?.focus({ preventScroll: true });
+  useLayoutEffect(() => {
+    if (searchOpen) {
+      input.current?.focus({ preventScroll: true });
+      return;
+    }
+    const origin = searchOrigin.current;
+    if (!origin) return;
+    searchOrigin.current = null;
+    window.scrollTo({ top: origin.scrollY, behavior: "instant" });
+    const selector = origin.changedTopic && `[data-kink-id="${CSS.escape(origin.changedTopic)}"] button[data-answer-summary]`;
+    const row = selector && (resultList.current?.querySelector<HTMLButtonElement>(selector)
+      ?? boundaryList.current?.querySelector<HTMLButtonElement>(selector));
+    if (!row) {
+      launch.current?.focus({ preventScroll: true });
+      return;
+    }
+    row.focus({ preventScroll: true });
+    row.scrollIntoView({ block: "nearest", behavior: "instant" });
   }, [searchOpen]);
   useEffect(() => {
     const hide = () => setRevealed(null);
@@ -141,13 +157,19 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
   }, []);
 
   function closeSearch() {
+    const origin = searchOrigin.current;
+    if (origin?.changedTopic) {
+      const entry = entries[origin.changedTopic];
+      if (entry?.status && !entry.privateResponse) setFilter(entry.status);
+      else delete origin.changedTopic;
+    }
     setSearchOpen(false);
     setQuery("");
     setCategory("");
     setEditor(null);
-    launch.current?.focus({ preventScroll: true });
   }
   function patch(id: string, change: Partial<KinkEntry>) {
+    if (editor?.id === id && searchOrigin.current) searchOrigin.current.changedTopic = id;
     updateEntry(id, change);
     if (change.privateResponse !== undefined) {
       setEditor(null);
@@ -175,6 +197,7 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
       const entry = entries[kink.id] ?? unrated;
       return <ProfileTopicRow key={kink.id} kink={kink} entry={entry} showCategory
         answerChoices={active && <AnswerChoices current={entry.status} onSelect={status => patch(kink.id, { status, desire: null })} />}
+        completion={section === "catalogue" ? { label: "Terug naar profiel", onClick: closeSearch } : undefined}
         editable={!pinnedBoundary} selected={active} open={active} concealed={false}
         onToggle={() => {
           setRevealed(null);
@@ -191,23 +214,21 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
   return (
     <div className={styles.study}>
       <section aria-labelledby="studio-interests">
-        <div className={styles.toolbar}>
-          <h2 id="studio-interests">Interesses &amp; grenzen</h2>
-          <button className={`focus-ring ${styles.action}`} type="button" ref={launch} aria-expanded={searchOpen}
-            aria-controls="studio-search" onClick={() => {
-              if (searchOpen) closeSearch();
-              else { setEditor(null); setRevealed(null); setSearchOpen(true); }
-            }}><MagnifyingGlass size={16} aria-hidden="true" /> {searchOpen ? "Sluit catalogus" : "Zoek in catalogus"}</button>
-        </div>
-        {searchOpen ? <section id="studio-search">
+        <h2 id="studio-interests" className={styles.sectionTitle}>Interesses &amp; grenzen</h2>
+        {searchOpen ? <section id="studio-search" aria-label="Catalogus" onKeyDown={event => {
+          if (event.key === "Escape" && !event.nativeEvent.isComposing && !event.defaultPrevented) {
+            event.preventDefault();
+            closeSearch();
+          }
+        }}>
           <div className={styles.searchField}>
+            <MagnifyingGlass size={18} aria-hidden="true" />
             <input ref={input} type="search" value={query} aria-label="Volledige catalogus doorzoeken"
-              placeholder="Zoek op onderwerp of andere naam…" onChange={event => { setEditor(null); setQuery(event.target.value); }}
-              onKeyDown={event => { if (event.key === "Escape") { event.preventDefault(); closeSearch(); } }} />
-            <button type="button" className="focus-ring" aria-label="Sluit zoeken" onClick={closeSearch}><X size={18} aria-hidden="true" /></button>
+              placeholder="Zoek in catalogus…" onChange={event => { setEditor(null); setQuery(event.target.value); }} />
+            <button type="button" className="focus-ring" aria-label="Sluit catalogus" onClick={closeSearch}><X size={18} aria-hidden="true" /></button>
           </div>
           <label className={styles.categoryPicker}>
-            <span>Categorie</span>
+            <FunnelSimple size={16} aria-hidden="true" />
             <strong aria-hidden="true">{category ? kinkCategoryLabel(category) : "Alle categorieën"}</strong>
             <CaretDown size={15} aria-hidden="true" />
             <select aria-label="Categorie" value={category} onChange={event => {
@@ -222,6 +243,12 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
             : results.length ? "Al beoordeeld in dit profiel" : "Zoek een onderwerp of kies een categorie."}</p>
           <div ref={resultList}>{rows(results, "catalogue")}</div>
         </section> : <>
+          <button className={`focus-ring ${styles.action}`} type="button" ref={launch} onClick={() => {
+            searchOrigin.current = { scrollY: window.scrollY };
+            setEditor(null);
+            setRevealed(null);
+            setSearchOpen(true);
+          }}><MagnifyingGlass size={18} aria-hidden="true" /> Zoek in catalogus</button>
           <div className={styles.filters} role="group" aria-label="Antwoordstatus">
             {STATUS_ORDER.map(status => <button key={status} type="button" className="focus-ring"
               ref={filter === status ? activeFilter : undefined} aria-pressed={filter === status} style={answerTone(status)}

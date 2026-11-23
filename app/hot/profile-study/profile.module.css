@@ -19,16 +19,16 @@
 }
 .kicker { margin-bottom: .4rem; font-size: .875rem; }
 .study h2 { font-size: 1.45rem; line-height: 1.2; }
-.toolbar, .privateHeading, .action, .verdict, .sealed, .privateSection h2 {
+.privateHeading, .action, .verdict, .sealed, .privateSection h2 {
   display: flex;
   align-items: center;
   gap: .5rem;
 }
-.toolbar, .privateHeading {
+.privateHeading {
   justify-content: space-between;
   flex-wrap: wrap;
 }
-.toolbar { margin-block: 1.15rem .4rem; }
+.sectionTitle { margin-block: 1.15rem .4rem; }
 .action {
   min-height: var(--touch-target);
   font-size: .875rem;
@@ -76,30 +76,33 @@
 }
 .searchField {
   display: flex;
-  border-bottom: 2px solid var(--control-border);
+  gap: .5rem;
+  color: var(--accent-text);
+  border-bottom: 1px solid var(--control-border);
   align-items: center;
   margin-bottom: .5rem;
 }
 .searchField:focus-within { border-color: var(--focus); }
-.searchField input { flex: 1; min-width: 0; min-height: var(--touch-target); outline: none; font-size: 1rem; }
+.searchField input { flex: 1; min-width: 0; min-height: var(--touch-target); outline: none; font-size: 1rem; color: var(--text); }
 .searchField button { min-width: var(--touch-target); min-height: var(--touch-target); display: grid; place-items: center; }
 .categoryPicker {
-  display: grid;
+  display: inline-grid;
+  max-inline-size: 100%;
   position: relative;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
   gap: .5rem;
   min-height: var(--touch-target);
   padding-block: .5rem;
-  border-bottom: 1px solid var(--border);
   color: var(--text2);
   font-size: .875rem;
 }
-.categoryPicker strong { text-align: end; color: var(--text); }
+.categoryPicker strong { font-weight: 550; color: var(--text); }
 .categoryPicker select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
 .categoryPicker:focus-within { outline: 2px solid var(--focus); outline-offset: 2px; }
 .study [data-answer-summary] {
   display: grid;
+  scroll-margin-block: calc(var(--nav-h) + .5rem) .75rem;
   grid-template-columns: minmax(0,1fr) auto;
   align-items: center;
   gap: .4rem .65rem;
@@ -160,7 +163,8 @@
 .verdict { font-size: .925rem; font-weight: 650; }
 @media (prefers-reduced-motion: no-preference) {
   .choices button { transition: color .16s ease-out, background-color .16s ease-out; }
-  .searchField { animation: unfold .26s var(--motion-ease) both; }
+  .searchField { position: relative; }
+  .searchField::after { content: ""; position: absolute; inset: auto 0 -1px; height: 1px; background: currentColor; transform-origin: left; pointer-events: none; animation: unfold .24s var(--motion-ease) both; }
   .openLane::after {
     content: "";
     position: absolute;
@@ -172,7 +176,7 @@
   }
   .openLane .verdict { animation: uncover .44s var(--motion-ease) both; }
 }
-@keyframes unfold { from { clip-path: inset(0 92% 0 0); } to { clip-path: inset(0); } }
+@keyframes unfold { from { transform: scaleX(.06); } to { transform: scaleX(1); } }
 @keyframes peel {
   from { transform: translateX(0) skewX(0); }
   25% { transform: translateX(7%) skewX(-6deg); }

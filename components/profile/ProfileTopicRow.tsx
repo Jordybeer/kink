@@ -22,13 +22,14 @@ interface Props {
   compactPrivate?: boolean;
   showCategory?: boolean;
   answerChoices?: ReactNode;
+  completion?: { label: string; onClick: () => void };
   onToggle: () => void;
   onReveal: () => void;
   onConceal: () => void;
   onChange: (partial: Partial<KinkEntry>) => void;
 }
 
-export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, showCategory = false, answerChoices, onToggle, onReveal, onConceal, onChange }: Props) {
+export default function ProfileTopicRow({ kink, entry, editable, selected, open, concealed, compactPrivate = false, showCategory = false, answerChoices, completion, onToggle, onReveal, onConceal, onChange }: Props) {
   const id = useId();
   const trigger = useRef<HTMLButtonElement>(null);
   const visible = !entry.privateResponse || !concealed;
@@ -103,10 +104,10 @@ export default function ProfileTopicRow({ kink, entry, editable, selected, open,
               <Accordion trigger="Details" className="mt-3" contentClassName="pb-2 pt-2">
                 <TopicDetailsFields entry={entry} onChange={onChange} />
               </Accordion>
-              <button type="button" onClick={close}
+              <button type="button" onClick={completion?.onClick ?? close}
                 className="focus-ring ks-motion-choice mt-3 min-h-11 px-1 text-sm font-semibold"
                 style={{ color: "var(--accent-text)" }}>
-                Klaar
+                {completion?.label ?? "Klaar"}
               </button>
             </>
           )}
