@@ -1,6 +1,7 @@
 "use client";
 import { motion } from "framer-motion";
 import { Check } from "@phosphor-icons/react";
+import StatusGlyph from "./StatusGlyph";
 import type { KinkStatus } from "@/types";
 import { useMotionSafe } from "@/lib/motion";
 import { STATUS_HINT, STATUS_LABEL, STATUS_ORDER, STATUS_VAR } from "@/lib/statusLabels";
@@ -45,39 +46,9 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                   : "transparent",
               }}
             >
-              <motion.span
-                data-status-indicator={s}
-                aria-hidden="true"
-                className="flex h-5 w-5 flex-none items-center justify-center rounded-full ks-motion-state"
-                animate={{ scale: active ? 1 : 0.94 }}
-                transition={motionSafe.state}
-                style={{
-                  color: active ? labelColour : colour,
-                  border: active
-                    ? `1px ${danger ? "dashed" : "solid"} color-mix(in srgb, ${colour} 54%, var(--border))`
-                    : "1px solid var(--control-border)",
-                  background: active
-                    ? `color-mix(in srgb, ${colour} ${danger ? 9 : 10}%, transparent)`
-                    : "transparent",
-                }}
-              >
-                {active
-                  ? (
-                    <motion.span
-                      initial={motionSafe.reduced ? false : { opacity: 0, scale: 0.75 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={motionSafe.state}
-                      className="flex"
-                    >
-                      <Check size={12} weight="bold" />
-                    </motion.span>
-                  )
-                  : <span
-                      className="h-2 w-2 rounded-full"
-                      style={danger ? { border: `1.5px dashed ${colour}` } : { background: colour }}
-                    />}
-              </motion.span>
-
+              <span data-status-indicator={s} className="flex w-5 flex-none justify-center" style={{ color: labelColour }}>
+                <StatusGlyph status={s} size={17} />
+              </span>
               <span className="min-w-0 flex-1">
                 <span
                   className="block text-[15px] font-semibold leading-5"
@@ -88,6 +59,9 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
                 <span className="mt-0.5 block text-xs leading-4" style={{ color: "var(--text2)" }}>
                   {hint}
                 </span>
+              </span>
+              <span className="flex w-4 flex-none" style={{ color: labelColour }}>
+                {active && <Check size={16} weight="bold" aria-hidden="true" />}
               </span>
             </button>
           );
