@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { ArrowRight, CaretDown, CaretRight, Check, Circle, Info, ShieldCheck } from "@phosphor-icons/react";
 import type { Kink, KinkCategory, KinkCategoryId, KinkEntry, KinkStatus } from "@/types";
 import { KINKS, kinkCategoryLabel } from "@/lib/kinks";
@@ -36,13 +36,14 @@ interface Props {
   entries: Record<string, KinkEntry>;
   focusCategory?: KinkCategoryId | null;
   progressLabel?: string;
+  completedContent?: ReactNode;
   onStatusChange: (kinkId: string, s: KinkStatus) => void;
   onCuriousChange: (kinkId: string, v: boolean) => void;
   onPrivateChange: (kinkId: string, v: boolean) => void;
   onTagsChange: (kinkId: string, tags: string[]) => void;
 }
 
-export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
+export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
   const folio = presentationStyle === "folio";
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
   const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean } | null>(null);
@@ -260,6 +261,8 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
               </div>
             </div>
           </div>
+        ) : skippedUnansweredCount === 0 && completedContent ? (
+          <div data-testid="question-finish-state">{completedContent}</div>
         ) : (
           <div data-testid="question-finish-state" className="rounded-2xl p-5 text-center" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}><p className="text-lg italic" style={{ fontFamily: "var(--font-display, Georgia, serif)", color: "var(--text)" }}>{skippedUnansweredCount > 0 ? "Voor nu klaar." : "Alles beoordeeld."}</p><p className="mt-1 text-xs tabular-nums" style={{ color: "var(--text2)" }}>{progressLabel ?? `${totalDone} van ${kinks.length} beoordeeld`}.{!standalone && " Tik een kink hieronder om bij te stellen."}</p>{skippedUnansweredCount > 0 && <button onClick={() => setSkipped(new Set())} className="ks-motion-choice focus-ring mt-3 min-h-11 rounded-lg border px-4 text-xs" style={{ color: "var(--accent)", borderColor: "color-mix(in srgb, var(--accent) 40%, transparent)" }}>{skippedUnansweredCount} overgeslagen. Toon opnieuw</button>}</div>
         )}

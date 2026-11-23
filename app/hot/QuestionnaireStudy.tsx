@@ -1,9 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import Link from "next/link";
 import { ArrowsClockwise, Columns } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import TriageDeck from "@/components/TriageDeck";
+import EditorialHeading from "@/components/ui/EditorialHeading";
 import { useTopNavActions } from "@/components/nav/TopNavContext";
 import { getQuestionnaireRuntime } from "@/lib/questionnaire";
 import { getDynamicFirstRound } from "@/lib/questionnaireFirstRound";
@@ -34,8 +36,8 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
       .filter(kink => FOLLOW_UP_STUDY_ORDER.includes(kink.id))
       .map(kink => kink.id === FOLLOW_UP && folio ? {
         ...kink,
-        name: "Elkaar met een titel aanspreken",
-        description: "Spreekt het je aan om binnen een D/s-dynamiek een afgesproken titel te gebruiken, zoals Sir, Meesteres of prinses? Spreek samen af welke titel past, wie die gebruikt en wanneer die geldt.",
+        name: "Aanspreektitels",
+        description: "Hoe sta je tegenover afgesproken titels zoals Sir of Meesteres? Spreek samen af welke titel past, wie die gebruikt en wanneer die geldt.",
       } : kink);
   }, [folio, followUpStudy, round.visibleKinks]);
   const queue = useMemo(() => {
@@ -47,6 +49,10 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
     });
   }, [followUpStudy, round.queue, visibleKinks]);
   const answered = visibleKinks.filter(kink => entries[kink.id]?.status != null).length;
+  const restart = useCallback(() => {
+    setEntries({});
+    setSession(value => value + 1);
+  }, []);
 
   function update(id: string, patch: Partial<KinkEntry>) {
     setEntries(previous => ({
@@ -59,10 +65,11 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
     { id: "compare-layout", label: followUpStudy
         ? (folio ? "Toon oorspronkelijke tekst" : "Toon nieuwe tekst")
         : (folio ? "Bekijk origineel" : "Bekijk prototype"),
+      shortLabel: followUpStudy ? "Vergelijk" : undefined,
       icon: <Columns size={19} />, placement: "primary" as const, onClick: () => setFolio(value => !value) },
     { id: "restart", label: "Opnieuw beginnen", icon: <ArrowsClockwise size={19} />,
-      onClick: () => { setEntries({}); setSession(value => value + 1); } },
-  ], [folio, followUpStudy]);
+      onClick: restart },
+  ], [folio, followUpStudy, restart]);
   useTopNavActions(actions, followUpStudy ? "Vervolgvraag" : folio ? "Vragenlijst · Prototype" : "Vragenlijst · Origineel", "/hot");
 
   return (
@@ -72,6 +79,22 @@ export default function QuestionnaireStudy({ followUpStudy = false }: { followUp
         value={round.coverage.answered} max={round.coverage.total} />}
       <TriageDeck key={session} presentationStyle={folio || followUpStudy ? "folio" : "classic"} standalone
         kinks={visibleKinks} queueItems={queue} entries={entries}
+        completedContent={followUpStudy ? (
+          <section className="mx-auto max-w-sm pt-10 text-center">
+            <EditorialHeading title="Proef afgerond" level={2} size="compact" />
+            <p className="mt-2 text-sm text-[var(--text2)]">
+              {answered} {answered === 1 ? "vraag" : "vragen"} beantwoord.
+            </p>
+            <div className="mt-5 flex flex-wrap items-center justify-center gap-x-5">
+              <button type="button" onClick={restart} className="focus-ring ks-motion-choice min-h-11 rounded-md font-semibold text-[var(--accent-text)]">
+                Opnieuw proberen
+              </button>
+              <Link href="/hot" className="focus-ring ks-motion-choice inline-flex min-h-11 items-center rounded-md text-[var(--text2)]">
+                Terug naar de studio
+              </Link>
+            </div>
+          </section>
+        ) : undefined}
         progressLabel={followUpStudy ? `${answered} beantwoord` : folio ? `${round.coverage.answered} / ${round.coverage.total}` : `Dynamic · ${round.coverage.answered} / ${round.coverage.total}`}
         onStatusChange={(id, status) => update(id, { status, desire: null })}
         onCuriousChange={(id, curious) => update(id, { curious })}
