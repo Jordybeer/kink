@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
-import { CaretDown, Check, Eye, EyeSlash, FunnelSimple, LockKey, MagnifyingGlass, X } from "@phosphor-icons/react";
+import { CaretDown, Check, Eye, EyeSlash, FunnelSimple, LockKey, MagnifyingGlass } from "@phosphor-icons/react";
 import { useReducedMotionPreference } from "@/lib/motion";
 import PageShell from "@/components/PageShell";
 import ProfileTopicRow from "@/components/profile/ProfileTopicRow";
@@ -225,7 +225,7 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
             <MagnifyingGlass size={18} aria-hidden="true" />
             <input ref={input} type="search" value={query} aria-label="Volledige catalogus doorzoeken"
               placeholder="Zoek in catalogus…" onChange={event => { setEditor(null); setQuery(event.target.value); }} />
-            <button type="button" className="focus-ring" aria-label="Sluit catalogus" onClick={closeSearch}><X size={18} aria-hidden="true" /></button>
+            <button type="button" className="focus-ring" aria-label="Sluit catalogus" onClick={closeSearch}>Sluit</button>
           </div>
           <label className={styles.categoryPicker}>
             <FunnelSimple size={16} aria-hidden="true" />

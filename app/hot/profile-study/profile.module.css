@@ -84,7 +84,7 @@
 }
 .searchField:focus-within { border-color: var(--focus); }
 .searchField input { flex: 1; min-width: 0; min-height: var(--touch-target); outline: none; font-size: 1rem; color: var(--text); }
-.searchField button { min-width: var(--touch-target); min-height: var(--touch-target); display: grid; place-items: center; }
+.searchField button { font-size: .875rem; font-weight: 600; min-width: var(--touch-target); min-height: var(--touch-target); display: grid; place-items: center; }
 .categoryPicker {
   display: inline-grid;
   max-inline-size: 100%;
