@@ -75,24 +75,43 @@ test.describe("Intimiteitsagenda", () => {
     await expect(page.getByText(/30 aug.*20:30/)).toBeVisible();
 
     const moment = page.getByRole("article", { name: "Date night", exact: true });
-    const momentTitle = moment.getByText("Date night", { exact: true });
     const trigger = moment.getByRole("button", { name: "Bijhouden", exact: true });
-    await trigger.scrollIntoViewIfNeeded();
-    const titlePosition = (await momentTitle.boundingBox())!;
     await trigger.click();
-    const logEditor = moment.getByRole("region", { name: "Moment bijhouden" });
-    const openTitlePosition = (await momentTitle.boundingBox())!;
-    expect(Math.abs(openTitlePosition.x - titlePosition.x)).toBeLessThanOrEqual(1);
-    expect(Math.abs(openTitlePosition.y - titlePosition.y)).toBeLessThanOrEqual(1);
-    await logEditor.getByRole("button", { name: "Annuleer" }).click();
+    const logEditor = page.getByRole("dialog", { name: "Moment bijhouden" });
+    await expect(logEditor.getByRole("heading", { name: "Date night" })).toBeFocused();
+    await logEditor.getByRole("button", { name: "Terug naar agenda" }).click();
     await expect(trigger).toBeFocused();
     await trigger.click();
-    await expect(logEditor.getByLabel("Privénotitie")).toBeVisible();
-    await expect(logEditor.getByLabel("Datum", { exact: true })).toBeHidden();
-    await logEditor.getByText("Datum en details", { exact: true }).click();
+
+    const privateNote = logEditor.getByLabel("Privénotitie");
+    const save = logEditor.getByRole("button", { name: "Bewaar in logboek" });
+    await expect(privateNote).toBeVisible();
+    await expect(logEditor.getByLabel("Datum", { exact: true })).toHaveCount(0);
+    await privateNote.fill("Een dag later was fijner");
+    // Simulate the visual viewport left by a short mobile keyboard without
+    // changing the layout viewport. Both writing and saving must stay reachable.
+    await page.setViewportSize({ width: 320, height: 667 });
+    await page.evaluate(() => {
+      const viewport = window.visualViewport!;
+      Object.defineProperties(viewport, {
+        height: { configurable: true, get: () => 314 },
+        offsetTop: { configurable: true, get: () => 20 },
+      });
+      viewport.dispatchEvent(new Event("resize"));
+    });
+    const saveBox = (await save.boundingBox())!;
+    const noteBox = (await privateNote.boundingBox())!;
+    expect(saveBox.y + saveBox.height).toBeLessThanOrEqual(334);
+    expect(noteBox.y + noteBox.height).toBeLessThanOrEqual(saveBox.y);
+    expect(await save.evaluate((button) => {
+      const { x, y, width, height } = button.getBoundingClientRect();
+      return button.contains(document.elementFromPoint(x + width / 2, y + height / 2));
+    })).toBe(true);
+    await logEditor.getByRole("button", { name: "Details", exact: true }).click();
     await logEditor.getByLabel("Datum", { exact: true }).fill("2026-08-31");
-    await logEditor.getByLabel("Privénotitie").fill("Een dag later was fijner");
-    await logEditor.getByRole("button", { name: "Bewaar in logboek" }).click();
+    await logEditor.getByRole("button", { name: "Naar notitie", exact: true }).click();
+    await expect(privateNote).toHaveValue("Een dag later was fijner");
+    await save.click();
 
     const logbook = page.getByLabel("Logboek");
     await expect(page.getByRole("tab", { name: "Logboek" })).toHaveAttribute("aria-selected", "true");

@@ -14,10 +14,6 @@
   outline-offset: 3px;
 }
 
-.entry[data-writing] {
-  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
-}
-
 .entryBody {
   display: flow-root;
 }
@@ -183,39 +179,6 @@ details[open] > .summary .summaryAction svg {
   resize: vertical;
 }
 
-/* The existing card is the writing surface on an anchored entry. */
-.entry .writingEditor {
-  margin-block-start: 0.875rem;
-  border: 0;
-  padding-block-start: 0.4rem;
-}
-
-.writingEditor .form {
-  gap: 0.45rem;
-}
-
-.writingEditor .options {
-  border-block-end: 0;
-}
-
-.writingField {
-  gap: 0;
-}
-
-.writingField textarea {
-  border: 0;
-  border-radius: 0.5rem;
-  caret-color: var(--accent);
-  resize: none;
-  min-block-size: 5rem;
-  max-block-size: 40vh;
-  field-sizing: content;
-}
-
-.writingField textarea::placeholder {
-  font: 500 1.25rem/1.5 var(--font-display, Georgia, serif);
-}
-
 .titleField input::placeholder,
 .note textarea::placeholder {
   color: var(--text2);
@@ -227,12 +190,6 @@ details[open] > .summary .summaryAction svg {
   outline: none;
   border-block-end-color: var(--focus);
   box-shadow: 0 1px var(--focus);
-}
-
-.writingField textarea:focus {
-  outline: 2px solid var(--focus);
-  outline-offset: 3px;
-  box-shadow: none;
 }
 
 .summary:focus-visible {
@@ -271,12 +228,8 @@ details[open] > .summary .summaryAction svg {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .editor:not(.writingEditor) {
+  .editor {
     animation: enter var(--motion-disclosure) var(--motion-ease) both;
-  }
-
-  .entry {
-    transition: background-color var(--motion-state) var(--motion-ease);
   }
 
   .summaryAction svg {
@@ -288,5 +241,162 @@ details[open] > .summary .summaryAction svg {
       opacity: 0.6;
       transform: translateY(5px);
     }
+  }
+}
+
+/* A dedicated writing screen with one flexible region between fixed actions. */
+:global(html:has(dialog[data-moment-writing][open])) {
+  overflow: hidden;
+}
+
+.writingScreen {
+  container: journal-screen / size;
+  position: fixed;
+  inset: var(--visual-viewport-offset-top, 0px) 0 auto;
+  inline-size: 100%;
+  max-inline-size: none;
+  block-size: var(--visual-viewport-height, 100dvh);
+  max-block-size: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  background: linear-gradient(160deg, color-mix(in srgb, var(--surface) 90%, var(--accent2)), var(--bg) 62%);
+  color: var(--text);
+}
+
+.writingScreen::backdrop {
+  background: var(--bg);
+}
+
+.writingForm {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  block-size: 100%;
+  inline-size: min(100%, 42rem);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+.writingBar {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.15rem 1rem;
+  border-block-end: 1px solid var(--border);
+  padding-block: env(safe-area-inset-top) 0.2rem;
+}
+
+.writingBar button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-block-size: 44px;
+  color: var(--text2);
+  text-align: start;
+  font-size: 0.875rem;
+  font-weight: 650;
+}
+
+.writingBar svg {
+  flex: none;
+}
+
+.writingBody {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 4dvh, 2rem);
+  min-inline-size: 0;
+  min-block-size: 0;
+  margin-inline: -0.35rem;
+  padding: clamp(0.75rem, 3dvh, 1.75rem) 0.35rem 0.5rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  container: moment-editor / inline-size;
+}
+
+.writingSubject {
+  position: relative;
+  z-index: 1;
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.writingTitle {
+  font: 500 clamp(1.65rem, 5vw, 2.65rem)/1.16 var(--font-display, Georgia, serif);
+  outline: none;
+}
+
+.writingSubject p {
+  margin-block-start: 0.35rem;
+  color: var(--text2);
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.writingField {
+  display: flex;
+  flex: 1 0 5.75rem;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-inline-size: 0;
+  color: var(--text2);
+  font-size: 0.875rem;
+}
+
+.writingField textarea {
+  flex: 1;
+  inline-size: 100%;
+  min-block-size: 3.75rem;
+  padding-block: 0.35rem;
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--text);
+  caret-color: var(--accent);
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  resize: none;
+}
+
+.writingField textarea::placeholder {
+  color: var(--text2);
+  font: 500 clamp(1.2rem, 4vw, 1.45rem)/1.45 var(--font-display, Georgia, serif);
+}
+
+.writingField textarea:focus {
+  outline: none;
+}
+
+.writingField:focus-within > span {
+  color: var(--accent);
+}
+
+.writingDetails {
+  display: grid;
+  gap: 1rem;
+  padding-block-end: 1.25rem;
+}
+
+.writingFooter {
+  padding-block: 0.5rem max(0.5rem, env(safe-area-inset-bottom));
+  border-block-start: 1px solid var(--border);
+}
+
+.writingFooter button {
+  inline-size: 100%;
+  min-block-size: 44px;
+  padding: 0.55rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+/* Use the actual visual height, including when a virtual keyboard occupies it. */
+@container journal-screen (max-height: 28rem) {
+  .writingBody {
+    gap: 0.65rem;
+    padding-block-start: 0.6rem;
   }
 }

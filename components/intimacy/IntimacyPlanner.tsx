@@ -20,7 +20,9 @@ import Sheet, { SheetContent } from "@/components/Sheet";
 import ContextMenu from "@/components/ui/ContextMenu";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import { useStore, useHasHydrated } from "@/lib/store";
-import { TWEEN_DISCLOSURE, TWEEN_SHEET, useReducedMotionPreference } from "@/lib/motion";
+import { useReducedMotionPreference } from "@/lib/motion";
+import { readPartnerProfileId } from "@/lib/partnerPreference";
+import MomentWritingScreen, { carryMomentIdentity } from "./MomentWritingScreen";
 import journal from "./MomentJournal.module.css";
 import {
   useIntimacyStore,
@@ -97,13 +99,6 @@ function findMomentCard(id: string) {
   return document.querySelector<HTMLElement>(`[data-intimacy-card="${CSS.escape(id)}"]`);
 }
 
-type WritingGeometry = { body: HTMLElement; height: number };
-
-function measureWritingBody(card: Element | null | undefined): WritingGeometry | null {
-  const body = card?.querySelector<HTMLElement>("[data-moment-body]");
-  return body ? { body, height: body.getBoundingClientRect().height } : null;
-}
-
 function IntimacyCard({
   entry,
   onLog,
@@ -111,7 +106,6 @@ function IntimacyCard({
   onCalendar,
   onDelete,
   composer,
-  recording,
 }: {
   entry: IntimacyRecord;
   onLog: () => void;
@@ -119,7 +113,6 @@ function IntimacyCard({
   onCalendar: () => void;
   onDelete: () => void;
   composer?: ReactNode;
-  recording: boolean;
 }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const titleId = useId();
@@ -130,7 +123,6 @@ function IntimacyCard({
     <article
       className={`rounded-2xl p-4 ${journal.entry}`}
       data-intimacy-card={entry.id}
-      data-writing={recording || undefined}
       aria-labelledby={titleId}
       tabIndex={-1}
     >
@@ -149,14 +141,16 @@ function IntimacyCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p id={titleId} className={journal.entryTitle}>
-            {entry.title?.trim() || "Privé moment"}
-          </p>
-          <p className={journal.entryDate}>
-            {displayDate(entry.date)}
-            {entry.time ? ` · ${entry.time}` : ""}
-            {entry.partnerName ? ` · ${entry.partnerName}` : ""}
-          </p>
+          <div data-moment-identity>
+            <p id={titleId} className={journal.entryTitle}>
+              {entry.title?.trim() || "Privé moment"}
+            </p>
+            <p className={journal.entryDate}>
+              {displayDate(entry.date)}
+              {entry.time ? ` · ${entry.time}` : ""}
+              {entry.partnerName ? ` · ${entry.partnerName}` : ""}
+            </p>
+          </div>
           {countdown && (
             <p className="mt-1 text-xs font-medium" style={{ color: "var(--accent)" }}>
               {countdown}
@@ -200,7 +194,7 @@ function IntimacyCard({
         </div>
       </div>
 
-      <div data-moment-body className={journal.entryBody}>
+      <div className={journal.entryBody}>
         {!composer && entry.note && (
           <p className={planned ? "mt-3 line-clamp-3 text-sm leading-6 text-[var(--text2)]" : journal.entryNote}>
             {entry.note}
@@ -258,13 +252,13 @@ export default function IntimacyPlanner() {
   const [notificationPermission, setNotificationPermission] = useState<IntimacyNotificationPermission | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const editorHeading = useRef<HTMLHeadingElement>(null);
-  const dateDetails = useRef<HTMLDetailsElement>(null);
+  const [writingDetails, setWritingDetails] = useState(false);
+  const [writingOrigin, setWritingOrigin] = useState<DOMRect | null>(null);
   const dateInput = useRef<HTMLInputElement>(null);
   const timeInput = useRef<HTMLInputElement>(null);
   const opener = useRef<HTMLElement | null>(null);
   const focusPending = useRef(false);
-  const pendingWriting = useRef<WritingGeometry | null>(null);
-  const pendingSave = useRef<{ id: string; sourceTop: number | null } | null>(null);
+  const pendingReturn = useRef<{ id: string; source: DOMRect | null; saved: boolean } | null>(null);
   const reducedMotion = useReducedMotionPreference();
   const editingEntry = editingId ? entries.find((entry) => entry.id === editingId) : undefined;
   const composerTab = editingEntry?.status ?? composerMode;
@@ -286,17 +280,21 @@ export default function IntimacyPlanner() {
     setComposerMode(null);
     setEditingId(null);
     setFormError(null);
+    setWritingDetails(false);
+    setWritingOrigin(null);
   }, []);
 
-  function cancelComposer() {
-    pendingWriting.current = measureWritingBody(editorHeading.current?.closest("[data-writing]"));
+  function cancelComposer(source: DOMRect | null = null) {
+    if (composerMode === "completed" && editingId) {
+      pendingReturn.current = { id: editingId, source, saved: false };
+    }
     const trigger = opener.current;
     opener.current = null;
     closeComposer();
     requestAnimationFrame(() => {
       const fallback = tabRefs.current[tab === "planned" ? 0 : 1];
       const visibleTrigger = trigger?.isConnected && trigger.getClientRects().length;
-      (visibleTrigger ? trigger : fallback)?.focus();
+      (visibleTrigger ? trigger : fallback)?.focus({ preventScroll: true });
     });
   }
 
@@ -313,44 +311,18 @@ export default function IntimacyPlanner() {
   }, [composerMode, composerTab, tab, mainHydrated, intimacyHydrated, focusEditor]);
 
   useLayoutEffect(() => {
-    const start = pendingWriting.current;
-    pendingWriting.current = null;
-    if (!start?.body.isConnected || reducedMotion) return;
+    const result = pendingReturn.current;
+    if (!result || composerMode) return;
+    pendingReturn.current = null;
 
-    // Both bodies occupy the same slot. Measure once after React's commit so
-    // an interrupted reversal can start at the card's current rendered height.
-    const height = start.body.getBoundingClientRect().height;
-    if (Math.abs(start.height - height) < 1) return;
-    const timing = composerMode ? TWEEN_SHEET : TWEEN_DISCLOSURE;
-    const animation = start.body.animate(
-      [{ height: `${start.height}px`, overflow: "clip" }, { height: `${height}px`, overflow: "clip" }],
-      { duration: timing.duration * 1000, easing: `cubic-bezier(${timing.ease.join(",")})` },
-    );
-    return () => animation.cancel();
-  }, [composerMode, tab, reducedMotion]);
-
-  useLayoutEffect(() => {
-    const saved = pendingSave.current;
-    if (!saved || composerMode) return;
-    pendingSave.current = null;
-
-    const card = findMomentCard(saved.id);
-    if (!card) return;
-    card.focus({ preventScroll: true });
-    card.scrollIntoView({ block: "nearest" });
-    if (saved.sourceTop === null || reducedMotion) return;
-
-    // Preserve the match when both positions are close. Larger jumps settle
-    // within the space between cards so the saved item never covers a neighbour.
-    const top = card.getBoundingClientRect().top;
-    const delta = saved.sourceTop - top;
-    if (Math.abs(delta) < 1) return;
-    const offset = Math.max(-8, Math.min(8, delta));
-    const animation = card.animate(
-      [{ transform: `translateY(${offset}px)` }, { transform: "none" }],
-      { duration: TWEEN_SHEET.duration * 1000, easing: `cubic-bezier(${TWEEN_SHEET.ease.join(",")})` },
-    );
-    return () => animation.cancel();
+    const card = findMomentCard(result.id);
+    if (result.saved) {
+      card?.focus({ preventScroll: true });
+      card?.scrollIntoView({ block: "nearest" });
+    }
+    if (reducedMotion) return;
+    const animation = carryMomentIdentity(card?.querySelector<HTMLElement>("[data-moment-identity]"), result.source);
+    return () => animation?.cancel();
   }, [composerMode, tab, reducedMotion]);
 
   const openComposer = useCallback((mode: ComposerMode, entry?: IntimacyRecord) => {
@@ -362,11 +334,11 @@ export default function IntimacyPlanner() {
       }
       return;
     }
-    if (mode === "completed" && entry?.status === "planned") {
-      pendingWriting.current = measureWritingBody(findMomentCard(entry.id));
+    if (mode === "completed" && entry) {
+      setWritingOrigin(findMomentCard(entry.id)?.querySelector("[data-moment-identity]")?.getBoundingClientRect() ?? null);
     }
     const active = document.activeElement;
-    focusPending.current = true;
+    focusPending.current = mode === "planned";
     if (active instanceof HTMLElement && active !== document.body) {
       opener.current = active.getAttribute("role") === "menuitem"
         ? active.closest("[data-intimacy-card]")?.querySelector<HTMLButtonElement>('button[aria-haspopup="menu"]') ?? null
@@ -378,7 +350,7 @@ export default function IntimacyPlanner() {
     setDate(entry?.date ?? localDateInputValue());
     setTime(entry?.time ?? "");
     setTitle(entry?.title ?? "");
-    setPartnerId(entry?.partnerProfileId ?? "");
+    setPartnerId(entry ? entry.partnerProfileId ?? "" : mode === "completed" ? readPartnerProfileId() ?? "" : "");
     setNote(entry?.note ?? "");
     setReminderEnabled(mode === "planned" && entry?.reminderDaysBefore !== undefined);
     setReminderDays(entry?.reminderDaysBefore ?? 2);
@@ -416,7 +388,7 @@ export default function IntimacyPlanner() {
     ? "Bewaar in logboek"
     : editingId
       ? "Wijzigingen bewaren"
-      : composerMode === "planned" ? "Plan moment" : "Bewaar";
+      : composerMode === "planned" ? "Plan moment" : "Bewaar in logboek";
 
   async function setReminder(enabled: boolean) {
     setReminderEnabled(enabled);
@@ -425,12 +397,14 @@ export default function IntimacyPlanner() {
     setNotificationPermission(permission);
   }
 
-  function saveEntry() {
+  function saveEntry(source: DOMRect | null = null) {
     if (!composerMode) return;
     if (!date) {
       setFormError("Kies een datum.");
-      if (dateDetails.current) dateDetails.current.open = true;
-      dateInput.current?.focus();
+      if (composerMode === "completed" && !writingDetails) {
+        setWritingDetails(true);
+        requestAnimationFrame(() => dateInput.current?.focus());
+      } else dateInput.current?.focus();
       return;
     }
     if (composerMode === "planned" && !time) {
@@ -450,9 +424,6 @@ export default function IntimacyPlanner() {
       reminderDaysBefore: composerMode === "planned" && reminderEnabled ? reminderDays : undefined,
     };
 
-    const sourceTop = loggingPlannedMoment
-      ? editorHeading.current?.closest("article")?.getBoundingClientRect().top
-      : undefined;
     let savedId: string;
     if (editingId) {
       const existing = entries.find((entry) => entry.id === editingId);
@@ -474,10 +445,7 @@ export default function IntimacyPlanner() {
       });
     }
 
-    pendingSave.current = {
-      id: savedId,
-      sourceTop: sourceTop !== undefined && sourceTop > 0 && sourceTop < window.innerHeight ? sourceTop : null,
-    };
+    pendingReturn.current = { id: savedId, source, saved: true };
     setTab(composerMode);
     opener.current = null;
     closeComposer();
@@ -524,7 +492,7 @@ export default function IntimacyPlanner() {
     </div>
   );
   const noteField = (
-    <label className={`${journal.note} ${isPlanning ? "" : journal.writingField}`}>
+    <label className={isPlanning ? journal.note : journal.writingField}>
       <span className="inline-flex items-center gap-1.5"><LockSimple size={14} aria-hidden="true" /> Privénotitie</span>
       <textarea
         value={note}
@@ -534,44 +502,45 @@ export default function IntimacyPlanner() {
       />
     </label>
   );
-  const editor = composerMode && (
-    <section className={`${journal.editor} ${isPlanning ? "" : journal.writingEditor}`} aria-labelledby="moment-journal-heading"
+  const momentDetails = (
+    <>
+      <label className={journal.titleField}>
+        Titel (optioneel)
+        <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Geef dit moment een naam" />
+      </label>
+      {profiles.length > 0 && (
+        <div>
+          <p id="moment-partner-label" className="mb-1.5 text-sm text-[var(--text2)]">Met wie? (optioneel)</p>
+          <ProfileSelect profiles={profiles} value={partnerId} onChange={setPartnerId}
+            placeholder="Geen partner gekozen" emptyOption={isPlanning ? undefined : "Geen partner gekozen"}
+            labelledBy="moment-partner-label" />
+        </div>
+      )}
+    </>
+  );
+
+  const editor = isPlanning && (
+    <section className={journal.editor} aria-labelledby="moment-journal-heading"
       onKeyDown={(event) => {
         if (event.key === "Escape" && !event.defaultPrevented) {
           event.preventDefault();
           cancelComposer();
         }
       }}>
-      <h2 id="moment-journal-heading" ref={editorHeading} tabIndex={-1} className={loggingPlannedMoment ? "sr-only" : journal.heading}>{composerTitle}</h2>
+      <h2 id="moment-journal-heading" ref={editorHeading} tabIndex={-1} className={journal.heading}>{composerTitle}</h2>
       <form className={journal.form} noValidate onSubmit={(event) => { event.preventDefault(); saveEntry(); }}>
-        {isPlanning ? when : noteField}
-        <details ref={isPlanning ? undefined : dateDetails} className={journal.options}
-          onToggle={(event) => {
-            event.currentTarget.closest("[data-moment-body]")?.getAnimations().forEach((animation) => animation.cancel());
-          }}>
+        {when}
+        <details className={journal.options}>
           <summary className={journal.summary}>
-            <span>{isPlanning ? "Meer opties" : "Datum en details"}</span>
+            <span>Meer opties</span>
             <span className={journal.summaryAction}>
-              {isPlanning ? profiles.find((profile) => profile.id === partnerId)?.name
-                : (!editingEntry || date !== editingEntry.date || time !== (editingEntry.time ?? "")) &&
-                  (date ? `${displayDate(date)}${time ? ` · ${time}` : ""}` : "Kies een datum")}
+              {profiles.find((profile) => profile.id === partnerId)?.name}
               <CaretDown size={14} aria-hidden="true" />
             </span>
           </summary>
           <div className={journal.optionalFields}>
-            {!isPlanning && when}
-            <label className={journal.titleField}>
-              Titel (optioneel)
-              <input type="text" value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Geef dit moment een naam" />
-            </label>
-            {profiles.length > 0 && (
-              <div>
-                <p id="moment-partner-label" className="mb-1.5 text-sm text-[var(--text2)]">Met wie? (optioneel)</p>
-                <ProfileSelect profiles={profiles} value={partnerId} onChange={setPartnerId}
-                  placeholder="Geen partner gekozen" labelledBy="moment-partner-label" />
-              </div>
-            )}
-            {isPlanning && noteField}
+            {momentDetails}
+            {noteField}
             {composerMode === "planned" && (
               <div className={journal.reminder}>
                 <label className="flex min-h-11 items-center justify-between gap-4">
@@ -631,7 +600,7 @@ export default function IntimacyPlanner() {
         </details>
         {formError && <p role="alert" className="text-sm text-[var(--hard-no-text)]">{formError}</p>}
         <div className={journal.actions}>
-          <button type="button" className={`focus-ring ks-motion-choice ${journal.cancel}`} onClick={cancelComposer}>Annuleer</button>
+          <button type="button" className={`focus-ring ks-motion-choice ${journal.cancel}`} onClick={() => cancelComposer()}>Annuleer</button>
           <button type="submit" className={`focus-ring ks-motion-choice ${journal.save}`}>{saveLabel}</button>
         </div>
       </form>
@@ -710,7 +679,7 @@ export default function IntimacyPlanner() {
       >
         {tab === value && composerTab === value && !editingEntry && editor}
         {tab === value && (visible.length === 0 ? (
-          composerTab === value ? null :
+          isPlanning && composerTab === value ? null :
           <div className="py-12 text-center">
             <Heart size={38} weight="duotone" aria-hidden="true" className="mx-auto mb-3" style={{ color: "var(--accent)", opacity: 0.7 }} />
             <p className="text-sm font-medium" style={{ color: "var(--text)" }}>
@@ -738,7 +707,6 @@ export default function IntimacyPlanner() {
                 key={entry.id}
                 entry={entry}
                 composer={composerTab === value && editingId === entry.id ? editor : undefined}
-                recording={loggingPlannedMoment && editingId === entry.id}
                 onLog={() => openComposer("completed", entry)}
                 onEdit={() => openComposer(entry.status, entry)}
                 onCalendar={() => {
@@ -752,6 +720,24 @@ export default function IntimacyPlanner() {
         ))}
       </div>
       ))}
+
+      {composerMode === "completed" && (
+        <MomentWritingScreen
+          name={composerTitle}
+          title={title.trim() || (editingEntry ? "Privémoment" : composerTitle)}
+          context={[date ? displayDate(date) : "Kies een datum", time, profiles.find((profile) => profile.id === partnerId)?.name]
+            .filter(Boolean).join(" · ")}
+          origin={writingOrigin}
+          details={writingDetails}
+          onDetailsChange={setWritingDetails}
+          onDismiss={cancelComposer}
+          onSave={saveEntry}
+          saveLabel={saveLabel}
+        >
+          {writingDetails ? <div className={journal.writingDetails}>{when}{momentDetails}</div> : noteField}
+          {formError && <p role="alert" className="text-sm text-[var(--hard-no-text)]">{formError}</p>}
+        </MomentWritingScreen>
+      )}
 
       <Sheet
         open={calendarTarget !== null}
