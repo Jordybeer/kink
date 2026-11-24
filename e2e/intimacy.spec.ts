@@ -48,7 +48,7 @@ test.describe("Intimiteitsagenda", () => {
 
     const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
     await expect(planDialog).toBeVisible();
-    await expect(planDialog).toHaveAttribute("data-sheet-variant", "surface");
+    await expect(planDialog).toHaveAttribute("data-sheet-variant", "task");
     await expect(planDialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
     await expect(planDialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
     // A smaller iPhone cannot reliably display two native date/time inputs side by side.
