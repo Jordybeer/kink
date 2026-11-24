@@ -49,10 +49,12 @@ function AnswerChoices({ current, onSelect }: { current: KinkStatus; onSelect: (
 function RevealedAnswer({ entry, onChange }: { entry: KinkEntry; onChange: (patch: Partial<KinkEntry>) => void }) {
   return (
     <div className={styles.openLane}>
-      <p className={styles.verdict} style={{ color: entry.status ? STATUS_VAR[entry.status] : "var(--text2)" }}>
-        <StatusGlyph status={entry.status} size={15} />{entry.status ? STATUS_LABEL[entry.status] : "Nog niet beoordeeld"}
-      </p>
-      {entry.comment && <p>{entry.comment}</p>}
+      <div className={styles.revealContent}>
+        <p className={styles.verdict} style={{ color: entry.status ? STATUS_VAR[entry.status] : "var(--text2)" }}>
+          <StatusGlyph status={entry.status} size={15} />{entry.status ? STATUS_LABEL[entry.status] : "Nog niet beoordeeld"}
+        </p>
+        {entry.comment && <p>{entry.comment}</p>}
+      </div>
       <Accordion trigger="Bewerk privéantwoord" className="mt-2" contentClassName="py-2">
         <AnswerChoices current={entry.status} onSelect={status => onChange({ status, desire: null })} />
         <TopicDetailsFields entry={entry} onChange={onChange} />
@@ -270,12 +272,12 @@ export function ProfileInterests({ profileId, seed }: { profileId: string; seed:
         <h2>Harde grenzen</h2>{rows(boundaries, "boundary")}
         {!boundaries.length && <p data-empty-result className={styles.hint}>Geen openbare antwoorden met deze status.</p>}
       </section>
-      {privateEntries.length > 0 && <section className={styles.privateSection} data-reveal={soft ? "soft" : "matte"}>
+      {privateEntries.length > 0 && <section className={styles.privateSection} data-reveal={soft ? "soft" : "aperture"}>
         <h2><LockKey size={19} aria-hidden="true" /> Privéantwoorden</h2>
         {privateEntries.map(kink => <PrivateAnswer key={kink.id} kink={kink} entry={entries[kink.id]} open={revealed === kink.id}
           onChange={change => patch(kink.id, change)} toggle={() => { setEditor(null); setRevealed(previous => previous === kink.id ? null : kink.id); }} />)}
         <details className={styles.compare}><summary>Onthulling vergelijken</summary>
-          <label><input type="checkbox" checked={soft} onChange={e => { setRevealed(null); setSoft(e.target.checked); }} /> Zachte overgang</label>
+          <label><input type="checkbox" checked={soft} onChange={e => { setRevealed(null); setSoft(e.target.checked); }} /> Alleen vervagen</label>
         </details>
       </section>}
     </div>

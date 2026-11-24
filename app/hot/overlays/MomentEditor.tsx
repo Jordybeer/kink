@@ -72,12 +72,17 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
       <textarea rows={planned ? 2 : 3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
       <small>Alleen zichtbaar in deze proef.</small></label>;
   const partnerField = (
-    <label>Met wie?
-      <select value={partner} onChange={event => setPartner(event.target.value)}>
-        <option value="">Zonder partner</option>
-        {partners.map(profile => <option key={profile.id} value={profile.id}>{profile.name}</option>)}
-      </select>
-    </label>
+    <fieldset className="os-partners">
+      <legend className="os-label">Met wie?</legend>
+      {[{ id: "", name: "Zonder partner" }, ...partners].map(choice => (
+        <label className="os-partner-option" key={choice.id}>
+          <input className="sr-only" type="radio" name={id + "-partner"} value={choice.id}
+            checked={partner === choice.id} onChange={() => setPartner(choice.id)} />
+          <span className="os-partner-mark" aria-hidden="true" />
+          <span>{choice.name}</span>
+        </label>
+      ))}
+    </fieldset>
   );
   const heading = record ? (planned ? "Gepland moment bewerken" : "Bijgehouden moment bewerken")
     : (planned ? "Moment plannen" : "Moment bijhouden");

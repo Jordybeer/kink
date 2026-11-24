@@ -36,6 +36,7 @@
 .os-week button[aria-pressed=true] > span { background: var(--accent-fill); color: var(--on-accent-fill); }
 .os-daybook { margin-top: 1.9rem; }
 .os-dateline { font-size: clamp(1.55rem, 5.8vw, 2rem); line-height: 1.18; margin-bottom: .6rem; }
+.os-dateline > span { display: block; }
 .os-entries { list-style: none; margin: 0; padding: 0; }
 .os-entry { display: grid; width: 100%; min-width: 0; grid-template-columns: minmax(3rem, max-content) minmax(0, 1fr) auto; align-items: center; gap: .9rem; min-height: 4.65rem; padding: .7rem 0; border-bottom: 1px solid var(--os-rule); text-align: left; }
 .os-time { align-self: start; padding-top: .22rem; font-size: .875rem; font-variant-numeric: tabular-nums; color: var(--text2); }
@@ -101,11 +102,20 @@
   .os-week button { min-height: 3.5rem; }
 }
 @media (prefers-reduced-motion: no-preference) {
-  .os-entries { animation: os-ink-in 180ms var(--motion-ease); }
+  .os-daybook [data-direction="earlier"] { --os-travel: -1rem; }
+  .os-daybook [data-direction="later"] { --os-travel: 1rem; }
+  .os-dateline [data-direction], .os-empty[data-direction], .os-entries[data-direction] > li {
+    animation: os-day-arrive 360ms var(--motion-ease) both;
+  }
+  .os-entries[data-direction] > li:nth-child(2) { animation-delay: 38ms; }
+  .os-week button > span { transition: background-color 240ms var(--motion-ease), color 240ms var(--motion-ease); }
+  .os-week button[aria-pressed=true] > span { animation: os-date-press 320ms var(--motion-ease); }
   .os-days { animation: os-ink-in var(--motion-disclosure) var(--motion-ease); }
   .os-actions button, .os-week-controls button, .os-settings-launch, .os-footer button { transition: transform var(--motion-press) var(--motion-ease); }
   :is(.os-actions, .os-week-controls, .os-footer) button:active, .os-settings-launch:active { transform: translateY(1px); }
   @keyframes os-ink-in { from { opacity: .7; transform: translateY(3px); } to { opacity: 1; transform: none; } }
+  @keyframes os-day-arrive { from { opacity: .48; transform: translateX(var(--os-travel)); } to { opacity: 1; transform: none; } }
+  @keyframes os-date-press { from { transform: scale(.84); } to { transform: none; } }
 }
 @media (hover: hover) {
   .os-entry:hover, .os-reading-link:hover, .os-lock-row:hover { background: color-mix(in srgb, var(--accent2) 6%, transparent); }
@@ -127,3 +137,10 @@
 .os-extra summary { min-block-size: var(--touch-target); padding-block: .8rem; color: var(--text2); cursor: pointer; font-size: .9rem; font-weight: 550; }
 .os-extra-fields { display: grid; gap: 1rem; padding-block: .35rem; }
 .os-extra summary:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.os-partners { min-inline-size: 0; border-block-end: 1px solid var(--border); }
+.os-form .os-partner-option { display: flex; align-items: center; gap: .65rem; min-height: var(--touch-target); padding: .35rem 0; cursor: pointer; }
+.os-partner-option + .os-partner-option { border-block-start: 1px solid var(--border); }
+.os-partner-mark { flex: none; inline-size: 1rem; block-size: 1rem; border: 1px solid var(--control-border); border-radius: 50%; }
+.os-partner-option:has(:checked) .os-partner-mark { border: .29rem solid var(--accent-text); }
+.os-partner-option:has(:checked) { color: var(--accent-text); }
+.os-partner-option:has(:focus-visible) { outline: 2px solid var(--focus); outline-offset: 2px; }

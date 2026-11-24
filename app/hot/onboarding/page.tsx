@@ -1,13 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { ArrowLeft, ArrowRight, Eye, EyeSlash } from "@phosphor-icons/react";
+import { useLayoutEffect, useRef, useState } from "react";
+import { ArrowLeft, ArrowRight } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
-import StatusGlyph from "@/components/StatusGlyph";
 import StatusOptionRows from "@/components/StatusOptionRows";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
-import { STATUS_LABEL, STATUS_VAR } from "@/lib/statusLabels";
 import type { KinkStatus } from "@/types";
 import styles from "./onboarding.module.css";
 
@@ -15,7 +13,7 @@ const navActions: TopNavAction[] = [];
 const spreads = {
   welcome: { number: 1, label: "Kennismaken", title: <>Ben je <em>18 of ouder?</em></> },
   practice: { number: 2, label: "Een vraag proberen", title: <>Samen blijven <em>liggen?</em></> },
-  example: { number: 3, label: "Jouw voorbeeld", title: <>Jij kiest wat je <em>deelt.</em></> },
+  example: { number: 3, label: "Je profiel en privacy", title: <>Jouw profiel, <em>jouw keuze.</em></> },
 } as const;
 
 type Spread = keyof typeof spreads;
@@ -24,7 +22,6 @@ type View = Spread | "declined";
 export default function OnboardingStudy() {
   const [view, setView] = useState<View>("welcome");
   const [answer, setAnswer] = useState<KinkStatus>(null);
-  const [revealed, setRevealed] = useState(false);
   const title = useRef<HTMLHeadingElement>(null);
   const previousView = useRef(view);
   const spread = view === "declined" ? null : spreads[view];
@@ -37,20 +34,7 @@ export default function OnboardingStudy() {
     window.scrollTo({ top: 0, behavior: "instant" });
   }, [view]);
 
-  useEffect(() => {
-    if (!revealed) return;
-    function conceal() { setRevealed(false); }
-    function onVisibilityChange() { if (document.hidden) conceal(); }
-    document.addEventListener("visibilitychange", onVisibilityChange);
-    window.addEventListener("pagehide", conceal);
-    return () => {
-      document.removeEventListener("visibilitychange", onVisibilityChange);
-      window.removeEventListener("pagehide", conceal);
-    };
-  }, [revealed]);
-
   function navigate(next: View) {
-    setRevealed(false);
     if (next === "declined") setAnswer(null);
     setView(next);
   }
@@ -89,34 +73,12 @@ export default function OnboardingStudy() {
           )}
           {view === "example" && (
             <>
-              <p className={styles.lead}>
-                Je profiel staat in de browser op je toestel. Deel je een profiel, dan blijven privéantwoorden standaard buiten de gedeelde versie.
-              </p>
-              <div className={styles.sample}>
-                <div className={styles.sampleHead}>
-                  <h2>Jouw oefenantwoord</h2>
-                  {answer && (
-                    <button type="button" className={`focus-ring ${styles.reveal}`}
-                      aria-controls="practice-result" aria-expanded={revealed}
-                      onClick={() => setRevealed(open => !open)}>
-                      {revealed ? <EyeSlash size={17} aria-hidden="true" /> : <Eye size={17} aria-hidden="true" />}
-                      {revealed ? "Verberg oefenantwoord" : "Toon oefenantwoord"}
-                    </button>
-                  )}
-                </div>
-                <div id="practice-result" className={styles.sampleBody}>
-                  {answer && revealed ? (
-                    <>
-                      <span>Samen blijven liggen</span>
-                      <strong>
-                        <span style={{ color: STATUS_VAR[answer] }}><StatusGlyph status={answer} size={18} /></span>
-                        {STATUS_LABEL[answer]}
-                      </strong>
-                    </>
-                  ) : <span>{answer ? "Verborgen" : "Je hebt de vraag overgeslagen."}</span>}
-                </div>
-              </div>
-
+              <p className={styles.lead}>In je profiel verzamel je wat je aanspreekt, waarover je twijfelt en waar je grenzen liggen. Je kunt je antwoorden altijd aanpassen.</p>
+              <dl className={styles.profileFacts}>
+                <div><dt>Op dit toestel</dt><dd>Je profiel blijft in de browser op je toestel.</dd></div>
+                <div><dt>Delen is jouw keuze</dt><dd>Als je een profiel deelt, blijven antwoorden die je als Privé markeert buiten de gedeelde versie.</dd></div>
+              </dl>
+              <p className={styles.note}>{answer ? "Je oefenantwoord komt niet in je profiel terecht." : "Je mag ook in de vragenlijst vragen overslaan."}</p>
             </>
           )}
           {view === "declined" && <p className={styles.lead}>KinkSync is alleen voor mensen van 18 jaar en ouder.</p>}
@@ -140,7 +102,7 @@ export default function OnboardingStudy() {
           {view === "practice" && (
             <button type="button" className={`focus-ring ${styles.primary}`}
               onClick={() => navigate("example")}>
-              {answer ? "Bekijk mijn voorbeeld" : "Sla de vraag over"} <ArrowRight aria-hidden="true" />
+              {answer ? "Verder" : "Sla de vraag over"} <ArrowRight aria-hidden="true" />
             </button>
           )}
           {view === "example" && (

@@ -158,37 +158,33 @@
 .privateLane { margin-top: .5rem; position: relative; isolation: isolate; }
 .sealed, .openLane { min-height: 2.75rem; }
 .sealed { font-size: .875rem; }
-.openLane { position: relative; overflow: hidden; padding-block: .4rem; }
+.openLane { padding-block: .4rem; }
 .openLane p + p { margin-top: .35rem; line-height: 1.45; }
 .verdict { font-size: .925rem; font-weight: 650; }
 @media (prefers-reduced-motion: no-preference) {
   .choices button { transition: color .16s ease-out, background-color .16s ease-out; }
   .searchField { position: relative; }
   .searchField::after { content: ""; position: absolute; inset: auto 0 -1px; height: 1px; background: currentColor; transform-origin: left; pointer-events: none; animation: unfold .24s var(--motion-ease) both; }
-  .openLane::after {
-    content: "";
-    position: absolute;
-    pointer-events: none;
-    inset: -1px -8%;
-    background: linear-gradient(90deg, var(--surface2) 60%, var(--surface3) 87%, var(--identity-border) 99%, var(--surface2));
-    transform-origin: right;
-    animation: peel .46s cubic-bezier(.41,.02,.17,1) both;
+  .revealContent { animation: softReveal .24s var(--motion-ease); }
+  @supports (mask-image: radial-gradient(black, transparent)) {
+    .privateSection[data-reveal="aperture"] .revealContent {
+      animation: aperture .48s cubic-bezier(.35,.03,.18,1);
+    }
   }
-  .openLane .verdict { animation: uncover .44s var(--motion-ease) both; }
 }
 @keyframes unfold { from { transform: scaleX(.06); } to { transform: scaleX(1); } }
-@keyframes peel {
-  from { transform: translateX(0) skewX(0); }
-  25% { transform: translateX(7%) skewX(-6deg); }
-  to { transform: translateX(105%) skewX(-4deg); }
+@keyframes aperture {
+  from {
+    mask: radial-gradient(ellipse farthest-corner at 0% 50%, #000 45%, transparent 72%) left center / 20% 70% no-repeat;
+    opacity: .5;
+  }
+  to {
+    mask: radial-gradient(ellipse farthest-corner at 0% 50%, #000 45%, transparent 72%) left center / 320% 290% no-repeat;
+    opacity: 1;
+  }
 }
-@keyframes uncover { from { transform: translateX(-.4rem); } to { transform: none; } }
+@keyframes softReveal { from { opacity:.2; } to { opacity:1; } }
 
 .compare { margin-block-start:.75rem; color:var(--text2); font-size:.85rem; }
 .compare :is(summary,label) { min-height:var(--touch-target); padding-block:.65rem; cursor:pointer; }
 .compare label { display:block; }
-@media (prefers-reduced-motion: no-preference) {
-  .privateSection[data-reveal="soft"] .openLane::after { content:none; }
-  .privateSection[data-reveal="soft"] .openLane { animation:softReveal .28s var(--motion-ease) both; }
-  @keyframes softReveal { from { opacity:.15; } to { opacity:1; } }
-}

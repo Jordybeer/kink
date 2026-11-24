@@ -29,6 +29,7 @@ export default function OverlayStudy() {
   const [surface, setSurface] = useState<Surface>(null);
   const [moments, setMoments] = useState(exampleMoments);
   const [selectedDate, setSelectedDate] = useState(exampleDay);
+  const [direction, setDirection] = useState<"earlier" | "later" | null>(null);
   const [editorSession, setEditorSession] = useState(0);
   const [mode, setMode] = useState<IntimacyStatus>("planned");
   const [editing, setEditing] = useState<IntimacyRecord>();
@@ -46,6 +47,7 @@ export default function OverlayStudy() {
   useTopNavActions(actions, "Agenda & instellingen", "/hot");
 
   function selectDate(date: string) {
+    if (date !== selectedDate) setDirection(date < selectedDate ? "earlier" : "later");
     setSelectedDate(date);
     setFeedback("");
   }
@@ -70,7 +72,7 @@ export default function OverlayStudy() {
 
   function save(record: IntimacyRecord) {
     setMoments(previous => [record, ...previous.filter(item => item.id !== record.id)]);
-    setSelectedDate(record.date);
+    selectDate(record.date);
     const day = fullDay.format(new Date(`${record.date}T12:00:00`));
     setFeedback(`${record.status === "planned" ? "Gepland voor" : "Bijgehouden voor"} ${day}${record.time ? " om " + record.time : ""}.`);
     setSurface(null);
@@ -85,7 +87,7 @@ export default function OverlayStudy() {
         <div><h1 className="os-title">Agenda</h1><p className="os-note">Voorbeeldmomenten voor deze sessie.</p></div>
         <button className="os-settings-launch" type="button" aria-label="Instellingen" title="Instellingen" onClick={() => setSurface("settings")}><GearSix weight="regular"/></button>
       </header>
-      <Agenda selected={selectedDate} onSelect={selectDate} moments={moments} onOpen={startMoment}/>
+      <Agenda selected={selectedDate} direction={direction} onSelect={selectDate} moments={moments} onOpen={startMoment}/>
       <p className="os-feedback" role="status">{feedback}</p>
       <button className="os-reading-link" type="button" onClick={() => setSurface("info")}>
         <BookOpen aria-hidden="true"/><span><small>Gespreksonderwerp</small><strong>{topic.title}</strong></span><ArrowUpRight aria-hidden="true"/>

@@ -22,8 +22,9 @@ function shiftDay(date: string, offset: number) {
   return next.toISOString().slice(0, 10);
 }
 
-export default function Agenda({ selected, onSelect, moments, onOpen }: {
+export default function Agenda({ selected, direction, onSelect, moments, onOpen }: {
   selected: string;
+  direction: "earlier" | "later" | null;
   onSelect: (date: string) => void;
   moments: IntimacyRecord[];
   onOpen: (status: IntimacyStatus, record?: IntimacyRecord) => void;
@@ -68,8 +69,8 @@ export default function Agenda({ selected, onSelect, moments, onOpen }: {
       </div>
     </section>
     <section className="os-daybook" aria-label="Momenten op de geselecteerde dag">
-      <h2 className="os-dateline" aria-live="polite">{fullDay.format(date)}</h2>
-      <ul className="os-entries" key={selected}>
+      <h2 className="os-dateline" aria-live="polite"><span key={selected} data-direction={direction}>{fullDay.format(date)}</span></h2>
+      {entries.length > 0 ? <ul className="os-entries" key={selected} data-direction={direction}>
         {entries.map(item => <li key={item.id}>
           <button type="button" data-moment-id={item.id} className="os-entry" onClick={() => onOpen(item.status, item)}>
             <span className="os-time">{item.time || "Geen tijd"}</span>
@@ -80,8 +81,7 @@ export default function Agenda({ selected, onSelect, moments, onOpen }: {
             <ArrowUpRight aria-hidden="true"/>
           </button>
         </li>)}
-      </ul>
-      {!entries.length && <p className="os-empty">Deze dag is nog vrij.</p>}
+      </ul> : <p className="os-empty" key={selected} data-direction={direction}>Deze dag is nog vrij.</p>}
       <div className="os-actions">
         <button className="os-primary" type="button" onClick={() => onOpen("planned")}><Plus weight="bold"/>Moment plannen</button>
         <button className="os-secondary" type="button" onClick={() => onOpen("completed")}><Feather/>Moment bijhouden</button>
