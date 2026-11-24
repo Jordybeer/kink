@@ -245,10 +245,6 @@ details[open] > .summary .summaryAction svg {
 }
 
 /* A dedicated writing screen with one flexible region between fixed actions. */
-:global(html:has(dialog[data-moment-writing][open])) {
-  overflow: hidden;
-}
-
 .writingScreen {
   container: journal-screen / size;
   position: fixed;

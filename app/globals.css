@@ -35,6 +35,9 @@ html, body {
 
 body { isolation: isolate; }
 
+/* The writing screen follows the visual viewport while the agenda stays still. */
+html:has(dialog[data-moment-writing][open]) { overflow: hidden; }
+
 .ks-content-nav { container-type: inline-size; }
 .compare-kink-row { container-type: inline-size; }
 .ks-scene-card { container-type: inline-size; }
