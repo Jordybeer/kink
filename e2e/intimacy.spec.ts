@@ -74,17 +74,29 @@ test.describe("Intimiteitsagenda", () => {
     await expect(page.getByText("Date night", { exact: true })).toBeVisible();
     await expect(page.getByText(/30 aug.*20:30/)).toBeVisible();
 
-    await page.getByRole("button", { name: "Bijhouden", exact: true }).click();
-    const logEditor = page.locator("article").filter({ hasText: "Date night" }).getByRole("region", { name: "Moment bijhouden" });
+    const moment = page.getByRole("article", { name: "Date night", exact: true });
+    const momentTitle = moment.getByText("Date night", { exact: true });
+    const trigger = moment.getByRole("button", { name: "Bijhouden", exact: true });
+    await trigger.scrollIntoViewIfNeeded();
+    const titlePosition = (await momentTitle.boundingBox())!;
+    await trigger.click();
+    const logEditor = moment.getByRole("region", { name: "Moment bijhouden" });
+    const openTitlePosition = (await momentTitle.boundingBox())!;
+    expect(Math.abs(openTitlePosition.x - titlePosition.x)).toBeLessThanOrEqual(1);
+    expect(Math.abs(openTitlePosition.y - titlePosition.y)).toBeLessThanOrEqual(1);
+    await logEditor.getByRole("button", { name: "Annuleer" }).click();
+    await expect(trigger).toBeFocused();
+    await trigger.click();
     await expect(logEditor.getByLabel("Privénotitie")).toBeVisible();
     await expect(logEditor.getByLabel("Datum", { exact: true })).toBeHidden();
-    await logEditor.getByText("Datum en tijd", { exact: true }).click();
+    await logEditor.getByText("Datum en details", { exact: true }).click();
     await logEditor.getByLabel("Datum", { exact: true }).fill("2026-08-31");
     await logEditor.getByLabel("Privénotitie").fill("Een dag later was fijner");
     await logEditor.getByRole("button", { name: "Bewaar in logboek" }).click();
 
     const logbook = page.getByLabel("Logboek");
     await expect(page.getByRole("tab", { name: "Logboek" })).toHaveAttribute("aria-selected", "true");
+    await expect(logbook.getByRole("article", { name: "Date night", exact: true })).toBeFocused();
     await expect(logbook.getByText("Date night", { exact: true })).toBeVisible();
     await expect(logbook.getByText("Een dag later was fijner", { exact: true })).toBeVisible();
     await expect(logbook.getByText(/31 aug/)).toBeVisible();

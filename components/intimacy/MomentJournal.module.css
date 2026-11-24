@@ -4,6 +4,52 @@
   scroll-margin-block-start: calc(var(--nav-h) + 1rem);
 }
 
+.entry {
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+.entry:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+.entry[data-writing] {
+  background: color-mix(in srgb, var(--accent) 7%, var(--surface));
+}
+
+.entryBody {
+  display: flow-root;
+}
+
+.entryTitle {
+  color: var(--text);
+  font: 500 1.125rem/1.25 var(--font-display, Georgia, serif);
+  overflow-wrap: anywhere;
+}
+
+.entryDate {
+  margin-block-start: 0.25rem;
+  color: var(--text2);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.entryNote {
+  display: -webkit-box;
+  max-inline-size: 60ch;
+  margin-block-start: 0.8rem;
+  overflow: hidden;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+}
+
 .editor {
   container: moment-editor / inline-size;
   margin-block: 0 1.25rem;
@@ -71,10 +117,6 @@ details[open] > .summary .summaryAction svg {
   transform: rotate(180deg);
 }
 
-.dateDetails .summary > :first-child {
-  font-variant-numeric: tabular-nums;
-}
-
 .options {
   border-block: 1px solid var(--border);
 }
@@ -97,10 +139,6 @@ details[open] > .summary .summaryAction svg {
   .when {
     grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
   }
-}
-
-.dateDetails .when {
-  padding-block-end: 0.55rem;
 }
 
 .when label,
@@ -145,6 +183,39 @@ details[open] > .summary .summaryAction svg {
   resize: vertical;
 }
 
+/* The existing card is the writing surface on an anchored entry. */
+.entry .writingEditor {
+  margin-block-start: 0.875rem;
+  border: 0;
+  padding-block-start: 0.4rem;
+}
+
+.writingEditor .form {
+  gap: 0.45rem;
+}
+
+.writingEditor .options {
+  border-block-end: 0;
+}
+
+.writingField {
+  gap: 0;
+}
+
+.writingField textarea {
+  border: 0;
+  border-radius: 0.5rem;
+  caret-color: var(--accent);
+  resize: none;
+  min-block-size: 5rem;
+  max-block-size: 40vh;
+  field-sizing: content;
+}
+
+.writingField textarea::placeholder {
+  font: 500 1.25rem/1.5 var(--font-display, Georgia, serif);
+}
+
 .titleField input::placeholder,
 .note textarea::placeholder {
   color: var(--text2);
@@ -156,6 +227,12 @@ details[open] > .summary .summaryAction svg {
   outline: none;
   border-block-end-color: var(--focus);
   box-shadow: 0 1px var(--focus);
+}
+
+.writingField textarea:focus {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+  box-shadow: none;
 }
 
 .summary:focus-visible {
@@ -194,8 +271,12 @@ details[open] > .summary .summaryAction svg {
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .editor {
+  .editor:not(.writingEditor) {
     animation: enter var(--motion-disclosure) var(--motion-ease) both;
+  }
+
+  .entry {
+    transition: background-color var(--motion-state) var(--motion-ease);
   }
 
   .summaryAction svg {
