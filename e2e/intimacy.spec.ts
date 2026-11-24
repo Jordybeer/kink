@@ -46,41 +46,42 @@ test.describe("Intimiteitsagenda", () => {
     await expect(page.getByLabel("Tabbladen")).toHaveCount(0);
     await page.getByRole("button", { name: "Moment plannen" }).first().click();
 
-    const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
-    await expect(planDialog).toBeVisible();
-    await expect(planDialog).toHaveAttribute("data-sheet-variant", "surface");
-    await expect(planDialog.locator('[data-testid="sheet-scroll-body"]')).toHaveCount(1);
-    await expect(planDialog.locator('[data-testid="sheet-footer"]')).toBeVisible();
+    const planner = page.getByRole("region", { name: "Moment plannen", exact: true });
+    await expect(planner).toBeVisible();
+    await expect(page.getByRole("tabpanel", { name: "Gepland" }).getByRole("region", { name: "Moment plannen" })).toBeVisible();
+    await expect(planner.getByRole("heading")).toBeFocused();
     // A smaller iPhone cannot reliably display two native date/time inputs side by side.
     await page.setViewportSize({ width: 320, height: 667 });
-    await expect.poll(() => planDialog.getByTestId("planner-date-time").evaluate(
+    await expect.poll(() => planner.getByTestId("planner-date-time").evaluate(
       (el) => getComputedStyle(el).gridTemplateColumns.split(" ").length,
     )).toBe(1);
-    await expect(planDialog.getByLabel("Datum")).toBeVisible();
-    await expect(planDialog.getByLabel("Tijd")).toBeVisible();
-    const smallFooter = await planDialog.getByTestId("sheet-footer").boundingBox();
-    expect(smallFooter).not.toBeNull();
-    expect(smallFooter!.y + smallFooter!.height).toBeLessThanOrEqual(667 + 1);
+    await expect(planner.getByLabel("Datum")).toBeVisible();
+    await expect(planner.getByLabel("Tijd")).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
     await page.setViewportSize({ width: 390, height: 844 });
     const viewportWidth = page.viewportSize()!.width;
-    const planDialogBox = await planDialog.boundingBox();
-    expect(planDialogBox?.x).toBeGreaterThanOrEqual(0);
-    expect((planDialogBox?.x ?? 0) + (planDialogBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth + 1);
+    const plannerBox = await planner.boundingBox();
+    expect(plannerBox?.x).toBeGreaterThanOrEqual(0);
+    expect((plannerBox?.x ?? 0) + (plannerBox?.width ?? 0)).toBeLessThanOrEqual(viewportWidth + 1);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(viewportWidth);
-    await page.screenshot({ path: `screenshots/theme-rehearsal/modal-cohesion/${testInfo.project.name}/intimacy-planner-390.png`, fullPage: false });
-    await planDialog.getByLabel("Datum").fill("2026-08-30");
-    await planDialog.getByLabel("Tijd").fill("20:30");
-    await planDialog.getByLabel("Titel (optioneel)").fill("Date night");
-    await planDialog.getByRole("button", { name: "Plan moment" }).click();
+    await page.screenshot({ path: `screenshots/theme-rehearsal/agenda/${testInfo.project.name}/intimacy-planner-390.png`, fullPage: false });
+    await planner.getByLabel("Datum").fill("2026-08-30");
+    await planner.getByLabel("Tijd").fill("20:30");
+    await planner.getByText("Meer opties", { exact: true }).click();
+    await planner.getByLabel("Titel (optioneel)").fill("Date night");
+    await planner.getByRole("button", { name: "Plan moment" }).click();
 
     await expect(page.getByText("Date night", { exact: true })).toBeVisible();
     await expect(page.getByText(/30 aug.*20:30/)).toBeVisible();
 
     await page.getByRole("button", { name: "Bijhouden", exact: true }).click();
-    const logDialog = page.getByRole("dialog", { name: "Intiem moment bijhouden" });
-    await logDialog.getByLabel("Datum").fill("2026-08-31");
-    await logDialog.getByLabel("Privé notitie (optioneel)").fill("Een dag later was fijner");
-    await logDialog.getByRole("button", { name: "Bewaar in logboek" }).click();
+    const logEditor = page.locator("article").filter({ hasText: "Date night" }).getByRole("region", { name: "Moment bijhouden" });
+    await expect(logEditor.getByLabel("Privénotitie")).toBeVisible();
+    await expect(logEditor.getByLabel("Datum", { exact: true })).toBeHidden();
+    await logEditor.getByText("Datum en tijd", { exact: true }).click();
+    await logEditor.getByLabel("Datum", { exact: true }).fill("2026-08-31");
+    await logEditor.getByLabel("Privénotitie").fill("Een dag later was fijner");
+    await logEditor.getByRole("button", { name: "Bewaar in logboek" }).click();
 
     const logbook = page.getByLabel("Logboek");
     await expect(page.getByRole("tab", { name: "Logboek" })).toHaveAttribute("aria-selected", "true");
@@ -101,8 +102,9 @@ test.describe("Intimiteitsagenda", () => {
     await seedAndGo(page, "/intimacy", [PROFILE_ALEX, SHARED_SAM]);
 
     await page.getByRole("button", { name: "Moment plannen" }).first().click();
-    const planDialog = page.getByRole("dialog", { name: "Intiem moment plannen" });
-    await expect(planDialog).toBeVisible();
-    await expect(planDialog.getByRole("button", { name: "Sam", exact: true })).toBeVisible();
+    const planner = page.getByRole("region", { name: "Moment plannen", exact: true });
+    await expect(planner).toBeVisible();
+    await planner.getByText("Meer opties", { exact: true }).click();
+    await expect(planner.getByRole("button", { name: /Met wie.*Sam/ })).toBeVisible();
   });
 });

@@ -1,0 +1,211 @@
+.editor,
+.entry {
+  min-inline-size: 0;
+  scroll-margin-block-start: calc(var(--nav-h) + 1rem);
+}
+
+.editor {
+  container: moment-editor / inline-size;
+  margin-block: 0 1.25rem;
+  border-block: 1px solid var(--border);
+  padding-block: 1.15rem 0.85rem;
+}
+
+.entry .editor {
+  margin-block: 1rem 0;
+  border-block-end: 0;
+  padding-block-end: 0;
+}
+
+.heading {
+  margin-block-end: 0.4rem;
+  scroll-margin-block-start: calc(var(--nav-h) + 1rem);
+  color: var(--text);
+  font: 500 clamp(1.45rem, 5vw, 1.85rem)/1.2 var(--font-display, Georgia, serif);
+}
+
+.heading:focus {
+  outline: none;
+}
+
+.form,
+.optionalFields {
+  display: grid;
+  min-inline-size: 0;
+  gap: 0.85rem;
+}
+
+.summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.45rem 0.9rem;
+  min-block-size: 44px;
+  padding-block: 0.4rem;
+  color: var(--text);
+  font-size: 0.875rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.summary::-webkit-details-marker {
+  display: none;
+}
+
+.summaryAction {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+  min-inline-size: 0;
+  color: var(--text2);
+  text-align: end;
+  overflow-wrap: anywhere;
+}
+
+.summaryAction svg {
+  flex: none;
+}
+
+details[open] > .summary .summaryAction svg {
+  transform: rotate(180deg);
+}
+
+.dateDetails .summary > :first-child {
+  font-variant-numeric: tabular-nums;
+}
+
+.options {
+  border-block: 1px solid var(--border);
+}
+
+.options .summary {
+  font-weight: 600;
+}
+
+.optionalFields {
+  padding-block: 0.15rem 1rem;
+}
+
+.when {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0.6rem 1rem;
+}
+
+@container moment-editor (min-width: 18rem) {
+  .when {
+    grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+  }
+}
+
+.dateDetails .when {
+  padding-block-end: 0.55rem;
+}
+
+.when label,
+.titleField,
+.note {
+  display: grid;
+  min-inline-size: 0;
+  gap: 0.2rem;
+  color: var(--text2);
+  font-size: 0.875rem;
+}
+
+.when input,
+.titleField input,
+.note textarea {
+  display: block;
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  border: 0;
+  border-block-end: 1px solid var(--border);
+  border-radius: 0;
+  padding: 0.5rem 0;
+  background: transparent;
+  color: var(--text);
+  font-size: 1rem;
+  text-align: start;
+}
+
+.when input::-webkit-date-and-time-value {
+  min-inline-size: 0;
+  text-align: start;
+}
+
+.note textarea {
+  padding-block-start: 0.6rem;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.titleField input::placeholder,
+.note textarea::placeholder {
+  color: var(--text2);
+}
+
+.when input:focus,
+.titleField input:focus,
+.note textarea:focus {
+  outline: none;
+  border-block-end-color: var(--focus);
+  box-shadow: 0 1px var(--focus);
+}
+
+.summary:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.5rem 0.8rem;
+}
+
+.actions button {
+  min-block-size: 44px;
+  max-inline-size: 100%;
+  border-radius: 0.75rem;
+  padding: 0.55rem 0.9rem;
+  font-size: 0.875rem;
+  font-weight: 650;
+  overflow-wrap: anywhere;
+}
+
+.cancel {
+  color: var(--text2);
+}
+
+.save {
+  background: var(--accent-fill);
+  color: var(--on-accent-fill);
+}
+
+.reminder input {
+  accent-color: var(--accent-fill);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .editor {
+    animation: enter var(--motion-disclosure) var(--motion-ease) both;
+  }
+
+  .summaryAction svg {
+    transition: transform var(--motion-state) var(--motion-ease);
+  }
+
+  @keyframes enter {
+    from {
+      opacity: 0.6;
+      transform: translateY(5px);
+    }
+  }
+}

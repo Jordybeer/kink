@@ -160,7 +160,7 @@ test("Compare ornament pauses offscreen and for reduced motion while contract he
 
 test("modal interruption preserves finite opacity and non-draggable surface backdrop", async ({ page }, testInfo) => {
   await page.setViewportSize({ width: 390, height: 844 });
-  await seedAndGo(page, "/intimacy", [PROFILE_ALEX, PROFILE_SAM]);
+  await seedAndGo(page, "/", [PROFILE_ALEX, PROFILE_SAM]);
   await page.evaluate(() => {
     const state = window as unknown as { sheetOpacityWrites: string[] };
     state.sheetOpacityWrites = [];
@@ -170,8 +170,8 @@ test("modal interruption preserves finite opacity and non-draggable surface back
       set(value) { state.sheetOpacityWrites.push(String(value)); this.setProperty("opacity", String(value)); },
     });
   });
-  const trigger = page.getByRole("button", { name: "Moment plannen", exact: true }).first();
-  const sheet = page.getByRole("dialog", { name: "Intiem moment plannen", exact: true });
+  const trigger = page.getByRole("button", { name: "Instellingen", exact: true });
+  const sheet = page.getByRole("dialog", { name: "Instellingen", exact: true });
   const scrollBefore = await page.evaluate(() => window.scrollY);
   for (let index = 0; index < 3; index++) {
     await trigger.focus();
