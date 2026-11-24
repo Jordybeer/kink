@@ -48,7 +48,7 @@
 .os-entry > svg, .os-reading-link > svg:last-child { color: var(--text2); width: 1rem; height: 1rem; }
 .os-empty { padding: .7rem 0 1.35rem; border-bottom: 1px solid var(--os-rule); }
 .os-actions { display: flex; flex-wrap: wrap; gap: .45rem .7rem; margin-top: 1.12rem; }
-.os-actions button, .os-primary, .os-secondary {
+.os-actions button, .os-primary, .os-secondary, .os-footer button {
   min-height: var(--touch-target); padding: .65rem .9rem; border-radius: var(--radius-control); font: 650 .9rem/1.3 var(--font-sans, sans-serif);
 }
 .os-actions button { display: inline-flex; justify-content: center; align-items: center; gap: .5rem; flex: 1 1 auto; }
@@ -79,6 +79,7 @@
 .os-form small { font-size: .75rem; font-weight: 400; }
 .os-form input[aria-invalid=true] { border-color: var(--hard-no); }
 .os-form .os-error { color: var(--hard-no-text); font-size: .875rem; padding-top: .35rem; }
+.os-pair { display: grid; grid-template-columns: repeat(auto-fit,minmax(min(100%,12rem),1fr)); gap: .65rem; }
 .os-date-imprint { grid-column: 1 / -1; display: flex; flex-wrap: wrap; align-items: center; gap: .25rem .85rem; min-height: var(--touch-target); text-align: start; }
 .os-date-imprint { border-block-end: 1px solid var(--border); font-weight: 600; }
 .os-date-change { margin-inline-start: auto; color: var(--accent-text); font-size: .875rem; text-decoration: underline; text-underline-offset: .2em; }
@@ -91,9 +92,11 @@
 .os-reminder input[type=checkbox] { margin-inline-start: auto; width: 1.1rem; height: 1.1rem; }
 .os-reminder input { accent-color: var(--accent-fill); }
 .os-days input { min-height: var(--touch-target); }
+.os-footer { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.6fr); gap: .5rem; }
+.os-footer button:first-child { color: var(--text2); background: var(--surface2); }
 .os-pin-key { color: var(--accent2-text); }
 .os-pin input[type=password] { font-size: 1.5rem; letter-spacing: .35em; }
-.overlay-study button:focus-visible, .os-settings button:focus-visible, .os-form :is(input,textarea,select):focus-visible, .os-primary:focus-visible:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+.overlay-study button:focus-visible, .os-settings button:focus-visible, .os-form :is(input,textarea,select):focus-visible, .os-primary:focus-visible, .os-footer button:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
 @media (max-width: 359px) {
   .os-week { grid-template-columns: repeat(4, minmax(0,1fr)); gap: 2px; }
   .os-week button { min-height: 3.5rem; }
@@ -108,8 +111,8 @@
   .os-week button > span { transition: background-color 240ms var(--motion-ease), color 240ms var(--motion-ease); }
   .os-week button[aria-pressed=true] > span { animation: os-date-press 320ms var(--motion-ease); }
   .os-days { animation: os-ink-in var(--motion-disclosure) var(--motion-ease); }
-  .os-actions button, .os-week-controls button, .os-settings-launch { transition: transform var(--motion-press) var(--motion-ease); }
-  :is(.os-actions, .os-week-controls) button:active, .os-settings-launch:active { transform: translateY(1px); }
+  .os-actions button, .os-week-controls button, .os-settings-launch, .os-footer button { transition: transform var(--motion-press) var(--motion-ease); }
+  :is(.os-actions, .os-week-controls, .os-footer) button:active, .os-settings-launch:active { transform: translateY(1px); }
   @keyframes os-ink-in { from { opacity: .7; transform: translateY(3px); } to { opacity: 1; transform: none; } }
   @keyframes os-day-arrive { from { opacity: .48; transform: translateX(var(--os-travel)); } to { opacity: 1; transform: none; } }
   @keyframes os-date-press { from { transform: scale(.84); } to { transform: none; } }

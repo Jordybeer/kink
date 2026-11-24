@@ -2,9 +2,8 @@
 
 import { useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { Bell, LockSimple } from "@phosphor-icons/react";
+import { Bell, CalendarBlank, Feather, LockSimple } from "@phosphor-icons/react";
 import Sheet from "@/components/Sheet";
-import composer from "@/components/intimacy/MomentComposer.module.css";
 import type { IntimacyRecord, IntimacyStatus } from "@/lib/intimacyStore";
 
 const partners = [{ id: "studio-sam", name: "Sam" }, { id: "studio-noor", name: "Noor" }];
@@ -51,25 +50,25 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
   }
 
   const when = <div>
-    <div className={composer.when}>
+    <div className="os-pair">
       {planned && !editingDate && local ? (
         <button type="button" className="os-date-imprint focus-ring" onClick={() => setEditingDate(true)}>
           <span>{dayFormat.format(local)}</span>
           <span className="os-date-change">Wijzig datum</span>
         </button>
       ) : (
-        <label className={composer.field}>Datum<input type="date" ref={dateInput} required value={date} autoFocus={planned && editingDate}
+        <label>Datum<input type="date" ref={dateInput} required value={date} autoFocus={planned && editingDate}
           aria-invalid={invalid === "date" || undefined} aria-describedby={invalid === "date" ? id+"-error" : undefined}
           onChange={e => { setDate(e.target.value); if (invalid === "date") setInvalid(null); }}/></label>
       )}
-      <label className={composer.field}>{planned ? "Tijd" : "Tijd (optioneel)"}<input type="time" ref={timeInput} required={planned} value={time}
+      <label>{planned ? "Tijd" : "Tijd (optioneel)"}<input type="time" ref={timeInput} required={planned} value={time}
         aria-invalid={invalid === "time" || undefined} aria-describedby={invalid === "time" ? id+"-error" : undefined}
         onChange={e => { setTime(e.target.value); if (invalid === "time") setInvalid(null); }}/></label>
     </div>
     {invalid && <p id={id+"-error"} className="os-error" role="alert">{invalid === "date" ? "Kies een datum." : "Kies een tijd om dit moment te plannen."}</p>}
   </div>;
-  const titleField = <label className={composer.field}>Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Bijv. tijd voor ons" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>;
-  const noteField = <label className={`os-writing-note ${composer.field}`}><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
+  const titleField = <label>Titel (optioneel)<input type="text" value={title} placeholder={planned ? "Geef dit moment een naam" : "Welk moment blijft je bij?"} onChange={e => setTitle(e.target.value)} /></label>;
+  const noteField = <label className="os-writing-note"><span><LockSimple size={15} aria-hidden="true"/>Privénotitie (optioneel)</span>
       <textarea rows={planned ? 2 : 3} value={note} placeholder={planned ? "Waar wil je ruimte voor maken?" : "Wat wil je onthouden?"} onChange={e => setNote(e.target.value)} />
       <small>Alleen zichtbaar in deze proef.</small></label>;
   const partnerField = (
@@ -88,10 +87,10 @@ export default function MomentEditor({ open, mode, selectedDate, record, onClose
   const heading = record ? (planned ? "Gepland moment bewerken" : "Bijgehouden moment bewerken")
     : (planned ? "Moment plannen" : "Moment bijhouden");
 
-  return <Sheet open={open} onClose={onClose} title={heading} variant="task" titleTone="editorial" scrollable
-    footer={<div className={composer.footer}><button className={`ks-motion-choice focus-ring ${composer.cancel}`} type="button" onClick={onClose}>Annuleer</button>
-      <button className={`ks-motion-choice focus-ring ${composer.save}`} type="submit" form={id}>{record ? "Wijzigingen bewaren" : planned ? "Plan moment" : "Bewaar moment"}</button></div>}>
-    <form id={id} noValidate className={`os-form ${composer.fields}`} onSubmit={submit}>
+  return <Sheet open={open} onClose={onClose} title={heading} headerIcon={planned ? <CalendarBlank size={20}/> : <Feather size={20}/>} variant="task" titleTone="editorial" scrollable
+    footer={<div className="os-footer"><button type="button" onClick={onClose}>Annuleer</button>
+      <button className="os-primary" type="submit" form={id}>{record ? "Wijzigingen bewaren" : planned ? "Plan moment" : "Bewaar moment"}</button></div>}>
+    <form id={id} noValidate className="os-form" onSubmit={submit}>
       {planned ? when : <div className="os-writing">{titleField}{noteField}</div>}
       {planned ? titleField : when}
       {planned ? <details className="os-extra" open={Boolean(record?.partnerProfileId || record?.reminderDaysBefore !== undefined || record?.note)}>
