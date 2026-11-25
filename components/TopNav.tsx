@@ -173,6 +173,18 @@ export default function TopNav() {
             </button>
           </div>
         </nav>
+        {process.env.NEXT_PUBLIC_MOTION_PREVIEW === "1" && (
+          <div className="flex justify-center pb-2">
+            <Link
+              href="/hot"
+              prefetch={false}
+              className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-semibold"
+              style={{ color: "var(--accent-text)", borderColor: "var(--border)" }}
+            >
+              Hot <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+        )}
       </header>
     );
   }
