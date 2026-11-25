@@ -3,7 +3,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
-import { CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
+import { ArrowRight, CaretLeft, DotsThree, GearSix, WifiSlash } from "@phosphor-icons/react";
 import { useMotionSafe } from "@/lib/motion";
 import { useStore, useHasHydrated } from "@/lib/store";
 import { routeChromeSemantics } from "@/lib/routeSemantics";
@@ -181,7 +181,7 @@ export default function TopNav() {
               className="ks-motion-choice focus-ring inline-flex min-h-11 items-center gap-2 rounded-lg border px-4 text-sm font-semibold"
               style={{ color: "var(--accent-text)", borderColor: "var(--border)" }}
             >
-              Hot <span aria-hidden="true">→</span>
+              Hot <ArrowRight size={16} aria-hidden="true" />
             </Link>
           </div>
         )}
