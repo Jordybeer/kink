@@ -103,6 +103,11 @@ const SECURITY_HEADERS = [
 ];
 
 const nextConfig: NextConfig = {
+  // Temporary experiment: only this exact Vercel preview may skip first-run onboarding.
+  env: {
+    NEXT_PUBLIC_MOTION_PREVIEW: process.env.VERCEL_ENV === "preview" &&
+      process.env.VERCEL_GIT_COMMIT_REF === "experiment/premium-motion" ? "1" : "0",
+  },
   turbopack: {},
   devIndicators: false,
   async headers() {

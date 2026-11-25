@@ -18,7 +18,8 @@ export default function OnboardingRouteGate({ children }: { children: React.Reac
   const hasHydrated = useHasHydrated();
   const onboardingComplete = useStore((state) => state.onboardingComplete);
   const requiresOnboarding = !isPublicRoute(pathname);
-  const blocked = requiresOnboarding && hasHydrated && !onboardingComplete;
+  const allowed = onboardingComplete || process.env.NEXT_PUBLIC_MOTION_PREVIEW === "1";
+  const blocked = requiresOnboarding && hasHydrated && !allowed;
 
   useEffect(() => {
     if (blocked) router.replace("/");
@@ -26,7 +27,7 @@ export default function OnboardingRouteGate({ children }: { children: React.Reac
 
   // Fail closed on protected routes: never mount local profile/compare/contract
   // content until persisted onboarding state has been checked.
-  if (requiresOnboarding && (!hasHydrated || !onboardingComplete)) return null;
+  if (requiresOnboarding && (!hasHydrated || !allowed)) return null;
 
   return children;
 }

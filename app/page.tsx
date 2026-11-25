@@ -391,7 +391,7 @@ function HomeContent() {
 
   if (!hydrated) return <PageShell loading width="2xl" />;
 
-  if (!onboardingComplete) {
+  if (!onboardingComplete && process.env.NEXT_PUBLIC_MOTION_PREVIEW !== "1") {
     if (!firstRunRestore) return <Onboarding onComplete={completeOnboarding} onRestore={() => setFirstRunRestore(true)} />;
     return (
       <>

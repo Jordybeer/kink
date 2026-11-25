@@ -43,12 +43,13 @@ export default function TopNav() {
   const profiles = useStore((state) => state.profiles);
   const scenes = useStore((state) => state.scenes);
   const onboardingComplete = useStore((state) => state.onboardingComplete);
+  const onboardingVisible = !onboardingComplete && process.env.NEXT_PUBLIC_MOTION_PREVIEW !== "1";
   const { actions, title: contextualTitle, backHref } = useTopNav();
   const t = useMotionSafe();
   const [savedVisible, setSavedVisible] = useState(false);
   const [overflowOpen, setOverflowOpen] = useState(false);
   const homeMastheadRef = useRef<HTMLElement>(null);
-  const homeMastheadVisible = path === "/" && (!hydrated || onboardingComplete);
+  const homeMastheadVisible = path === "/" && (!hydrated || !onboardingVisible);
   const previousProfilesRef = useRef(profiles);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const saveFeedbackArmedRef = useRef(false);
@@ -105,7 +106,7 @@ export default function TopNav() {
   }, [homeMastheadVisible]);
 
   if (path === "/scene") return null;
-  if (hydrated && path === "/" && !onboardingComplete) return null;
+  if (hydrated && path === "/" && onboardingVisible) return null;
 
   const safeAreaShell = {
     paddingTop: "env(safe-area-inset-top)",
