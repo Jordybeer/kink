@@ -13,8 +13,8 @@ function selectorHexTokens(selector: RegExp): Record<string, string> {
 }
 
 const PALETTES = {
-  dark: selectorHexTokens(/:root,\s*:root\[data-theme="dark"\]\s*\{([\s\S]*?)\}/m),
-  light: selectorHexTokens(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\}/m),
+  dark: selectorHexTokens(/:root,\s*:root\[data-theme="dark"\],\s*\[data-preview-theme="dark"\]\s*\{([\s\S]*?)\}/m),
+  light: selectorHexTokens(/:root\[data-theme="light"\],\s*\[data-preview-theme="light"\]\s*\{([\s\S]*?)\}/m),
 } as const;
 
 function rgb(hex: string): [number, number, number] {
@@ -100,6 +100,16 @@ describe.each(Object.entries(PALETTES))("tokenContrast — %s palette", (mode, t
   it("muted text remains AA on common surfaces", () => {
     for (const background of ["--bg", "--surface", "--surface2"]) {
       assertPair("--text2", background, 4.5);
+    }
+  });
+
+  it("light-mode secondary ink remains readable during editorial motion", () => {
+    if (mode !== "light") return;
+    const start = Number.parseFloat(roleCss.match(/--follow-up-ink-start:\s*([\d.]+);/g)?.[1]?.split(":")[1] ?? "NaN");
+    for (const surface of SURFACES) {
+      const background = tokens[surface];
+      expect(contrast(mix(tokens["--text2"], background, start), background))
+        .toBeGreaterThanOrEqual(4.5);
     }
   });
 

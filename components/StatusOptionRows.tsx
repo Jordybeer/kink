@@ -116,7 +116,7 @@ export default function StatusOptionRows({ current, onSelect, presentation = "ca
               style={{
                 color: "var(--text)",
                 background: active
-                  ? `color-mix(in srgb, ${colour} ${danger ? 17 : 19}%, var(--surface2))`
+                  ? `color-mix(in srgb, ${colour} ${danger ? "var(--status-option-selected-danger-tint)" : "var(--status-option-selected-tint)"}, var(--surface2))`
                   : `color-mix(in srgb, ${colour} ${idleTint}, var(--status-option-surface))`,
                 border: `1px ${danger ? "dashed" : "solid"} ${active
                   ? `color-mix(in srgb, ${colour} ${danger ? 46 : 52}%, var(--border))`

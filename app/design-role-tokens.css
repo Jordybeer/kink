@@ -41,6 +41,9 @@
   --surface-tint: #17101F;
   --status-option-surface: var(--surface2);
   --status-option-idle-tint: 6%;
+  --status-option-selected-tint: 19%;
+  --status-option-selected-danger-tint: 17%;
+  --follow-up-ink-start: 0.65;
   --status-option-idle-border: 12%;
   --ambient-layer-opacity: 1;
   --profile-stack-surface: color-mix(in srgb, var(--surface2) 46%, transparent);
@@ -127,14 +130,17 @@
 :root[data-theme="light"],
 [data-preview-theme="light"] {
   color-scheme: light;
-  --bg: #F6F1EF;
-  --surface: #FFFDFC;
-  --surface2: #EFE7EA;
-  --surface3: #E3D9DF;
-  --surface-tint: #F3ECEF;
+  --bg: #F5EFEC;
+  --surface: #FFFCF9;
+  --surface2: #EEE3E5;
+  --surface3: #E5D9E5;
+  --surface-tint: #F2E9EA;
   --status-option-surface: var(--surface);
-  --status-option-idle-tint: 8%;
-  --status-option-idle-border: 22%;
+  --status-option-idle-tint: 4.5%;
+  --status-option-selected-tint: 12%;
+  --status-option-selected-danger-tint: 12%;
+  --follow-up-ink-start: 0.94;
+  --status-option-idle-border: 14%;
   --ambient-layer-opacity: 0.70;
   --profile-stack-surface: color-mix(in srgb, var(--surface2) 82%, var(--surface));
   --profile-stack-border: color-mix(in srgb, var(--border) 62%, transparent);
@@ -142,14 +148,14 @@
   --profile-page-glow: radial-gradient(ellipse 58% 13rem at 45% 0%, color-mix(in srgb, var(--accent2) 4%, transparent), transparent 68%);
   --profile-hero-glow: radial-gradient(ellipse 58% 54% at 32% 28%, color-mix(in srgb, var(--accent2) 6%, transparent), transparent 70%);
   --profile-edit-glow: radial-gradient(ellipse 68% 14rem at 50% 0%, color-mix(in srgb, var(--accent) 2%, transparent), transparent 72%);
-  --profile-form-surface: #FCFAF8;
-  --profile-form-control-surface: #F5EFEE;
-  --profile-form-muted-surface: #E7DDE2;
-  --border: #BBAEB7;
+  --profile-form-surface: #FFFCF9;
+  --profile-form-control-surface: #F5EFEC;
+  --profile-form-muted-surface: #EEE3E5;
+  --border: #BBAAB6;
   --control-border: #82737E;
   --border-bright: rgba(72, 47, 61, 0.30);
   --text: #291F27;
-  --text2: #675A62;
+  --text2: #5D505A;
   --accent: #A72B53;
   --accent2: #6B4E80;
   --accent-text: #972047;
@@ -165,11 +171,11 @@
   --hard-no-text: #A31D14;
   --danger-fill: #A61B12;
   --on-danger-fill: #FFFFFF;
-  --yes: #963300;
-  --willing: #005D43;
+  --yes: #85462E;
+  --willing: #285C4D;
   --curious: #7A5200;
-  --maybe: #005887;
-  --no: #4338CA;
+  --maybe: #315B73;
+  --no: #584D88;
   --conflict: #8A4700;
   --category-impact: #9C4938;
   --category-bondage: #6650A0;
@@ -208,9 +214,9 @@
   --wordmark-highlight: #DCCFE4;
   --tour-outline: rgba(255, 255, 255, 0.78);
   --tour-scrim: rgba(41, 31, 39, 0.68);
-  --pwa-nav-surface: #F7F0F2;
-  --pwa-nav-surface-deep: #EFE4E9;
-  --pwa-nav-active: #E3D1DC;
+  --pwa-nav-surface: #F7EFED;
+  --pwa-nav-surface-deep: #EEE3E5;
+  --pwa-nav-active: #E5D9E5;
   --pwa-nav-icon: #6F5C67;
   --pwa-nav-icon-active: #84294F;
 }

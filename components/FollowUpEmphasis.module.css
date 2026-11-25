@@ -19,7 +19,7 @@
   }
 }
 @keyframes follow-up-ink {
-  from { opacity: .65; }
+  from { opacity: var(--follow-up-ink-start, 0.65); }
   to { opacity: 1; }
 }
 @keyframes follow-up-underline {

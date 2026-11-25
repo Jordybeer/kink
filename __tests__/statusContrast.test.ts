@@ -13,8 +13,8 @@ function palette(selector: RegExp): Record<string, string> {
 }
 
 const PALETTES = {
-  dark: palette(/:root,\s*:root\[data-theme="dark"\]\s*\{([\s\S]*?)\}/m),
-  light: palette(/:root\[data-theme="light"\]\s*\{([\s\S]*?)\}/m),
+  dark: palette(/:root,\s*:root\[data-theme="dark"\],\s*\[data-preview-theme="dark"\]\s*\{([\s\S]*?)\}/m),
+  light: palette(/:root\[data-theme="light"\],\s*\[data-preview-theme="light"\]\s*\{([\s\S]*?)\}/m),
 } as const;
 
 function rgb(hex: string): [number, number, number] {
@@ -59,7 +59,10 @@ describe.each(Object.entries(PALETTES))("status labels — %s palette", (mode, t
       status,
       label: danger ? token("hard-no-text") : token(status),
       fill: danger ? token("hard-no") : token(status),
-      pct: danger ? 0.17 : 0.19,
+      pct: Number.parseFloat(
+        CSS.match(new RegExp(`--status-option-selected${danger ? "-danger" : ""}-tint: ([\\d.]+)%;`, "g"))
+          ?.[mode === "light" ? 1 : 0]?.match(/([\d.]+)%/)?.[1] ?? "NaN",
+      ) / 100,
     };
   });
 
