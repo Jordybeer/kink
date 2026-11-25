@@ -212,9 +212,8 @@
     animation: study-arrive var(--motion-progress) var(--motion-ease) both;
   }
 
-  .folio-question-prompt[data-follow-up] [data-testid="question-title"],
-  .folio-question-prompt[data-follow-up] [data-testid="question-essence"] {
-    animation: study-continue var(--motion-state) var(--motion-ease) both;
+  .folio-question-prompt[data-follow-up] [data-testid="question-title"] {
+    animation: none;
   }
 
   .folio-question-category[data-category-changed] {
@@ -227,12 +226,21 @@
   to { opacity: 1; }
 }
 
-@keyframes study-continue {
-  from { opacity: .8; translate: 0 .25rem; }
-  to { opacity: 1; translate: 0 0; }
-}
-
 @keyframes study-category-arrive {
   from { opacity: .6; translate: .5rem 0; }
   to { opacity: 1; translate: 0 0; }
+}
+
+/* The actual continuation is the editorial focal point; the topic stays a
+   readable anchor. Existing prompt minimum and answer controls remain intact. */
+.folio-question-prompt[data-follow-up-editorial] h2 {
+  font-size: 1rem;
+  line-height: 1.35;
+  font-family: var(--font-sans), sans-serif !important;
+}
+.folio-question-prompt[data-follow-up-editorial] [data-testid="question-essence"] {
+  font-family: var(--font-display, Georgia, serif);
+  font-size: clamp(1.4rem, 5.8vw, 1.75rem);
+  line-height: 1.25;
+  color: var(--text) !important;
 }

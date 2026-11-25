@@ -170,6 +170,7 @@ export default function QuestionsScreen({ params }: Props) {
               entries={currentProfile.entries}
               focusCategory={null}
               progressLabel={progressLabel}
+              showConversationCues={process.env.NEXT_PUBLIC_MOTION_PREVIEW === "1"}
               onStatusChange={updateStatus}
               onCuriousChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { curious: value })}
               onPrivateChange={(kinkId, value) => setEntry(currentProfile.id, kinkId, { privateResponse: value })}

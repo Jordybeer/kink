@@ -7,6 +7,7 @@ import { kinkCategoryExplainer } from "@/lib/kinkCategories";
 import { getQuestionnairePresentation } from "@/lib/questionnairePresentation";
 import { isConversationContinuation, positiveQuestionnaireStatus, selectConversationQuestion, type ConversationPhase, type QuestionnaireQueueItem } from "@/lib/questionnaireEngine";
 import QuestionMarkers from "./QuestionMarkers";
+import FollowUpEmphasis from "./FollowUpEmphasis";
 import StatusOptionRows from "./StatusOptionRows";
 import Sheet from "./Sheet";
 import EditorialHeading from "./ui/EditorialHeading";
@@ -46,9 +47,9 @@ interface Props {
 
 export default function TriageDeck({ presentationStyle = "classic", standalone = false, kinks, queueItems, entries, focusCategory, progressLabel, showConversationCues = false, completedContent, onStatusChange, onCuriousChange, onPrivateChange, onTagsChange }: Props) {
   const folio = presentationStyle === "folio";
-  const conversationCues = folio && showConversationCues;
+  const conversationCues = showConversationCues;
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
-  const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean } | null>(null);
+  const [holding, setHolding] = useState<{ id: string; wasContinuation: boolean; showFollowUp: boolean } | null>(null);
   const [lastQuestion, setLastQuestion] = useState<Pick<Kink, "id" | "category"> | null>(null);
   const [conversationPhase, setConversationPhase] = useState<ConversationPhase>("normal");
   const [safetyKinkId, setSafetyKinkId] = useState<string | null>(null);
@@ -82,7 +83,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   const held = holding ? kinks.find((kink) => kink.id === holding.id) : null;
   const current = held ?? currentItem?.kink ?? null;
   const followUpVisible = conversationCues && (held
-    ? holding?.wasContinuation === true
+    ? holding?.showFollowUp === true
     : conversationPhase === "preferContinuation" && currentItem?.isProbe === true
       && isConversationContinuation(currentItem, lastQuestionId));
   const categoryChanged = current && lastQuestion && current.category !== lastQuestion.category;
@@ -104,7 +105,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
       setConversationPhase("normal");
       return;
     }
-    setHolding({ id: kink.id, wasContinuation: answeredWasContinuation });
+    setHolding({ id: kink.id, wasContinuation: answeredWasContinuation, showFollowUp: followUpVisible });
     onStatusChange(kink.id, status);
     setLastQuestion(kink);
     if (answeredWasContinuation || status === "hard_no") setConversationPhase("topicBreakRequired");
@@ -143,6 +144,10 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   const categoryAccent = current ? CATEGORY_ACCENT[current.category] : "var(--category-custom)";
   const categoryUnseen = Boolean(current && current.category !== "custom" && !seenCategories.has(current.category));
   const presentation = current ? getQuestionnairePresentation(current) : { title: "", essence: "", details: null, hasDetails: false };
+  // A known, neutral phrase receives the underline; other probes use their existing topic title.
+  const followUpPhrase = followUpVisible && current?.id === "titels_aanspreekvormen"
+    ? ["afgesproken titels", "Vaste titels"].find((phrase) => presentation.essence.includes(phrase))
+    : undefined;
   const categoryCopy = categoryDetail ? kinkCategoryExplainer(categoryDetail) : null;
   const announcement = current
     ? `${followUpVisible ? "Vervolgvraag" : "Nieuwe vraag"}: ${presentation.title}. Categorie ${kinkCategoryLabel(current.category)}.`
@@ -162,8 +167,8 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
   const contextButtonStyle = folio ? undefined : { background: "var(--question-utility-surface)", color: "var(--text2)" };
   const prompt = current && (
     <>
-      <div key={folio ? current.id : "title"} data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{presentation.title}</h2></div>
-      <p key={folio ? current.id + "-essence" : "essence"} data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{presentation.essence}</p>
+      <div key={folio || followUpVisible ? current.id : "title"} data-testid="question-title-slot" className="flex min-h-0 -translate-y-1 items-center overflow-visible"><h2 data-testid="question-title" className="break-words overflow-visible pb-1 text-[clamp(1.22rem,5.4vw,1.4rem)] leading-[1.2] tracking-[-0.018em]" style={{ fontFamily: "var(--font-display, Georgia, serif)", fontWeight: 500, color: "var(--text)" }}>{followUpVisible && !followUpPhrase ? <FollowUpEmphasis text={presentation.title} emphasis={presentation.title} /> : presentation.title}</h2></div>
+      <p key={folio || followUpVisible ? current.id + "-essence" : "essence"} data-testid="question-essence" className="min-h-[3.75rem] self-start break-words text-xs leading-4" style={{ color: "var(--text2)" }}>{followUpPhrase ? <FollowUpEmphasis text={presentation.essence} emphasis={followUpPhrase} /> : presentation.essence}</p>
 
       <div data-testid="question-detail-slot" className={folio ? "folio-question-links" : "grid min-h-0 grid-cols-[minmax(0,1fr)_auto] items-center gap-2"}>
         {presentation.hasDetails && (
@@ -255,7 +260,7 @@ export default function TriageDeck({ presentationStyle = "classic", standalone =
                 ) : markers}
               </div>
 
-              {folio ? <header className="folio-question-prompt" data-follow-up={followUpVisible || undefined}>{prompt}</header> : prompt}
+              {folio ? <header className="folio-question-prompt" data-follow-up={followUpVisible || undefined} data-follow-up-editorial={Boolean(followUpPhrase) || undefined}>{prompt}</header> : prompt}
 
               <StatusOptionRows current={currentEntry?.status ?? null} onSelect={(status) => handleSelect(current, status)} />
 

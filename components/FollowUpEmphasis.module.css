@@ -1,0 +1,35 @@
+.word {
+  color: inherit;
+}
+.word[data-follow-up-emphasis] {
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-position: left 100%;
+  background-size: 100% 1px;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .word {
+    animation: follow-up-ink 220ms var(--motion-ease) var(--follow-up-delay) both;
+  }
+  .word[data-follow-up-emphasis] {
+    animation: follow-up-ink 220ms var(--motion-ease) var(--follow-up-delay) both,
+      follow-up-underline 220ms var(--motion-ease) var(--follow-up-delay) both;
+  }
+}
+@keyframes follow-up-ink {
+  from { opacity: .65; }
+  to { opacity: 1; }
+}
+@keyframes follow-up-underline {
+  from { background-size: 0% 1px; }
+  to { background-size: 100% 1px; }
+}
+@media (forced-colors: active) {
+  .word[data-follow-up-emphasis] {
+    background: none;
+    text-decoration: underline;
+    text-underline-offset: .15em;
+  }
+}
