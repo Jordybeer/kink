@@ -4,6 +4,7 @@ import PageShell from "@/components/PageShell";
 import EditorialHeading from "@/components/ui/EditorialHeading";
 
 const studies = [
+  { href: "/hotter", name: "Materialenstudio", detail: "Voel het verschil tussen velvet, porselein en dynamisch materiaal." },
   { href: "folio", name: "Van start naar profiel", detail: "Kies een profiel, bewerk een antwoord en ga terug." },
   { href: "profile-study", name: "Profiel & privéantwoorden", detail: "Zoek in de catalogus of open een privéantwoord." },
   { href: "questions", name: "Vragenlijst", detail: "Beantwoord een vraag of bewaar die voor later." },
@@ -20,7 +21,7 @@ export default function StudioIndex() {
         description="Probeer de interacties met voorbeeldgegevens. Je eigen profiel blijft privé." />
       <nav aria-label="Interactiestudies" className="mt-8 divide-y divide-[var(--border)] border-y border-[var(--border)]">
         {studies.map(study => (
-          <Link key={study.href} href={`/hot/${study.href}`} className="focus-ring ks-motion-choice flex min-h-16 items-center justify-between gap-4 py-4">
+          <Link key={study.href} href={study.href.startsWith("/") ? study.href : `/hot/${study.href}`} className="focus-ring ks-motion-choice flex min-h-16 items-center justify-between gap-4 py-4">
             <span>
               <span className="block text-lg font-semibold">{study.name}</span>
               <span className="mt-1 block text-sm text-[var(--text2)]">{study.detail}</span>
