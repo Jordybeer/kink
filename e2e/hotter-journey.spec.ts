@@ -10,6 +10,7 @@ test("journey entries preserve fictional state across candidate, theme and navig
   await expect(page.getByRole("heading", { name: "Leiding nemen of geven" })).toBeVisible();
   await maybe.click();
   await expect(maybe).toHaveAttribute("aria-pressed", "true");
+  await page.locator(".journey-labdetails summary").click();
   await page.getByRole("group", { name: "Kleurwereld" }).getByRole("button", { name: "Velvet" }).click();
   await expect(world).toHaveAttribute("data-world", "velvet");
   await page.getByRole("group", { name: "Thema" }).getByRole("button", { name: "Donker" }).click();
@@ -38,6 +39,7 @@ test("material and palette comparison preserves geometry and keyboard selection"
   await limit.focus();
   await page.keyboard.press("Space");
   await expect(limit).toHaveAttribute("aria-pressed", "true");
+  await page.locator(".journey-labdetails summary").click();
   const box = await limit.boundingBox();
   for (const material of ["Ingedrukt", "Verheven", "Dynamisch"]) {
     await page.getByRole("group", { name: "Materiaal" }).getByRole("button", { name: material }).click();

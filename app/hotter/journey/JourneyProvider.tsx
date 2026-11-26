@@ -71,8 +71,8 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
             <Link href="/hotter/journey" className="journey-wordmark">KinkSync <span>studio</span></Link>
             <span className="journey-sample">Fictieve gegevens</span>
           </div>
-          <details className="journey-labdetails" open>
-            <summary><SlidersHorizontal size={17} aria-hidden="true" /> Proefinstellingen <CaretDown size={15} aria-hidden="true" /></summary>
+          <details className="journey-labdetails">
+            <summary><SlidersHorizontal size={17} aria-hidden="true" /> <span>Proefinstellingen <small>{world === "control" ? "Huidig" : world === "botanical" ? "Botanisch" : "Velvet"} · {theme === "light" ? "Licht" : "Donker"}</small></span> <CaretDown size={15} aria-hidden="true" /></summary>
             <div className="journey-labsettings">
               <Choice<World> label="Kleurwereld" value={world} onChange={setWorld} options={[{value:"control",label:"Huidig"},{value:"botanical",label:"Botanisch"},{value:"velvet",label:"Velvet"}]} />
               <Choice<Theme> label="Thema" value={theme} onChange={setTheme} options={[{value:"light",label:"Licht"},{value:"dark",label:"Donker"}]} />
