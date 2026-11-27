@@ -176,7 +176,7 @@ export function CompareStudy(){
       {model.facts.length===0&&<p className="journey-muted relationship-empty">Nog geen gezamenlijk beoordeelde onderwerpen.</p>}
       {visibleGroups.map(group=>{const facts=model.facts.filter(f=>group.kinds.includes(f.kind));return facts.length>0?<section className="relationship-result" data-group={group.id} key={group.id}><h2>{group.label}</h2>{facts.map(factRow)}</section>:filter!=="all"?<p className="journey-muted relationship-empty" key={group.id}>Geen onderwerpen in deze groep.</p>:null;})}
       {(filter==="all"||filter==="unknown")&&<section className="relationship-result"><h2>Nog open</h2>{model.unpaired.length===0?<p className="journey-muted">Geen eenzijdig zichtbare antwoorden.</p>:model.unpaired.map(item=><article key={item.id} className="relationship-fact"><h3>{compactComparisonName(item.label)}</h3><div className="relationship-factpair"><div data-person={identityTone(a)}><small>{a.name}</small>{item.visibleSide==="a"?<Verdict status={item.status}/>:<span className="journey-muted">Geen zichtbaar antwoord</span>}</div><div data-person={identityTone(b)}><small>{b.name}</small>{item.visibleSide==="b"?<Verdict status={item.status}/>:<span className="journey-muted">Geen zichtbaar antwoord</span>}</div></div></article>)}</section>}
-      <Link href="/hotter/journey/together" className="journey-nextlink">Maak ruimte voor een moment <ArrowRight size={18} aria-hidden="true"/></Link>
+      <Link href="/hotter/journey/together/atelier" className="journey-nextlink">Maak ruimte voor een moment <ArrowRight size={18} aria-hidden="true"/></Link>
     </div>
   </section>;
 }

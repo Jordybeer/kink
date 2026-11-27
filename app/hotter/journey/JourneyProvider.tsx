@@ -10,6 +10,7 @@ import type { QuestionId, Status } from "./fixtures";
 import type { ConversationSession } from "./conversationSession";
 import { initialRelationship, type RelationshipSession } from "./relationshipSession";
 import type { IdentityOrigin } from "./RelationshipStudy";
+import { initialTogether, type TogetherSession } from "./togetherSession";
 
 type World = "control" | "botanical" | "velvet";
 type Theme = "light" | "dark";
@@ -25,6 +26,8 @@ type JourneyContext = {
   note: string; setNote: (v: string) => void;
   remembered: boolean; setRemembered: (v: boolean) => void;
   resetVersion: number;
+  together: TogetherSession;
+  setTogether: Dispatch<SetStateAction<TogetherSession>>;
   relationship: RelationshipSession;
   setRelationship: Dispatch<SetStateAction<RelationshipSession>>;
   identityOrigin: RefObject<IdentityOrigin | null>;
@@ -40,7 +43,7 @@ export function useJourney() {
 const ROUTES = [
   { path: "/hotter/journey/self/conversation", label: "Jezelf" },
   { path: "/hotter/journey/connection/people", label: "Elkaar" },
-  { path: "/hotter/journey/together", label: "Samen" },
+  { path: "/hotter/journey/together/atelier", label: "Samen" },
 ] as const;
 const NO_ACTIONS: TopNavAction[] = [];
 
@@ -64,6 +67,7 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
   const [conversation, setConversation] = useState<ConversationSession | null>(null);
   const [relationship, setRelationship] = useState(initialRelationship);
   const identityOrigin = useRef<IdentityOrigin | null>(null);
+  const [together,setTogether] = useState(initialTogether);
   const onSelf = pathname === "/hotter/journey/self" || pathname === ROUTES[0].path;
   useTopNavActions(NO_ACTIONS, "Ontdekkingsstudio", "/hotter");
 
@@ -71,10 +75,10 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
     setAnswers(prev => ({ ...prev, [id]: { ...(prev[id] ?? EMPTY), ...patch } }));
   }
   function reset() {
-    setIndex(0); setAnswers({}); setDiscussed(true); setNote(""); setRemembered(false); setConversation(null); setRelationship(initialRelationship()); identityOrigin.current = null;
+    setIndex(0); setAnswers({}); setDiscussed(true); setNote(""); setRemembered(false); setConversation(null); setRelationship(initialRelationship()); identityOrigin.current = null; setTogether(initialTogether());
     setResetVersion(v => v + 1);
   }
-  return <Context.Provider value={{ world, theme, material, index, setIndex, answers, updateAnswer, discussed, setDiscussed, note, setNote, remembered, setRemembered, resetVersion, conversation, setConversation, relationship, setRelationship, identityOrigin }}>
+  return <Context.Provider value={{ world, theme, material, index, setIndex, answers, updateAnswer, discussed, setDiscussed, note, setNote, remembered, setRemembered, resetVersion, conversation, setConversation, relationship, setRelationship, identityOrigin, together, setTogether }}>
     <PageShell width="5xl">
       <div className="journey-world" data-preview-theme={theme} data-world={world} data-material={material}>
         <header className="journey-lab">
@@ -91,7 +95,7 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
             </div>
           </details>
           <nav className="journey-nav" aria-label="Ervaringen">
-            {ROUTES.map(route => <Link key={route.path} href={route.path} aria-current={pathname === route.path || (route.label === "Jezelf" && onSelf) || (route.label === "Elkaar" && pathname.startsWith("/hotter/journey/connection")) ? "page" : undefined}>{route.label}</Link>)}
+            {ROUTES.map(route => <Link key={route.path} href={route.path} aria-current={pathname === route.path || (route.label === "Jezelf" && onSelf) || (route.label === "Elkaar" && pathname.startsWith("/hotter/journey/connection")) || (route.label === "Samen" && pathname.startsWith("/hotter/journey/together")) ? "page" : undefined}>{route.label}</Link>)}
           </nav>
         </header>
         <div key={resetVersion} className="journey-content">{children}</div>

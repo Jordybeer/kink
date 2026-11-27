@@ -52,6 +52,7 @@ export default function TogetherStudy() {
         {OTHER_MOMENTS.map(moment => <details key={moment.id} className="journey-context"><summary><span>{moment.title}</span><small>{moment.detail}</small></summary><p>{moment.note}</p></details>)}
         <details className="journey-context"><summary><span>{SCENE.title}</span><small>Scene · {SCENE.status}</small></summary><p>Nazorg: {SCENE.aftercare}</p></details>
       </section>
+      <Link className="journey-nextlink" href="/hotter/journey/together/atelier">Bekijk de uitgebreide agenda <ArrowRight size={17} aria-hidden="true"/></Link>
       <Link className="journey-nextlink" href="/hotter/journey/self">Verder met jezelf <ArrowRight size={17} aria-hidden="true"/></Link>
     </div>
   </section>;
