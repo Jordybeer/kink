@@ -17,7 +17,7 @@ test("journey entries preserve fictional state across candidate, theme and navig
   await expect(world).toHaveAttribute("data-preview-theme", "dark");
   await expect(maybe).toHaveAttribute("aria-pressed", "true");
   await page.getByRole("navigation", { name: "Ervaringen" }).getByRole("link", { name: "Elkaar" }).click();
-  await expect(page.getByRole("heading", { name: "Noor & Jules" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Wie wil je ontdekken?" })).toBeVisible();
   await page.getByRole("navigation", { name: "Ervaringen" }).getByRole("link", { name: "Samen" }).click();
   await expect(page.getByRole("heading", { name: "Een avond samen" })).toBeVisible();
   await page.goBack();

@@ -74,6 +74,7 @@ export default function ConnectionStudy() {
         </article>)}
       </section>)}
       <p className="journey-muted journey-consent">Een overeenkomst in antwoorden is geen toestemming. Een grens blijft een grens.</p>
+      <Link className="journey-nextlink" href="/hotter/journey/connection/people">Bekijk de uitgebreide perspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
       <Link className="journey-nextlink" href="/hotter/journey/together">Maak ruimte voor een moment <ArrowRight size={17} aria-hidden="true"/></Link>
     </div>}
   </section>;

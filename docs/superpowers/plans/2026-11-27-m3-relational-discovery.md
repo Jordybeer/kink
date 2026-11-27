@@ -1,0 +1,10 @@
+# M3 — Relational discovery work package
+
+Scope: C1–C7 / G2b, [experience roadmap](2026-11-26-experience-led-roadmap.md). M2 build READY at 9d03953. Retain all M1/M2 studies and palette/material choices. No production integration.
+
+1. Synthetic relationship session: create two people with two perspectives each (including a new unanswered shared perspective), explicit statuses, a private response and private note, complementary topics and hard limits. Reuse buildCompareModel and production discussionFactKey/discussionFingerprint, no storage. Unit cases first: private omission, swap, unchanged linked perspective, changed meaning invalidation, shared readonly, no same-person compare.
+2. People directory and direct profile routes under /connection/people. Public initial carries geometry only (no snapshot or private data), local WAAPI, fallback on direct/native back/reduced/offline/interruption. Separate identity atmosphere and response meanings. Search/filter, empty states, explicit own-response editing, read-only shared, explicit private reveal and conceal on exit/hide/pagehide.
+3. Pair reading composition with actual compare facts, complementary direction, explicit boundaries first, separate one-sided visible responses. Select linked perspectives, swap, acknowledge explicitly using the production identity/fingerprint functions. Keep no score and no consent inference. Contextual link to planning, no automatic transfer.
+4. Preserve M1 /connection reference; journey index and Elkaar link open /connection/people. Persist sample state in provider until reset/reload, no sharing from M2 answers. Add e2e scenarios and update M1 nav expectations. Build on exact commit, verify UI/device evidence where available, stop at G2b.
+
+Rulings: no real agreement lifecycle in M3; discussion fingerprint receives empty contract series, so agreement invalidation remains M4/I6 evidence. User asks best next; M3 proceeds with provisional aesthetic rather than claiming G2a acceptance. No claim independent review or red-green tests unless observed.

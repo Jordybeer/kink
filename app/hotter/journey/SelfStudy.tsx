@@ -38,7 +38,7 @@ export default function SelfStudy() {
       </div>
       <details className="journey-context" key={"detail-" + question.id}><summary>Meer over deze vraag</summary><p>{question.detail}</p></details>
       <Link className="journey-nextlink" href="/hotter/journey/self/conversation">Volledige vragenlijst <ArrowRight size={17} aria-hidden="true"/></Link>
-      <Link className="journey-nextlink" href="/hotter/journey/connection">Bekijk twee voorbeeldperspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
+      <Link className="journey-nextlink" href="/hotter/journey/connection/people">Bekijk twee voorbeeldperspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
     </div>
   </section>;
 }

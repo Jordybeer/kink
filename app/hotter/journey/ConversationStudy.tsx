@@ -80,7 +80,7 @@ export default function ConversationStudy() {
           return kink ? <div key={id} className="conversation-deferred">{getQuestionnairePresentation(kink).title}</div> : null;
         })}
       </section>}
-      <Link href="/hotter/journey/connection" className="journey-nextlink">Bekijk voorbeeldperspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
+      <Link href="/hotter/journey/connection/people" className="journey-nextlink">Bekijk voorbeeldperspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
       <Link href="/hotter/journey/self" className="conversation-reference">Terug naar de materiaalproef</Link>
     </div>
   </section>;

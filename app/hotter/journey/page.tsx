@@ -3,7 +3,7 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 
 const chapters = [
   { path: "self/conversation", name: "Ontdek jezelf", description: "Geef woorden aan wat voor jou betekenis heeft.", tone: "self" },
-  { path: "connection", name: "Ontdek elkaar", description: "Lees twee perspectieven naast elkaar, zonder oordeel.", tone: "connection" },
+  { path: "connection/people", name: "Ontdek elkaar", description: "Lees twee perspectieven naast elkaar, zonder oordeel.", tone: "connection" },
   { path: "together", name: "Creëer samen", description: "Maak ruimte voor wat komt en wat jullie willen bewaren.", tone: "together" },
 ] as const;
 
