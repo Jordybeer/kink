@@ -67,13 +67,13 @@ export function hasMomentChanges(state: TogetherSession) {
 export function discardMoment(state: TogetherSession): TogetherSession {
   return { ...state, draft: null, draftOriginal: null, details: false, error: null };
 }
-function validDate(value: string) {
+export function validMomentDate(value: string) {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value) || Number(value.slice(0,4)) < 1000) return false;
   const date = new Date(value + "T12:00:00Z");
   return Number.isFinite(date.getTime()) && date.toISOString().slice(0,10) === value;
 }
 export function validateMoment(d: MomentDraft): MomentError | null {
-  if (!validDate(d.date)) return { field: "date", message: "Kies een geldige datum." };
+  if (!validMomentDate(d.date)) return { field: "date", message: "Kies een geldige datum." };
   if ((d.status === "planned" || d.time) && !/^([01]\d|2[0-3]):[0-5]\d$/.test(d.time ?? "")) return { field: "time", message: "Kies een geldige tijd." };
   if (d.reminderDaysBefore !== undefined && (!Number.isInteger(d.reminderDaysBefore) || d.reminderDaysBefore < 1 || d.reminderDaysBefore > 14)) return { field: "reminder", message: "Kies een herinnering van 1 tot 14 dagen." };
   if (d.time) {
@@ -96,8 +96,10 @@ export function saveMoment(state: TogetherSession, now: number, fail = false): T
   return { ...discardMoment(state), moments, tab: saved.status, month: saved.date.slice(0,7), day: "" };
 }
 export function moveMonth(month: string, delta: number) {
+  if (!validMomentDate(month + "-01") || !Number.isInteger(delta)) return month;
   const [y,m] = month.split("-").map(Number);
   const value = new Date(Date.UTC(y,m-1+delta,1));
+  if (!Number.isFinite(value.getTime()) || value.getUTCFullYear()<1000 || value.getUTCFullYear()>9999) return month;
   return value.toISOString().slice(0,7);
 }
 export function calendarContents(record: IntimacyRecord, includeDetails = false, now?: Date) {

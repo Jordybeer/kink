@@ -97,3 +97,10 @@
 @media(min-width:640px) { .atelier-intro{padding:1.7rem 2rem;} .atelier-reading,.atelier-writerpage{padding:1.4rem 2rem;} .atelier-writingplane textarea{min-height:16rem;} }
 @media(max-width:360px) { .atelier-reading,.atelier-writerpage,.atelier-intro{padding-inline:.65rem;} .atelier-datetime{grid-template-columns:1fr;} .atelier-momentnote{margin-left:0!important;} }
 @media(forced-colors:active) { .atelier-feelings button span { border:1px solid CanvasText; } }
+
+/* Only the first planned moment earns a larger date and editorial title. */
+.atelier-moment[data-featured=true] { padding-block:1.35rem 1rem; }
+.atelier-moment[data-featured=true] .atelier-day>span { font-size:3.55rem; color:var(--j-action); }
+.atelier-moment[data-featured=true] .atelier-identitycopy h3 { font-size:1.55rem; line-height:1.18; }
+.atelier-writersubject { scroll-margin-block-start:5rem; }
+@media(max-width:360px) { .atelier-moment[data-featured=true] .atelier-day>span { font-size:2.9rem; } .atelier-moment[data-featured=true] .atelier-identitycopy h3 { font-size:1.3rem; } }

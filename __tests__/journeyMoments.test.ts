@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { initialTogether, openMoment, patchMoment, saveMoment, discardMoment, moveMonth, calendarContents, updateScene, completeScene, saveAftercare } from "@/app/hotter/journey/togetherSession";
+import { initialTogether, openMoment, patchMoment, saveMoment, discardMoment, moveMonth, calendarContents, updateScene, completeScene, saveAftercare, reorderScene, hasMomentChanges, validateMoment, validMomentDate } from "@/app/hotter/journey/togetherSession";
 
 describe("journey moments", () => {
   it("preserves an optional partner when editing and clearing a plan", () => {
@@ -66,5 +66,27 @@ describe("journey moments", () => {
     expect(saveAftercare(s, 123)).toBe(s);
     expect(updateScene(s, "talk", "zacht")).toBe(s);
     expect(moveMonth("2026-12", 1)).toBe("2027-01");
+  });
+
+  it("detects dirty drafts and permits only deliberate discard", () => {
+    let s = openMoment(initialTogether());
+    expect(hasMomentChanges(s)).toBe(false);
+    const before = s.moments;
+    s = patchMoment(s, { note: "Een gedachte" });
+    expect(hasMomentChanges(s)).toBe(true);
+    expect(discardMoment(s).moments).toBe(before);
+    expect(hasMomentChanges(patchMoment(s, { note: "" }))).toBe(false);
+  });
+
+  it("bounds calendar navigation, dates, reminders and scene reordering", () => {
+    expect(moveMonth("9999-12", 1)).toBe("9999-12");
+    expect(moveMonth("1000-01", -1)).toBe("1000-01");
+    expect(validMomentDate("10000-01-01")).toBe(false);
+    expect(validMomentDate("2026-02-31")).toBe(false);
+    const initial = initialTogether();
+    const s = patchMoment(openMoment(initial, "evening"), { reminderDaysBefore: 15 });
+    expect(validateMoment(s.draft!)?.field).toBe("reminder");
+    expect(reorderScene(initial, "talk", -1)).toBe(initial);
+    expect(reorderScene(initial, "talk", 1).scene.items[1].id).toBe("talk");
   });
 });

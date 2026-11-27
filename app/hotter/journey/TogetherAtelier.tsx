@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { ArrowLeft, ArrowRight, Bell, CalendarPlus, CaretLeft, CaretRight, Check, PencilSimple, Plus } from "@phosphor-icons/react";
 import type { IntimacyRecord } from "@/lib/intimacyStore";
 import { useJourney } from "./JourneyProvider";
-import { PARTNERS, openMoment, patchMoment, discardMoment, saveMoment, hasMomentChanges, moveMonth, calendarContents } from "./togetherSession";
+import { PARTNERS, openMoment, patchMoment, discardMoment, saveMoment, hasMomentChanges, moveMonth, calendarContents, validMomentDate } from "./togetherSession";
 import "./atelier.css";
 
 export const ATELIER_ROOT="/hotter/journey/together/atelier";
@@ -50,11 +50,13 @@ export default function TogetherAtelier(){
   const draft=together.draft;
   const [confirmDiscard,setConfirmDiscard]=useState(false);
   const [failNext,setFailNext]=useState(false);
+  const [dayError,setDayError]=useState("");
   const heading=useRef<HTMLHeadingElement>(null);
   const identity=useRef<HTMLDivElement>(null);
   const origin=useRef<DOMRect|null>(null);
-  const returnId=useRef<string|null>(null);
-  const returnAction=useRef<"edit"|"log"|"new">("edit");
+  // On returning from another journey route, the provider still owns the draft.
+  const returnId=useRef<string|null>(draft?.id??null);
+  const returnAction=useRef<"edit"|"log"|"new">(draft&&!together.moments.some(m=>m.id===draft.id)?"new":"edit");
   const listRoot=useRef<HTMLDivElement>(null);
   const wasWriting=useRef(false);
   const writing=!!draft;
@@ -64,6 +66,13 @@ export default function TogetherAtelier(){
       heading.current?.focus({preventScroll:true});
       const source=origin.current;origin.current=null;
       const target=identity.current;
+      const visible=target?.getBoundingClientRect();
+      // A lower list entry can leave the destination above the scroll viewport.
+      // Ensure the writer is readable before attempting decorative continuity.
+      if(visible && (visible.top<0 || visible.bottom>window.innerHeight)){
+        target?.scrollIntoView({block:"start",behavior:"instant"});
+        return;
+      }
       if(!source||!target||!target.animate||document.hidden||matchMedia("(prefers-reduced-motion: reduce)").matches||!navigator.onLine)return;
       const rect=target.getBoundingClientRect();
       if(source.bottom<0||source.top>innerHeight||rect.bottom<0||rect.top>innerHeight||!rect.height)return;
@@ -95,8 +104,8 @@ export default function TogetherAtelier(){
     setTogether(discardMoment);
   }
   function save(){
-    const fail=failNext;setFailNext(false);setConfirmDiscard(false);
-    setTogether(s=>saveMoment(s,Date.now(),fail));
+    const fail=failNext;const now=Date.now();setFailNext(false);setConfirmDiscard(false);
+    setTogether(s=>saveMoment(s,now,fail));
   }
   const rows=together.moments.filter(m=>m.status===together.tab&&m.date.startsWith(together.month)&&(!together.day||m.date===together.day)).sort((a,b)=>together.tab==="planned"? (a.date+(a.time??"")).localeCompare(b.date+(b.time??"")):(b.date+(b.time??"")).localeCompare(a.date+(a.time??"")));
   const original=draft?together.moments.find(m=>m.id===draft.id):undefined;
@@ -125,10 +134,11 @@ export default function TogetherAtelier(){
     <header className="atelier-intro"><h1>{together.tab==="planned"?"Wat komt":"Logboek"}</h1><p>{together.tab==="planned"?"Ruimte voor wat je zelf wilt plannen.":"Een plek voor wat je wilt bewaren."}</p></header>
     <div className="atelier-reading" ref={listRoot}>
       <div className="atelier-tabs" role="group" aria-label="Momenten bekijken"><button type="button" aria-pressed={together.tab==="planned"} onClick={()=>setTogether(s=>({...s,tab:"planned",day:""}))}>Gepland</button><button type="button" aria-pressed={together.tab==="completed"} onClick={()=>setTogether(s=>({...s,tab:"completed",day:""}))}>Logboek</button><button type="button" className="atelier-new" data-moment-action="new" onClick={()=>begin()} aria-label="Nieuw moment"><Plus size={20} aria-hidden="true"/></button></div>
-      <div className="atelier-month"><button type="button" aria-label="Vorige maand" onClick={()=>setTogether(s=>({...s,month:moveMonth(s.month,-1),day:""}))}><CaretLeft size={20} aria-hidden="true"/></button><h2>{monthFormatter.format(new Date(together.month+"-01T12:00:00Z"))}</h2><button type="button" aria-label="Volgende maand" onClick={()=>setTogether(s=>({...s,month:moveMonth(s.month,1),day:""}))}><CaretRight size={20} aria-hidden="true"/></button></div>
-      <div className="atelier-dayfilter"><label htmlFor="atelier-dayfilter">Op datum</label><input id="atelier-dayfilter" type="date" value={together.day} onChange={e=>{const day=e.target.value;if(day)setTogether(s=>({...s,day,month:day.slice(0,7)}));else setTogether(s=>({...s,day:""}));}}/><button type="button" disabled={!together.day} onClick={()=>setTogether(s=>({...s,day:""}))}>Alle dagen</button></div>
+      <div className="atelier-month"><button type="button" aria-label="Vorige maand" onClick={()=>{setDayError("");setTogether(s=>({...s,month:moveMonth(s.month,-1),day:""}));}}><CaretLeft size={20} aria-hidden="true"/></button><h2>{monthFormatter.format(new Date(together.month+"-01T12:00:00Z"))}</h2><button type="button" aria-label="Volgende maand" onClick={()=>{setDayError("");setTogether(s=>({...s,month:moveMonth(s.month,1),day:""}));}}><CaretRight size={20} aria-hidden="true"/></button></div>
+      <div className="atelier-dayfilter"><label htmlFor="atelier-dayfilter">Op datum</label><input id="atelier-dayfilter" type="date" min="1000-01-01" max="9999-12-31" value={together.day} aria-invalid={!!dayError} aria-describedby={dayError?"atelier-dayerror":undefined} onChange={e=>{const day=e.target.value;if(day&&!validMomentDate(day)){setDayError("Kies een geldige datum.");return;}setDayError("");setTogether(s=>({...s,day,month:day?day.slice(0,7):s.month}));}}/><button type="button" disabled={!together.day&&!dayError} onClick={()=>{setDayError("");setTogether(s=>({...s,day:""}));}}>Alle dagen</button></div>
+      {dayError&&<p id="atelier-dayerror" className="atelier-error" role="alert">{dayError}</p>}
       {rows.length===0&&<div className="atelier-empty"><h2>Hier is nog ruimte.</h2><p>Geen {together.tab==="planned"?"geplande":"beleefde"} momenten in deze periode.</p><button type="button" className="journey-textaction" onClick={()=>begin()}><Plus size={18} aria-hidden="true"/> Voeg een moment toe</button></div>}
-      {rows.map(record=><article key={record.id} className="atelier-moment" data-moment-id={record.id} data-completed={record.status==="completed"}>
+      {rows.map((record,index)=><article key={record.id} className="atelier-moment" data-moment-id={record.id} data-completed={record.status==="completed"} data-featured={index===0&&record.status==="planned"}>
         <div className="atelier-momenthead"><DateIdentity record={record}/><button type="button" data-moment-action="edit" aria-label={"Bewerk "+record.title} onClick={e=>begin(record.id,false,e.currentTarget.parentElement?.querySelector(".atelier-identity"))}><PencilSimple size={19} aria-hidden="true"/></button></div>
         {record.note&&<p className="atelier-momentnote">{record.note}</p>}
         {record.status==="planned"&&<>{record.reminderDaysBefore&&<p className="atelier-reminder"><Bell size={16} aria-hidden="true"/>{record.reminderDaysBefore} {record.reminderDaysBefore===1?"dag":"dagen"} vooraf</p>}<button type="button" data-moment-action="log" className="journey-textaction" aria-label={"Bijhouden "+record.title} onClick={e=>begin(record.id,true,e.currentTarget.closest("article")?.querySelector(".atelier-identity"))}><Check size={18} aria-hidden="true"/> Bijhouden</button><CalendarExport record={record}/></>}

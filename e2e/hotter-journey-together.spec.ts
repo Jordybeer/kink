@@ -48,7 +48,7 @@ test("cancel protects changes and a draft survives navigation inside the studio"
 test("agreement examples do not sign; scene completion and aftercare are distinct", async ({ page }) => {
   await seedAndGo(page, path + "/agreements", []);
   await page.getByLabel("Voorbeeldstatus").selectOption("pending_signature");
-  await expect(page.getByText("Wacht op handtekening", { exact: true })).toBeVisible();
+  await expect(page.locator(".atelier-documentstatus")).toHaveText("Wacht op handtekening");
   await expect(page.getByRole("button", { name: /onderteken/i })).toHaveCount(0);
   await page.getByLabel("Voorbeeldstatus").selectOption("quarantine");
   await expect(page.getByRole("status")).toContainText("Niet bruikbaar als overeenkomst");
