@@ -1,0 +1,55 @@
+/* M2, intentionally local: question continuity, not a second shared system. */
+.journey-conversation .journey-questionhead,
+.journey-selfoverview .journey-questionhead { padding-block: .7rem .95rem; }
+.journey-conversation .journey-questionmeta { align-items: center; padding-bottom: .35rem; }
+.conversation-personline { display: inline-flex; align-items: center; gap: .45rem; color: var(--j-hero-muted); font-size: .79rem; }
+.conversation-avatar { display: grid; place-items: center; width: 1.65rem; height: 1.65rem; flex: none; border-radius: 50%; background: var(--j-noor); color: var(--j-portrait-ink); font-family: var(--j-font); font-weight: 500; font-size: .92rem; }
+.conversation-cue { min-height: 1.6rem; padding-top: .35rem; display: flex; align-items: baseline; justify-content: space-between; gap: .35rem .65rem; flex-wrap: wrap; font-size: .76rem; color: var(--j-hero-muted); }
+.conversation-cue > span:last-child { font-weight: 600; color: var(--j-hero-ink); }
+.journey-conversation .conversation-copy { min-height: 8.5rem; padding-top: .35rem; animation: none; }
+.journey-conversation .conversation-copy h1 { font-size: 1.84rem; line-height: 1.13; margin-bottom: .5rem; }
+.journey-conversation .conversation-copy p { font-size: .92rem; line-height: 1.4; max-width: 64ch; }
+.conversation-copy h1:focus,.journey-selfoverview h1:focus { outline: none; }
+.conversation-emphasis { font-weight: 600; background: linear-gradient(currentColor,currentColor) left bottom / 0 1px no-repeat; animation: conversation-ink 280ms var(--j-ease) 50ms forwards; padding-bottom: .1em; box-decoration-break: clone; -webkit-box-decoration-break: clone; }
+@keyframes conversation-ink { to { background-size: 100% 1px; } }
+.journey-conversation .journey-response { padding-top: .65rem; }
+.journey-conversation .journey-answers { gap: .38rem; }
+.journey-conversation .journey-answer { min-height: 3rem; padding: .3rem .6rem; }
+.journey-conversation .journey-answertext strong { font-size: .95rem; }
+.journey-conversation .journey-answertext small { font-size: .75rem; }
+.conversation-contextcontrols { margin-top: .45rem; }
+.conversation-contextcontrols .journey-flags { margin-top: .1rem; gap: .25rem; }
+.conversation-contextcontrols .journey-flags button { justify-content: flex-start; font-size: .8rem; padding-inline: .5rem; min-width: 0; }
+.conversation-firstmark { display: grid; place-items: center; width: 1.125rem; height: 1.125rem; border: 1px solid currentColor; border-radius: 50%; font-size: .73rem; flex: none; }
+.conversation-actions { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: .2rem .4rem; border-top: 1px solid var(--j-line); margin-top: .35rem; }
+.conversation-reading { padding-top: .4rem; }
+.conversation-reading .journey-context { margin-top: 0; }
+.conversation-reading summary { display: flex; align-items: center; gap: .45rem; font-size: .84rem; }
+.conversation-reading summary svg { flex: none; }
+.conversation-reference { display: inline-flex; align-items: center; color: var(--j-muted); font-size: .8rem; text-decoration: underline; text-underline-offset: .2em; }
+.journey-selfoverview .journey-questionhead h1 { margin: .85rem 0 .45rem; }
+.journey-selfoverview .journey-questionhead p { color: var(--j-hero-muted); font-size: .95rem; }
+.conversation-resume { width: 100%; }
+.conversation-revisit { margin-top: .4rem; }
+.conversation-ledger { margin-top: 1.4rem; }
+.conversation-ledger h2 { margin-bottom: .7rem; }
+.conversation-ledgerrow { display: flex; justify-content: space-between; align-items: center; gap: .6rem; border-top: 1px solid var(--j-line); padding: .5rem 0; }
+.conversation-ledgerrow p,.conversation-ledgerrow small { font-size: .85rem; color: var(--j-muted); margin-top: .2rem; }
+.conversation-ledgerrow button { min-width: 2.75rem; display: grid; place-items: center; color: var(--j-action); border-radius: .5rem; }
+.conversation-deferred { border-top: 1px solid var(--j-line); padding: .65rem 0; font-size: .9rem; }
+@media (min-width: 421px) { .journey-conversation .conversation-copy { min-height: 8.25rem; } }
+@media (max-width: 420px) {
+  .journey-conversation .journey-answer { min-height: 3.05rem; }
+  .journey-conversation .journey-answertext { gap: .03rem; }
+}
+@media (min-width: 640px) {
+  .journey-conversation .journey-questionhead,.journey-selfoverview .journey-questionhead { padding-block: 1rem 1.3rem; }
+  .journey-conversation .conversation-copy h1 { font-size: 2.35rem; }
+  .journey-conversation .conversation-copy { min-height: 8.5rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .conversation-emphasis { animation: none !important; background-size: 100% 1px; }
+}
+@media (forced-colors: active) {
+  .conversation-emphasis { text-decoration: underline; background: none; }
+}

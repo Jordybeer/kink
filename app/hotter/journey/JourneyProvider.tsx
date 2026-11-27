@@ -1,12 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState, type ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode, type Dispatch, type SetStateAction } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ArrowsClockwise, SlidersHorizontal, CaretDown } from "@phosphor-icons/react";
 import PageShell from "@/components/PageShell";
 import { useTopNavActions, type TopNavAction } from "@/components/nav/TopNavContext";
 import type { QuestionId, Status } from "./fixtures";
+import type { ConversationSession } from "./conversationSession";
 
 type World = "control" | "botanical" | "velvet";
 type Theme = "light" | "dark";
@@ -22,6 +23,8 @@ type JourneyContext = {
   note: string; setNote: (v: string) => void;
   remembered: boolean; setRemembered: (v: boolean) => void;
   resetVersion: number;
+  conversation: ConversationSession | null;
+  setConversation: Dispatch<SetStateAction<ConversationSession | null>>;
 };
 const Context = createContext<JourneyContext | null>(null);
 export function useJourney() {
@@ -30,7 +33,7 @@ export function useJourney() {
   return value;
 }
 const ROUTES = [
-  { path: "/hotter/journey/self", label: "Jezelf" },
+  { path: "/hotter/journey/self/conversation", label: "Jezelf" },
   { path: "/hotter/journey/connection", label: "Elkaar" },
   { path: "/hotter/journey/together", label: "Samen" },
 ] as const;
@@ -53,17 +56,18 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
   const [note, setNote] = useState("");
   const [remembered, setRemembered] = useState(false);
   const [resetVersion, setResetVersion] = useState(0);
-  const onSelf = pathname === ROUTES[0].path;
+  const [conversation, setConversation] = useState<ConversationSession | null>(null);
+  const onSelf = pathname === "/hotter/journey/self" || pathname === ROUTES[0].path;
   useTopNavActions(NO_ACTIONS, "Ontdekkingsstudio", "/hotter");
 
   function updateAnswer(id: QuestionId, patch: Partial<Answer>) {
     setAnswers(prev => ({ ...prev, [id]: { ...(prev[id] ?? EMPTY), ...patch } }));
   }
   function reset() {
-    setIndex(0); setAnswers({}); setDiscussed(true); setNote(""); setRemembered(false);
+    setIndex(0); setAnswers({}); setDiscussed(true); setNote(""); setRemembered(false); setConversation(null);
     setResetVersion(v => v + 1);
   }
-  return <Context.Provider value={{ world, theme, material, index, setIndex, answers, updateAnswer, discussed, setDiscussed, note, setNote, remembered, setRemembered, resetVersion }}>
+  return <Context.Provider value={{ world, theme, material, index, setIndex, answers, updateAnswer, discussed, setDiscussed, note, setNote, remembered, setRemembered, resetVersion, conversation, setConversation }}>
     <PageShell width="5xl">
       <div className="journey-world" data-preview-theme={theme} data-world={world} data-material={material}>
         <header className="journey-lab">
@@ -80,7 +84,7 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
             </div>
           </details>
           <nav className="journey-nav" aria-label="Ervaringen">
-            {ROUTES.map(route => <Link key={route.path} href={route.path} aria-current={pathname === route.path ? "page" : undefined}>{route.label}</Link>)}
+            {ROUTES.map(route => <Link key={route.path} href={route.path} aria-current={pathname === route.path || (route.label === "Jezelf" && onSelf) ? "page" : undefined}>{route.label}</Link>)}
           </nav>
         </header>
         <div key={resetVersion} className="journey-content">{children}</div>

@@ -37,6 +37,7 @@ export default function SelfStudy() {
         <button type="button" disabled={index === QUESTIONS.length - 1} onClick={() => setIndex(index + 1)}>Volgende <ArrowRight size={17} aria-hidden="true"/></button>
       </div>
       <details className="journey-context" key={"detail-" + question.id}><summary>Meer over deze vraag</summary><p>{question.detail}</p></details>
+      <Link className="journey-nextlink" href="/hotter/journey/self/conversation">Volledige vragenlijst <ArrowRight size={17} aria-hidden="true"/></Link>
       <Link className="journey-nextlink" href="/hotter/journey/connection">Bekijk twee voorbeeldperspectieven <ArrowRight size={17} aria-hidden="true"/></Link>
     </div>
   </section>;

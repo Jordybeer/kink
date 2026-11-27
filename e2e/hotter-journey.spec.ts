@@ -23,6 +23,7 @@ test("journey entries preserve fictional state across candidate, theme and navig
   await page.goBack();
   await expect(page.getByRole("heading", { name: "Noor & Jules" })).toBeVisible();
   await page.getByRole("navigation", { name: "Ervaringen" }).getByRole("link", { name: "Jezelf" }).click();
+  await page.getByRole("link", { name: "Vergelijk met de materiaalproef" }).click();
   await expect(maybe).toHaveAttribute("aria-pressed", "true");
   expect(await page.evaluate(() => localStorage.getItem("kink-profiles"))).toBe(original);
   await page.reload();
