@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import JourneyProvider from "./JourneyProvider";
 import "./world.css";
 import "./editions.css";
+import "./self-spread.css";
+import "./identity-fit.css";
 
 export const metadata: Metadata = {
   title: "Ontdekkingsstudio · KinkSync",

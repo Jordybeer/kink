@@ -1,0 +1,409 @@
+[
+  {
+    "scene": "self",
+    "arm": "control",
+    "tone": "light",
+    "visible": 405,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 6.68,
+    "minLarge": 13.97
+  },
+  {
+    "scene": "self",
+    "arm": "control",
+    "tone": "dark",
+    "visible": 405,
+    "coveredFailures": 3,
+    "formerlyObscured": [
+      {
+        "text": "KinkSync",
+        "visible": 3
+      },
+      {
+        "text": "Fictieve gegevens",
+        "visible": 3
+      },
+      {
+        "text": "Hoe sta je tegenover een",
+        "visible": 12
+      }
+    ],
+    "failures": [],
+    "minBody": 6.9,
+    "minLarge": 17.09
+  },
+  {
+    "scene": "self",
+    "arm": "botanical",
+    "tone": "light",
+    "visible": 582,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.64,
+    "minLarge": 8.97
+  },
+  {
+    "scene": "self",
+    "arm": "botanical",
+    "tone": "dark",
+    "visible": 582,
+    "coveredFailures": 24,
+    "formerlyObscured": [
+      {
+        "text": "KinkSync",
+        "visible": 6
+      },
+      {
+        "text": "studio",
+        "visible": 6
+      },
+      {
+        "text": "Fictieve gegevens",
+        "visible": 6
+      },
+      {
+        "text": "Proefinstellingen",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 7.53,
+    "minLarge": 10.94
+  },
+  {
+    "scene": "self",
+    "arm": "velvet",
+    "tone": "light",
+    "visible": 582,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.47,
+    "minLarge": 10.79
+  },
+  {
+    "scene": "self",
+    "arm": "velvet",
+    "tone": "dark",
+    "visible": 582,
+    "coveredFailures": 24,
+    "formerlyObscured": [
+      {
+        "text": "KinkSync",
+        "visible": 6
+      },
+      {
+        "text": "studio",
+        "visible": 6
+      },
+      {
+        "text": "Fictieve gegevens",
+        "visible": 6
+      },
+      {
+        "text": "Proefinstellingen",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 7.28,
+    "minLarge": 8.78
+  },
+  {
+    "scene": "connection",
+    "arm": "control",
+    "tone": "light",
+    "visible": 438,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 6.68,
+    "minLarge": 13.97
+  },
+  {
+    "scene": "connection",
+    "arm": "control",
+    "tone": "dark",
+    "visible": 438,
+    "coveredFailures": 3,
+    "formerlyObscured": [
+      {
+        "text": "Waardering uitspreken.",
+        "visible": 9
+      },
+      {
+        "text": "Noor",
+        "visible": 54
+      }
+    ],
+    "failures": [],
+    "minBody": 6.91,
+    "minLarge": 17.09
+  },
+  {
+    "scene": "connection",
+    "arm": "botanical",
+    "tone": "light",
+    "visible": 438,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.64,
+    "minLarge": 8.97
+  },
+  {
+    "scene": "connection",
+    "arm": "botanical",
+    "tone": "dark",
+    "visible": 438,
+    "coveredFailures": 9,
+    "formerlyObscured": [
+      {
+        "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+        "visible": 12
+      },
+      {
+        "text": "Waar jullie elkaar vinden",
+        "visible": 9
+      },
+      {
+        "text": "Waardering uitspreken.",
+        "visible": 9
+      },
+      {
+        "text": "Noor",
+        "visible": 54
+      }
+    ],
+    "failures": [],
+    "minBody": 7.82,
+    "minLarge": 10.94
+  },
+  {
+    "scene": "connection",
+    "arm": "velvet",
+    "tone": "light",
+    "visible": 438,
+    "coveredFailures": 3,
+    "formerlyObscured": [
+      {
+        "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+        "visible": 12
+      }
+    ],
+    "failures": [],
+    "minBody": 4.57,
+    "minLarge": 10.79
+  },
+  {
+    "scene": "connection",
+    "arm": "velvet",
+    "tone": "dark",
+    "visible": 438,
+    "coveredFailures": 9,
+    "formerlyObscured": [
+      {
+        "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+        "visible": 12
+      },
+      {
+        "text": "Waar jullie elkaar vinden",
+        "visible": 9
+      },
+      {
+        "text": "Waardering uitspreken.",
+        "visible": 9
+      },
+      {
+        "text": "Noor",
+        "visible": 54
+      }
+    ],
+    "failures": [],
+    "minBody": 7.64,
+    "minLarge": 8.78
+  },
+  {
+    "scene": "together",
+    "arm": "control",
+    "tone": "light",
+    "visible": 357,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 6.68,
+    "minLarge": 13.97
+  },
+  {
+    "scene": "together",
+    "arm": "control",
+    "tone": "dark",
+    "visible": 357,
+    "coveredFailures": 3,
+    "formerlyObscured": [
+      {
+        "text": "KinkSync",
+        "visible": 3
+      },
+      {
+        "text": "Fictieve gegevens",
+        "visible": 3
+      },
+      {
+        "text": "Gepland",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 7.25,
+    "minLarge": 17.09
+  },
+  {
+    "scene": "together",
+    "arm": "botanical",
+    "tone": "light",
+    "visible": 348,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.64,
+    "minLarge": 8.97
+  },
+  {
+    "scene": "together",
+    "arm": "botanical",
+    "tone": "dark",
+    "visible": 348,
+    "coveredFailures": 7,
+    "formerlyObscured": [
+      {
+        "text": "Proefinstellingen",
+        "visible": 3
+      },
+      {
+        "text": "November",
+        "visible": 6
+      },
+      {
+        "text": "Gepland",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 8.23,
+    "minLarge": 10.94
+  },
+  {
+    "scene": "together",
+    "arm": "velvet",
+    "tone": "light",
+    "visible": 348,
+    "coveredFailures": 4,
+    "formerlyObscured": [
+      {
+        "text": "November",
+        "visible": 6
+      },
+      {
+        "text": "Gepland",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 5.47,
+    "minLarge": 10.79
+  },
+  {
+    "scene": "together",
+    "arm": "velvet",
+    "tone": "dark",
+    "visible": 348,
+    "coveredFailures": 7,
+    "formerlyObscured": [
+      {
+        "text": "Proefinstellingen",
+        "visible": 3
+      },
+      {
+        "text": "November",
+        "visible": 6
+      },
+      {
+        "text": "Gepland",
+        "visible": 9
+      }
+    ],
+    "failures": [],
+    "minBody": 7.64,
+    "minLarge": 8.78
+  },
+  {
+    "scene": "index",
+    "arm": "control",
+    "tone": "light",
+    "visible": 360,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 6.68,
+    "minLarge": 13.97
+  },
+  {
+    "scene": "index",
+    "arm": "control",
+    "tone": "dark",
+    "visible": 360,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 7.25,
+    "minLarge": 17.09
+  },
+  {
+    "scene": "index",
+    "arm": "botanical",
+    "tone": "light",
+    "visible": 405,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.64,
+    "minLarge": 8.97
+  },
+  {
+    "scene": "index",
+    "arm": "botanical",
+    "tone": "dark",
+    "visible": 405,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 8.23,
+    "minLarge": 10.94
+  },
+  {
+    "scene": "index",
+    "arm": "velvet",
+    "tone": "light",
+    "visible": 405,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 5.47,
+    "minLarge": 10.79
+  },
+  {
+    "scene": "index",
+    "arm": "velvet",
+    "tone": "dark",
+    "visible": 405,
+    "coveredFailures": 0,
+    "formerlyObscured": [],
+    "failures": [],
+    "minBody": 7.64,
+    "minLarge": 8.78
+  }
+]

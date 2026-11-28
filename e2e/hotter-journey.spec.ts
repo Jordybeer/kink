@@ -84,3 +84,21 @@ test("a moment becomes a memory only on explicit action; writer cancel retains s
   await expect(page.getByRole("heading", { name: "Een avond samen" })).toBeVisible();
   await expect(page.getByText("Samen rustig beginnen.", { exact: true })).toBeVisible();
 });
+
+test("a personal reflection belongs to one question and requires a deliberate reveal", async ({ page }) => {
+  await seedAndGo(page, "/hotter/journey/self", []);
+  const open = page.getByRole("button", { name: "In mijn woorden" });
+  await open.click();
+  const field = page.getByRole("textbox", { name: "Mijn woorden" });
+  await field.fill("Voor mij begint dat met een gesprek.");
+  await page.getByRole("button", { name: "Bewaar en sluit" }).click();
+  await expect(field).toHaveCount(0);
+  await expect(page.locator('.journey-answer[aria-pressed=true]')).toHaveCount(0);
+  await page.getByRole("button", { name: "Volgende" }).click();
+  await open.click();
+  await expect(field).toHaveValue("");
+  await page.getByRole("button", { name: "Annuleren" }).click();
+  await page.getByRole("button", { name: "Vorige" }).click();
+  await page.getByRole("button", { name: "Mijn woorden bekijken" }).click();
+  await expect(field).toHaveValue("Voor mij begint dat met een gesprek.");
+});

@@ -1,0 +1,25 @@
+.journey-self .self-subject { font: 600 .86rem/1.4 var(--font-sans); margin-block: .8rem .2rem; }
+.self-words { margin-block: .7rem; border-top: 1px solid var(--j-line); }
+.self-words button { color: var(--j-action); }
+.self-words form { background: var(--j-paper); padding: 1rem; }
+.self-words label { display: block; font: 500 1.35rem/1.25 var(--j-font); }
+.self-words textarea { display: block; width: 100%; margin-block: .7rem; padding: .5rem; border: 1px solid var(--j-control); color: var(--j-ink); background: var(--j-paper); font: inherit; }
+.self-words form div { display: flex; justify-content: space-between; flex-wrap: wrap; gap: .5rem; }
+.journey-world:not([data-world="control"]) .journey-self .journey-questionhead {
+  background-image: none; position: relative; padding-inline: clamp(1rem,3vw,2rem);
+}
+.journey-world:not([data-world="control"]) .journey-self .journey-questionhead::before {
+  content: ""; display: block; position: absolute; top: .4rem; right: .7rem; width: 4.8rem; height: 3.6rem;
+  background: var(--plate) left top / 200% 200% no-repeat; pointer-events: none;
+}
+.journey-world:not([data-world="control"]) .journey-self .journey-questionmeta { margin-inline-end: 5rem; }
+.journey-world:not([data-world="control"]) .journey-self .journey-questioncopy { min-height: 11.5rem; }
+.journey-world:not([data-world="control"]) .journey-self .journey-questioncopy h1 { max-width: 17ch; font-size: clamp(1.85rem,4vw,3.4rem); line-height: 1.03; text-wrap: balance; }
+@media(min-width: 800px) {
+  .journey-world:not([data-world="control"]) .journey-self { display: grid; grid-template-columns: minmax(0,1fr) minmax(0,1.08fr); }
+  .journey-world:not([data-world="control"]) .journey-self .journey-questionhead::before {
+    position: static; float: right; width: 42%; height: 6rem; margin-bottom: 1rem;
+  }
+  .journey-world:not([data-world="control"]) .journey-self .journey-questioncopy { clear: both; }
+  .journey-world:not([data-world="control"]) .journey-self .journey-response { padding-inline: clamp(1rem,3vw,2rem); }
+}

@@ -15,7 +15,7 @@ import { initialTogether, type TogetherSession } from "./togetherSession";
 type World = "control" | "botanical" | "velvet";
 type Theme = "light" | "dark";
 type Material = "recessed" | "raised" | "dynamic";
-type Answer = { status: Status | null; private: boolean; curious: boolean };
+type Answer = { words?: string; status: Status | null; private: boolean; curious: boolean };
 const EMPTY: Answer = { status: null, private: false, curious: false };
 type JourneyContext = {
   world: World; theme: Theme; material: Material;

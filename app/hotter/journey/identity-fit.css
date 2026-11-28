@@ -1,0 +1,13 @@
+/* The thread connects two portraits on one line. Wrapped portraits stand alone. */
+.journey-pair { container-type: inline-size; }
+@container (max-width: 11rem) {
+  .journey-pair::before { content: none; }
+}
+.journey-connection { container-type: inline-size; }
+@container (max-width: 15rem) {
+  .journey-world[data-world]:not([data-world="control"]) .journey-pairhero {
+    padding-inline: .85rem;
+    background-image: none;
+  }
+  .journey-world .journey-pair { margin-inline-end: 0; }
+}
