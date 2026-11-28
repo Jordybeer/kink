@@ -57,9 +57,9 @@ export default function ConnectionStudy() {
       </div>}
     </div> : <div className="journey-comparison">
       {([
+        { key: "boundary", title: "Duidelijke grenzen" },
         { key: "shared", title: "Waar jullie elkaar vinden" },
         { key: "difference", title: "Ruimte voor een gesprek" },
-        { key: "boundary", title: "Duidelijke grenzen" },
         { key: "unknown", title: "Nog open" },
       ] as const).map(group => <section key={group.key} className="journey-resultgroup" data-group={group.key}>
         <h2>{group.title}</h2>

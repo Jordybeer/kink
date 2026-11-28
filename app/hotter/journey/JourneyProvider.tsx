@@ -100,8 +100,8 @@ export default function JourneyProvider({ children }: { children: ReactNode }) {
         </header>
         <div key={resetVersion} className="journey-content">{children}</div>
         <footer className="journey-footer">
-          <p>Een ontwerpstudie. Keuzes blijven in dit bezoek; voorbeeldprofielen staan los van je eigen gegevens.</p>
-          <div><button type="button" onClick={reset}><ArrowsClockwise size={16} aria-hidden="true" /> Opnieuw proberen</button><Link href="/hotter">Materialenstudio</Link><Link href="/hot">Bewegingsstudio</Link></div>
+          <p>Fictieve gegevens. Keuzes blijven in dit bezoek; voorbeeldprofielen staan los van je eigen gegevens.</p>
+          <div><button type="button" onClick={reset}><ArrowsClockwise size={16} aria-hidden="true" /> Opnieuw proberen</button><Link className="journey-home" href="/hotter/journey">Studio-overzicht</Link><Link href="/hotter">Materialenstudio</Link><Link href="/hot">Bewegingsstudio</Link></div>
         </footer>
       </div>
     </PageShell>

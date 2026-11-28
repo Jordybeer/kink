@@ -1,0 +1,1395 @@
+{
+  "capturedUtc": "2026-11-27T22:30:48.105Z",
+  "sourceHead": "fa348565a3a1e873025af97e404459082d710747",
+  "journeySourceSha256": "4995f47541aea1ef0d3081ccb9ac74f71b70476715775babd72cc97a7607df5a",
+  "fixture": "Noor / Jules, synthetic in-memory",
+  "browser": "153.0.8010.0",
+  "sizes": {
+    "mobile": [
+      390,
+      844
+    ],
+    "desktop": [
+      1366,
+      900
+    ]
+  },
+  "fullMotion": true,
+  "frames": [
+    {
+      "id": "mobile-self-control-light",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-self-botanical-light",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-self-velvet-light",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-self-control-dark",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-self-botanical-dark",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-self-velvet-dark",
+      "route": "/hotter/journey/self",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-control-light",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-botanical-light",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-velvet-light",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-control-dark",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-botanical-dark",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-connection-velvet-dark",
+      "route": "/hotter/journey/connection",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-control-light",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-botanical-light",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-velvet-light",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-control-dark",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-botanical-dark",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-together-velvet-dark",
+      "route": "/hotter/journey/together",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-control-light",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-botanical-light",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-velvet-light",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-control-dark",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-botanical-dark",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "mobile-index-velvet-dark",
+      "route": "/hotter/journey",
+      "width": 390,
+      "pageWidth": 390,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-control-light",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-botanical-light",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-velvet-light",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-control-dark",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-botanical-dark",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-self-velvet-dark",
+      "route": "/hotter/journey/self",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-control-light",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-botanical-light",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-velvet-light",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-control-dark",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-botanical-dark",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-connection-velvet-dark",
+      "route": "/hotter/journey/connection",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-control-light",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-botanical-light",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-velvet-light",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-control-dark",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-botanical-dark",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-together-velvet-dark",
+      "route": "/hotter/journey/together",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-control-light",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-botanical-light",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-velvet-light",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-control-dark",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-botanical-dark",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    },
+    {
+      "id": "desktop-index-velvet-dark",
+      "route": "/hotter/journey",
+      "width": 1366,
+      "pageWidth": 1366,
+      "smallTargets": []
+    }
+  ],
+  "contrast": [
+    {
+      "id": "mobile-self-control-light",
+      "sampled": 210,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 70,
+          "y": 245
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-self-botanical-light",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 57,
+          "y": 245
+        },
+        {
+          "text": "Dynamiek",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 40,
+          "y": 198
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-self-velvet-light",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 57,
+          "y": 245
+        },
+        {
+          "text": "Privé",
+          "ratio": 5.47,
+          "target": 4.5,
+          "x": 108,
+          "y": 769
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-self-control-dark",
+      "sampled": 210,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 70,
+          "y": 245
+        },
+        {
+          "text": "zoek ik actief op",
+          "ratio": 6.9,
+          "target": 4.5,
+          "x": 84,
+          "y": 439
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-self-botanical-dark",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 57,
+          "y": 245
+        },
+        {
+          "text": "zoek ik actief op",
+          "ratio": 7.53,
+          "target": 4.5,
+          "x": 84,
+          "y": 439
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-self-velvet-dark",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 57,
+          "y": 245
+        },
+        {
+          "text": "zoek ik actief op",
+          "ratio": 7.28,
+          "target": 4.5,
+          "x": 84,
+          "y": 439
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-control-light",
+      "sampled": 249,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 130,
+          "y": 325
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-botanical-light",
+      "sampled": 255,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 53,
+          "y": 325
+        },
+        {
+          "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 50,
+          "y": 360
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-velvet-light",
+      "sampled": 255,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 53,
+          "y": 325
+        },
+        {
+          "text": "Duidelijke grenzen",
+          "ratio": 4.57,
+          "target": 4.5,
+          "x": 59,
+          "y": 464
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-control-dark",
+      "sampled": 249,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 130,
+          "y": 325
+        },
+        {
+          "text": "Duidelijke grenzen",
+          "ratio": 6.91,
+          "target": 4.5,
+          "x": 59,
+          "y": 443
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-botanical-dark",
+      "sampled": 255,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 53,
+          "y": 325
+        },
+        {
+          "text": "Duidelijke grenzen",
+          "ratio": 7.82,
+          "target": 4.5,
+          "x": 59,
+          "y": 464
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-connection-velvet-dark",
+      "sampled": 255,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 53,
+          "y": 325
+        },
+        {
+          "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+          "ratio": 7.64,
+          "target": 4.5,
+          "x": 50,
+          "y": 360
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-control-light",
+      "sampled": 189,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 42,
+          "y": 224
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-botanical-light",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 41,
+          "y": 221
+        },
+        {
+          "text": "November",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 123,
+          "y": 207
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-velvet-light",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 41,
+          "y": 221
+        },
+        {
+          "text": "Gedachte toevoegen",
+          "ratio": 5.47,
+          "target": 4.5,
+          "x": 87,
+          "y": 553
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-control-dark",
+      "sampled": 189,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 42,
+          "y": 224
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 7.25,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-botanical-dark",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 41,
+          "y": 221
+        },
+        {
+          "text": "November",
+          "ratio": 8.23,
+          "target": 4.5,
+          "x": 123,
+          "y": 207
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-together-velvet-dark",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 41,
+          "y": 221
+        },
+        {
+          "text": "November",
+          "ratio": 7.64,
+          "target": 4.5,
+          "x": 123,
+          "y": 207
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-control-light",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 66,
+          "y": 226
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-botanical-light",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 58,
+          "y": 223
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 51,
+          "y": 336
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-velvet-light",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 57,
+          "y": 223
+        },
+        {
+          "text": "Opnieuw proberen",
+          "ratio": 5.47,
+          "target": 4.5,
+          "x": 68,
+          "y": 765
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-control-dark",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 66,
+          "y": 226
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 7.25,
+          "target": 4.5,
+          "x": 64,
+          "y": 102
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-botanical-dark",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 58,
+          "y": 223
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 8.23,
+          "target": 4.5,
+          "x": 51,
+          "y": 336
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "mobile-index-velvet-dark",
+      "sampled": 195,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 57,
+          "y": 223
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 7.64,
+          "target": 4.5,
+          "x": 51,
+          "y": 336
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-self-control-light",
+      "sampled": 252,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 399,
+          "y": 319
+        },
+        {
+          "text": "studio",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-self-botanical-light",
+      "sampled": 265,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 303,
+          "y": 319
+        },
+        {
+          "text": "Dynamiek",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 258,
+          "y": 264
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-self-velvet-light",
+      "sampled": 265,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 1.98,
+          "target": 3,
+          "x": 303,
+          "y": 24
+        },
+        {
+          "text": "Privé",
+          "ratio": 5.47,
+          "target": 4.5,
+          "x": 464,
+          "y": 743
+        }
+      ],
+      "failures": [
+        "Leiding nemen of geven"
+      ]
+    },
+    {
+      "id": "desktop-self-control-dark",
+      "sampled": 252,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 399,
+          "y": 319
+        },
+        {
+          "text": "zoek ik actief op",
+          "ratio": 6.9,
+          "target": 4.5,
+          "x": 923,
+          "y": 485
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-self-botanical-dark",
+      "sampled": 265,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 2.01,
+          "target": 3,
+          "x": 303,
+          "y": 24
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 1.3,
+          "target": 4.5,
+          "x": 279,
+          "y": 11
+        }
+      ],
+      "failures": [
+        "Proefinstellingen",
+        "Leiding nemen of geven"
+      ]
+    },
+    {
+      "id": "desktop-self-velvet-dark",
+      "sampled": 265,
+      "minima": [
+        {
+          "text": "Leiding nemen of geven",
+          "ratio": 1.9,
+          "target": 3,
+          "x": 303,
+          "y": 24
+        },
+        {
+          "text": "Proefinstellingen",
+          "ratio": 1.4,
+          "target": 4.5,
+          "x": 279,
+          "y": 11
+        }
+      ],
+      "failures": [
+        "Proefinstellingen",
+        "Leiding nemen of geven"
+      ]
+    },
+    {
+      "id": "desktop-connection-control-light",
+      "sampled": 261,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 589,
+          "y": 393
+        },
+        {
+          "text": "studio",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-connection-botanical-light",
+      "sampled": 266,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 280,
+          "y": 393
+        },
+        {
+          "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 285,
+          "y": 434
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-connection-velvet-light",
+      "sampled": 266,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 280,
+          "y": 393
+        },
+        {
+          "text": "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+          "ratio": 1.53,
+          "target": 4.5,
+          "x": 267,
+          "y": 16
+        }
+      ],
+      "failures": [
+        "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis."
+      ]
+    },
+    {
+      "id": "desktop-connection-control-dark",
+      "sampled": 261,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 589,
+          "y": 393
+        },
+        {
+          "text": "Waardering uitspreken.",
+          "ratio": 1.06,
+          "target": 4.5,
+          "x": 365,
+          "y": 24
+        }
+      ],
+      "failures": [
+        "Waardering uitspreken.",
+        "Noor"
+      ]
+    },
+    {
+      "id": "desktop-connection-botanical-dark",
+      "sampled": 266,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 280,
+          "y": 393
+        },
+        {
+          "text": "Noor",
+          "ratio": 1.3,
+          "target": 4.5,
+          "x": 254,
+          "y": 54
+        }
+      ],
+      "failures": [
+        "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+        "Waardering uitspreken.",
+        "Noor"
+      ]
+    },
+    {
+      "id": "desktop-connection-velvet-dark",
+      "sampled": 266,
+      "minima": [
+        {
+          "text": "Noor & Jules",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 280,
+          "y": 393
+        },
+        {
+          "text": "Noor",
+          "ratio": 1.4,
+          "target": 4.5,
+          "x": 254,
+          "y": 54
+        }
+      ],
+      "failures": [
+        "Twee perspectieven. Ieder antwoord heeft zijn eigen betekenis.",
+        "Waardering uitspreken.",
+        "Noor"
+      ]
+    },
+    {
+      "id": "desktop-together-control-light",
+      "sampled": 213,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 355,
+          "y": 291
+        },
+        {
+          "text": "studio",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-together-botanical-light",
+      "sampled": 211,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 262,
+          "y": 307
+        },
+        {
+          "text": "November",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 368,
+          "y": 290
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-together-velvet-light",
+      "sampled": 211,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 262,
+          "y": 307
+        },
+        {
+          "text": "November",
+          "ratio": 1.53,
+          "target": 4.5,
+          "x": 368,
+          "y": 51
+        }
+      ],
+      "failures": [
+        "November"
+      ]
+    },
+    {
+      "id": "desktop-together-control-dark",
+      "sampled": 213,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 355,
+          "y": 291
+        },
+        {
+          "text": "studio",
+          "ratio": 7.25,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-together-botanical-dark",
+      "sampled": 211,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 262,
+          "y": 307
+        },
+        {
+          "text": "November",
+          "ratio": 1.51,
+          "target": 4.5,
+          "x": 368,
+          "y": 51
+        }
+      ],
+      "failures": [
+        "November"
+      ]
+    },
+    {
+      "id": "desktop-together-velvet-dark",
+      "sampled": 211,
+      "minima": [
+        {
+          "text": "28",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 262,
+          "y": 307
+        },
+        {
+          "text": "November",
+          "ratio": 1.65,
+          "target": 4.5,
+          "x": 368,
+          "y": 51
+        }
+      ],
+      "failures": [
+        "November"
+      ]
+    },
+    {
+      "id": "desktop-index-control-light",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 13.97,
+          "target": 3,
+          "x": 374,
+          "y": 286
+        },
+        {
+          "text": "studio",
+          "ratio": 6.68,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-index-botanical-light",
+      "sampled": 243,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 8.97,
+          "target": 3,
+          "x": 280,
+          "y": 300
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 5.64,
+          "target": 4.5,
+          "x": 279,
+          "y": 574
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-index-velvet-light",
+      "sampled": 243,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 10.79,
+          "target": 3,
+          "x": 280,
+          "y": 300
+        },
+        {
+          "text": "Opnieuw proberen",
+          "ratio": 5.47,
+          "target": 4.5,
+          "x": 267,
+          "y": 820
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-index-control-dark",
+      "sampled": 216,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 17.09,
+          "target": 3,
+          "x": 374,
+          "y": 286
+        },
+        {
+          "text": "studio",
+          "ratio": 7.25,
+          "target": 4.5,
+          "x": 433,
+          "y": 115
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-index-botanical-dark",
+      "sampled": 243,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 10.94,
+          "target": 3,
+          "x": 280,
+          "y": 300
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 8.23,
+          "target": 4.5,
+          "x": 279,
+          "y": 574
+        }
+      ],
+      "failures": []
+    },
+    {
+      "id": "desktop-index-velvet-dark",
+      "sampled": 243,
+      "minima": [
+        {
+          "text": "Nieuwsgierigheid",
+          "ratio": 8.78,
+          "target": 3,
+          "x": 280,
+          "y": 300
+        },
+        {
+          "text": "Drie manieren om te ontdekken. Begin waar jij wilt.",
+          "ratio": 7.64,
+          "target": 4.5,
+          "x": 279,
+          "y": 574
+        }
+      ],
+      "failures": []
+    }
+  ],
+  "stress": [],
+  "videos": []
+}

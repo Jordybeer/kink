@@ -1,0 +1,68 @@
+/* The plates belong to the three M1 studies and the studio cover. */
+.journey-world[data-world="botanical"] { --plate: url("./plates/botanical-day.webp"); }
+.journey-world[data-world="botanical"][data-preview-theme="dark"] { --plate: url("./plates/botanical-dusk.webp"); }
+.journey-world[data-world="velvet"] { --plate: url("./plates/velvet-day.webp"); }
+.journey-world[data-world="velvet"][data-preview-theme="dark"] { --plate: url("./plates/velvet-dusk.webp"); }
+
+.journey-world[data-world="botanical"][data-preview-theme="light"] {
+  --j-hero: #d3dcc6; --j-hero-ink: #243728; --j-hero-muted: #405642;
+  --j-hero-line: #879680; --j-bg: #e9e1d4; --j-paper: #fbf6ea;
+}
+.journey-world[data-world="botanical"][data-preview-theme="dark"] {
+  --j-hero: #193d39; --j-hero-ink: #fff5dc; --j-hero-muted: #c8dccb;
+  --j-hero-line: #71968a;
+}
+.journey-world:not([data-world="control"]) :is(.journey-index-intro,.journey-self .journey-questionhead,.journey-pairhero,.journey-moment) {
+  position: relative; isolation: isolate; padding-inline-end: 35%;
+  background-image: var(--plate); background-position: right center;
+  background-size: 32% auto; background-repeat: no-repeat;
+}
+.journey-world:not([data-world="control"]) .journey-index-intro { padding-block: clamp(2rem,7vw,5rem); }
+.journey-world:not([data-world="control"]) .journey-index-intro h1 { font-size: clamp(2rem,5vw,4rem); }
+.journey-world[data-world="velvet"] :is(.journey-index-intro h1,.journey-momentcopy h1) { font-style: italic; }
+.journey-world:not([data-world="control"]) .journey-pairhero { text-align: left; }
+.journey-world:not([data-world="control"]) .journey-pairhero p { margin-inline: 0; }
+.journey-world:not([data-world="control"]) .journey-pair { justify-content: flex-start; gap: 1rem; }
+.journey-world:not([data-world="control"]) .journey-pair::before { left: 2.8rem; }
+.journey-world:not([data-world="control"]) .journey-date-number { font-size: clamp(4rem,9vw,6.2rem); }
+.journey-world .journey-writing .journey-textaction { border-bottom: 1px solid currentColor; border-radius: 0; }
+.journey-world .journey-complete { width: auto; background: transparent; color: var(--j-action); padding-inline: 0; }
+.journey-world .journey-labline { border-bottom: 1px solid var(--j-line); }
+@media (min-width: 700px) {
+  .journey-world:not([data-world="control"]):has(.journey-index,.journey-self,.journey-connection,.journey-together) { max-width: 58rem; }
+  .journey-world:not([data-world="control"]) .journey-index { display: grid; grid-template-columns: 1fr 1fr; }
+  .journey-world:not([data-world="control"]) .journey-index-intro { padding: 2rem 2rem 10rem; background-size: auto 12rem; background-position: right bottom; }
+}
+@media (max-width: 639px) {
+  .journey-world:not([data-world="control"]) .journey-self .journey-questionhead { padding-inline-end: .85rem; background-size: 4.8rem auto; background-position: right .75rem top .5rem; }
+  .journey-world:not([data-world="control"]) .journey-questionmeta { margin-inline-end: 5.4rem; }
+  .journey-world:not([data-world="control"]) .journey-self .journey-questioncopy h1 { max-width: calc(100% - 4.3rem); }
+  .journey-world:not([data-world="control"]) .journey-index-intro { padding-inline-end: 29%; background-size: 29% auto; }
+  .journey-world .journey-lab { padding-top: 0; }
+  .journey-world .journey-labline { display: none; }
+  .journey-world .journey-footer .journey-home { display: inline-flex; }
+}
+.journey-pair { flex-wrap: wrap; }
+.journey-pair > button { min-width: 0; max-width: 100%; }
+.journey-pair .journey-portrait { max-width: 100%; }
+@media (max-width: 639px) {
+  .journey-world:not([data-world="control"]) .journey-pairhero { padding-inline-end: .85rem; background-position: right .75rem top .5rem; background-size: 19% auto; }
+  .journey-world .journey-pair { margin-inline-end: 17%; }
+}
+/* The pointer target stays put. The face and its printed mark carry the load. */
+.journey-world[data-material="raised"] .journey-self .journey-answer[aria-pressed="true"]::after {
+  box-shadow: 0 3px 0 var(--j-control), 0 7px 10px var(--j-shadow), inset 0 2px var(--j-light);
+}
+.journey-world[data-material="recessed"] .journey-self .journey-answer[aria-pressed="true"]::before {
+  box-shadow: inset 0 4px 5px var(--j-shadow), inset 2px 0 3px var(--j-shadow), inset 0 -2px var(--j-light);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .journey-world[data-material="dynamic"] .journey-self .journey-answer[aria-pressed="true"]:not(:active) .journey-answertext {
+    animation: journey-release-pressure 300ms cubic-bezier(.16,.76,.25,1) both;
+  }
+  @keyframes journey-release-pressure {
+    0% { transform: translateY(2px) scale(.985); }
+    45% { transform: translateY(-1.5px); }
+    100% { transform: none; }
+  }
+}

@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 import JourneyProvider from "./JourneyProvider";
 import "./world.css";
+import "./editions.css";
 
 export const metadata: Metadata = {
   title: "Ontdekkingsstudio · KinkSync",
